@@ -34,6 +34,8 @@ import {
   Scissors,
   Film,
   Zap,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   parseSubtitleFile,
@@ -84,10 +86,12 @@ export default function MvStudio({
   });
   const [showKeyEditor, setShowKeyEditor] = useState<boolean>(false);
   const [tempKeyInput, setTempKeyInput] = useState<string>(() => apiKey || "");
+  const [showTempKeyPassword, setShowTempKeyPassword] = useState<boolean>(false);
 
   useEffect(() => {
     if (apiKey && apiKey !== apiKeyVal) {
       setApiKeyVal(apiKey);
+      setTempKeyInput(apiKey);
     }
   }, [apiKey]);
   // 1. Song Metadata (Directly Editable)
@@ -1811,32 +1815,62 @@ export default function MvStudio({
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="password"
-                        value={tempKeyInput}
-                        onChange={(e) => setTempKeyInput(e.target.value)}
-                        placeholder="วาง API Key เช่น AIzaSy..."
-                        className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const trimmed = tempKeyInput.trim();
-                          if (!trimmed) {
-                            alert("กรุณากรอก API Key ก่อนบันทึกครับ");
-                            return;
-                          }
-                          setApiKeyVal(trimmed);
-                          localStorage.setItem("gemini_api_key", trimmed);
-                          onUpdateApiKey?.(trimmed);
-                          setShowKeyEditor(false);
-                          showToast("✅ บันทึก API Key สำหรับขั้นตอนที่ 3 เรียบร้อยแล้ว!");
-                        }}
-                        className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all whitespace-nowrap"
-                      >
-                        บันทึก Key
-                      </button>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type={showTempKeyPassword ? "text" : "password"}
+                          value={tempKeyInput}
+                          onChange={(e) => setTempKeyInput(e.target.value)}
+                          placeholder="วาง API Key เช่น AIzaSy..."
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-16 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
+                        />
+                        <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+                          {tempKeyInput && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTempKeyInput("");
+                                setApiKeyVal("");
+                                localStorage.removeItem("gemini_api_key");
+                                onUpdateApiKey?.("");
+                                showToast("🗑️ ล้าง API Key เรียบร้อยแล้ว");
+                              }}
+                              className="p-1 text-slate-400 hover:text-rose-400"
+                              title="ล้างคีย์"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setShowTempKeyPassword(!showTempKeyPassword)}
+                            className="p-1 text-slate-400 hover:text-slate-200"
+                            title={showTempKeyPassword ? "ซ่อนคีย์" : "ดูคีย์"}
+                          >
+                            {showTempKeyPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const trimmed = tempKeyInput.trim();
+                            if (!trimmed) {
+                              alert("กรุณากรอก API Key ก่อนบันทึกครับ");
+                              return;
+                            }
+                            setApiKeyVal(trimmed);
+                            localStorage.setItem("gemini_api_key", trimmed);
+                            onUpdateApiKey?.(trimmed);
+                            setShowKeyEditor(false);
+                            showToast("✅ บันทึก API Key สำหรับขั้นตอนที่ 3 เรียบร้อยแล้ว!");
+                          }}
+                          className="px-4 py-2 rounded-lg text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md transition-all whitespace-nowrap"
+                        >
+                          บันทึก Key
+                        </button>
+                      </div>
                     </div>
                     <p className="text-[10px] text-slate-400 leading-relaxed">
                       💡 คีย์จะถูกใช้เฉพาะในขั้นตอนนี้เพื่อให้ AI ฟังเพลงและคำนวณเวลาซับคำร้องเท่านั้น ไม่ถูกส่งไปที่อื่น และบันทึกในเครื่องคุณอย่างปลอดภัย
