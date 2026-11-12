@@ -5,10 +5,13 @@ import Header from "@/components/Header";
 import SongStudio from "@/components/SongStudio";
 import CoverMotionStudio from "@/components/CoverMotionStudio";
 import MvStudio from "@/components/MvStudio";
+import { LicenseSession } from "@/components/LicenseModal";
+import { Crown, CheckCircle2 } from "lucide-react";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"song" | "cover" | "mv">("song");
   const [apiKey, setApiKey] = useState<string>("");
+  const [licenseSession, setLicenseSession] = useState<LicenseSession | null>(null);
 
   // Shared state across stages
   const [songData, setSongData] = useState<{
@@ -44,6 +47,12 @@ export default function Home() {
     try {
       const savedGeminiKey = localStorage.getItem("gemini_api_key");
       if (savedGeminiKey) setApiKey(savedGeminiKey);
+
+      const savedLicense = localStorage.getItem("vericap_license_session");
+      if (savedLicense) {
+        const parsedLic = JSON.parse(savedLicense);
+        if (parsedLic && typeof parsedLic === "object") setLicenseSession(parsedLic);
+      }
 
       const savedSong = localStorage.getItem("vericap_song_data");
       if (savedSong) {
@@ -109,10 +118,51 @@ export default function Home() {
         setActiveTab={setActiveTab}
         apiKey={apiKey}
         setApiKey={setApiKey}
+        licenseSession={licenseSession}
+        setLicenseSession={setLicenseSession}
       />
 
       {/* Main Workspace */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Google Sheets License Banner */}
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-900 to-cyan-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center space-x-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0">
+              <Crown className="w-5 h-5 text-amber-400" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-bold text-white">ระบบตรวจสอบสิทธิ์ Google Sheets</span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${
+                  licenseSession
+                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                    : "bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse"
+                }`}>
+                  {licenseSession ? "✓ อนุมัติสิทธิ์แล้ว" : "ยังไม่ได้เปิดสิทธิ์"}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                {licenseSession
+                  ? `ยินดีต้อนรับคุณ ${licenseSession.userName || "VIP"} • คีย์: ${licenseSession.licenseKey} (สิทธิ์ตลอดชีพ)`
+                  : "กรอก License Key เพื่อเปิดใช้งานระบบแบบสมบูรณ์ ตรวจสอบสิทธิ์กับ Google Sheets แบบเรียลไทม์"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 self-end sm:self-auto shrink-0">
+            <button
+              onClick={() => {
+                // Find and trigger license button in header or dispatch custom event
+                const licBtn = document.querySelector('button[title*="Google Sheets"]') as HTMLButtonElement | null;
+                if (licBtn) licBtn.click();
+              }}
+              className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition-all flex items-center space-x-1.5 shadow-sm"
+            >
+              <Crown className="w-3.5 h-3.5" />
+              <span>{licenseSession ? "ดูรายละเอียดสิทธิ์" : "กรอก Key เปิดสิทธิ์"}</span>
+            </button>
+          </div>
+        </div>
         {activeTab === "song" && (
           <SongStudio apiKey={apiKey} onSendToMv={handleSongToCover} />
         )}

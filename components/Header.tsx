@@ -16,13 +16,17 @@ import {
   EyeOff,
   Trash2,
   ExternalLink,
+  Crown,
 } from "lucide-react";
+import LicenseModal, { LicenseSession } from "./LicenseModal";
 
 interface HeaderProps {
   activeTab: "song" | "cover" | "mv";
   setActiveTab: (tab: "song" | "cover" | "mv") => void;
   apiKey: string;
   setApiKey: (key: string) => void;
+  licenseSession?: LicenseSession | null;
+  setLicenseSession?: (session: LicenseSession | null) => void;
 }
 
 export default function Header({
@@ -30,8 +34,11 @@ export default function Header({
   setActiveTab,
   apiKey,
   setApiKey,
+  licenseSession = null,
+  setLicenseSession = () => {},
 }: HeaderProps) {
   const [showKeyModal, setShowKeyModal] = useState(false);
+  const [showLicenseModal, setShowLicenseModal] = useState(false);
   const [tempGeminiKey, setTempGeminiKey] = useState(apiKey);
   const [showPassword, setShowPassword] = useState(false);
   const [isTestingKey, setIsTestingKey] = useState(false);
@@ -174,8 +181,28 @@ export default function Header({
             </button>
           </nav>
 
-          {/* Free Badge & API Key Entry Button */}
+          {/* License & API Key Actions */}
           <div className="flex items-center space-x-2">
+            {/* Google Sheets License Key Button */}
+            <button
+              onClick={() => setShowLicenseModal(true)}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                licenseSession
+                  ? "bg-amber-500/15 text-amber-300 border-amber-500/40 hover:bg-amber-500/25 shadow-sm shadow-amber-500/20"
+                  : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
+              }`}
+              title="ตรวจสอบสิทธิ์การใช้งานผ่านระบบ Google Sheets"
+            >
+              <Crown className={`w-3.5 h-3.5 ${licenseSession ? "text-amber-400" : "text-slate-400"}`} />
+              <span className="hidden sm:inline">
+                {licenseSession ? `👑 VIP: ${licenseSession.userName || "อนุมัติแล้ว"}` : "👑 ปลดล็อคระบบ (Sheets)"}
+              </span>
+              <span className="sm:hidden">
+                {licenseSession ? "👑 VIP" : "👑 ปลดล็อค"}
+              </span>
+            </button>
+
+            {/* Gemini API Key Button */}
             <button
               onClick={() => setShowKeyModal(true)}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
@@ -183,7 +210,7 @@ export default function Header({
                   ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25 shadow-sm shadow-emerald-500/20"
                   : hasServerKey
                   ? "bg-cyan-500/15 text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/25"
-                  : "bg-amber-500/10 text-amber-300 border-amber-500/40 hover:bg-amber-500/20 animate-pulse"
+                  : "bg-amber-500/10 text-amber-300 border-amber-500/40 hover:bg-amber-500/20"
               }`}
               title="ตั้งค่า Google Gemini API Key สำหรับซิงก์ซับขั้นตอนที่ 3"
             >
@@ -193,10 +220,10 @@ export default function Header({
                   ? "🔑 Gemini API: พร้อมใช้งาน"
                   : hasServerKey
                   ? "🔑 เซิร์ฟเวอร์มี Key พร้อม"
-                  : "🔑 กรอก Key ใช้งาน (ฟรี)"}
+                  : "🔑 กรอก Key ฟรี"}
               </span>
               <span className="sm:hidden">
-                {isConfigured ? "🔑 มี Key แล้ว" : "🔑 กรอก Key"}
+                {isConfigured ? "🔑 มี Key" : "🔑 Key"}
               </span>
             </button>
           </div>
@@ -359,6 +386,13 @@ export default function Header({
           </div>
         </div>
       )}
+      {/* Modal for Google Sheets License Activation */}
+      <LicenseModal
+        isOpen={showLicenseModal}
+        onClose={() => setShowLicenseModal(false)}
+        session={licenseSession}
+        onSessionChange={setLicenseSession}
+      />
     </header>
   );
 }

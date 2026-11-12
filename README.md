@@ -27,6 +27,16 @@
 
 ---
 
+## 👑 ระบบจัดการและตรวจสอบ License Key ผ่าน Google Sheets
+
+ระบบเชื่อมต่อกับ **Google Sheets (Serverless API ผ่าน Google Apps Script)** เพื่อตรวจสอบสิทธิ์เข้าใช้งาน:
+- **สร้างคีย์ง่ายใน 1 คลิก:** มีเมนูใน Google Sheets สุ่มสร้างคีย์รูปแบบ `VCV-XXXX-XXXX-XXXX-XXXX` ครั้งละ 20, 50 หรือ 100 คีย์
+- **ผูก 1 คีย์ต่อ 1 อุปกรณ์:** เมื่อลูกค้ากรอกคีย์ครั้งแรก ระบบจะบันทึก Device ID และวันที่เปิดใช้งานลงตาราง Google Sheets อัตโนมัติ ป้องกันการแชร์คีย์ซ้ำ
+- **ระงับสิทธิ์ได้ทันที:** หากต้องการตัดสิทธิ์ เพียงเปลี่ยนสถานะใน Google Sheet เป็น "ระงับการใช้งาน"
+- **คู่มือและโค้ดติดตั้ง:** ดูได้ที่ [`tools/google-sheets-licensing/SETUP_GUIDE.md`](file:///tools/google-sheets-licensing/SETUP_GUIDE.md)
+
+---
+
 ## 🔑 การตั้งค่า Google Gemini API Key (ฟรี 100%)
 
 - ขั้นตอนที่ 1 & 2 เป็นระบบสร้างพรอพ (Prompt Generator) ใช้งานฟรี 100% ไม่ต้องใช้ API Key
