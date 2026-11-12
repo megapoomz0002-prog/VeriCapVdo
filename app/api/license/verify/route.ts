@@ -3,12 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const maxDuration = 15;
 
-// Default fallback to user's active Google Apps Script API endpoint
+// Default fallback to user's dedicated VeriCapVdo Google Apps Script API endpoint
 const DEFAULT_API_URL =
   process.env.LICENSE_API_URL ||
   process.env.GOOGLE_SHEETS_LICENSE_URL ||
   process.env.NEXT_PUBLIC_LICENSE_API_URL ||
-  "https://script.google.com/macros/s/AKfycbxWiOiFblrmursQ1L9G2BDyk67JQd8Q4vUgO68kBA7mRq523YUbdwf9_V1ZgscrjquG/exec";
+  "https://script.google.com/macros/s/AKfycbwyCfv4SZXZk_dgA0enzZdXtUz8ngoE8drQokObr357dhGGgjnPXQ8wU3iMZQnJ3Sc/exec";
 
 export async function POST(req: NextRequest) {
   try {
