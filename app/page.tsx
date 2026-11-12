@@ -5,13 +5,15 @@ import Header from "@/components/Header";
 import SongStudio from "@/components/SongStudio";
 import CoverMotionStudio from "@/components/CoverMotionStudio";
 import MvStudio from "@/components/MvStudio";
+import LicenseGate from "@/components/LicenseGate";
 import { LicenseSession } from "@/components/LicenseModal";
-import { Crown, CheckCircle2 } from "lucide-react";
+import { Crown, CheckCircle2, Loader2 } from "lucide-react";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"song" | "cover" | "mv">("song");
   const [apiKey, setApiKey] = useState<string>("");
   const [licenseSession, setLicenseSession] = useState<LicenseSession | null>(null);
+  const [isAuthLoaded, setIsAuthLoaded] = useState<boolean>(false);
 
   // Shared state across stages
   const [songData, setSongData] = useState<{
@@ -67,6 +69,8 @@ export default function Home() {
       }
     } catch (e) {
       console.warn("Could not load saved studio session:", e);
+    } finally {
+      setIsAuthLoaded(true);
     }
   }, []);
 
@@ -110,6 +114,42 @@ export default function Home() {
     setActiveTab("mv");
   };
 
+  if (!isAuthLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center animate-spin shadow-lg shadow-amber-500/25">
+            <Crown className="w-5 h-5 text-slate-950" />
+          </div>
+          <p className="text-xs text-slate-400">กำลังตรวจสอบสิทธิ์เข้าใช้งาน...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // MANDATORY LICENSE GATE: If user has not activated a valid key, LOCK the application completely
+  if (!licenseSession) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+        <Header
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          apiKey={apiKey}
+          setApiKey={setApiKey}
+          licenseSession={null}
+          setLicenseSession={setLicenseSession}
+        />
+        <main className="flex-1 flex items-center justify-center">
+          <LicenseGate onSuccess={(session) => setLicenseSession(session)} />
+        </main>
+        <footer className="border-t border-slate-900 bg-slate-950/80 py-6 text-center text-xs text-slate-500">
+          <p>VeriCapVdo AI Studio • ระบบจัดการสิทธิ์เข้าใช้งานผ่าน Google Sheets</p>
+        </footer>
+      </div>
+    );
+  }
+
+  // FULL UNLOCKED STUDIO (When valid license exists)
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       {/* Top Navigation */}
@@ -124,27 +164,21 @@ export default function Home() {
 
       {/* Main Workspace */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Google Sheets License Banner */}
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-900 to-cyan-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+        {/* Google Sheets Active License Banner */}
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-slate-900 to-amber-500/10 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0">
-              <Crown className="w-5 h-5 text-amber-400" />
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <span className="text-xs font-bold text-white">ระบบตรวจสอบสิทธิ์ Google Sheets</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${
-                  licenseSession
-                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-                    : "bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse"
-                }`}>
-                  {licenseSession ? "✓ อนุมัติสิทธิ์แล้ว" : "ยังไม่ได้เปิดสิทธิ์"}
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold border bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+                  ✓ อนุมัติสิทธิ์ VIP ตลอดชีพ
                 </span>
               </div>
               <p className="text-[11px] text-slate-400">
-                {licenseSession
-                  ? `ยินดีต้อนรับคุณ ${licenseSession.userName || "VIP"} • คีย์: ${licenseSession.licenseKey} (สิทธิ์ตลอดชีพ)`
-                  : "กรอก License Key เพื่อเปิดใช้งานระบบแบบสมบูรณ์ ตรวจสอบสิทธิ์กับ Google Sheets แบบเรียลไทม์"}
+                ยินดีต้อนรับคุณ {licenseSession.userName || "VIP Member"} • คีย์: {licenseSession.licenseKey} (ปลดล็อคเครื่องมือทั้งหมดเรียบร้อยแล้ว)
               </p>
             </div>
           </div>
@@ -152,14 +186,13 @@ export default function Home() {
           <div className="flex items-center space-x-2 self-end sm:self-auto shrink-0">
             <button
               onClick={() => {
-                // Find and trigger license button in header or dispatch custom event
                 const licBtn = document.querySelector('button[title*="Google Sheets"]') as HTMLButtonElement | null;
                 if (licBtn) licBtn.click();
               }}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition-all flex items-center space-x-1.5 shadow-sm"
+              className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all flex items-center space-x-1.5 shadow-sm"
             >
-              <Crown className="w-3.5 h-3.5" />
-              <span>{licenseSession ? "ดูรายละเอียดสิทธิ์" : "กรอก Key เปิดสิทธิ์"}</span>
+              <Crown className="w-3.5 h-3.5 text-amber-400" />
+              <span>ดูข้อมูลสิทธิ์ / เปลี่ยนคีย์</span>
             </button>
           </div>
         </div>
