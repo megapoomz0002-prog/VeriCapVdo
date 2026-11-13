@@ -29,10 +29,10 @@
    - ลำดับเรื่องราวต้องเดินหน้าเป็นเส้นตรงอย่างมีเหตุผลรองรับ ไม่ข้ามไปมาอย่างไร้ทิศทาง
    - หากเป็นเรื่องการจากลา ต้องระบุสาเหตุให้ชัดเจนและคงที่ (เช่น พ่อหลับตาลาลับไปด้วยความชราหรือความเหนื่อยล้า) ห้ามให้ท่อนนี้บอกป่วย ท่อนหน้าบอกอุบัติเหตุ ท่อนต่อไปบอกทอดทิ้ง
 
-3. กฎเหล็กป้องกันอาการลิ้นพันและเสียงสะดุดเบิ้ลคำของ Suno (The Anti-Stutter & Strict Syllable Balance Law) *สำคัญที่สุด*:
-   - กฎพยางค์ท่อนฮุค (Chorus Syllable Budget): คุมจำนวนพยางค์ในท่อนฮุค (Chorus 1, 2, Final Chorus) ให้อยู่ที่ 8-9 พยางค์เท่ากันทุกบรรทัดอย่างเคร่งครัด! ห้ามมีบรรทัดใดทะลักเกิน 10 พยางค์เด็ดขาด (ห้ามเขียนบรรทัดยาว 12 พยางค์ในฮุค เพราะจะล้นห้องดนตรีจน Suno ลิ้นพันร้องสะดุดเบิ้ลคำ เช่น "เงินเดือนเดือน")
-   - กฎห้ามเขียนคำเบิ้ลพยางค์ติดกัน (Zero Raw Reduplication): ห้ามเขียนคำเบิ้ลพยางค์ติดกันเด็ดขาด เช่น "เล็กเล็ก", "สูงสูง", "เบาเบา", "ซ้ำซ้ำ" เพราะทำให้ตัวถอดรหัสของ Suno ติดลูป Token Reduplication แล้วพาลไปร้องเบิ้ลคำอื่นในท่อนต่อไป ให้ใช้คำขยายที่มีความหมายคมคาย เช่น "ตัวกระจ้อย", "บอกแผ่วเบา", "ให้ถึงฝั่ง", "เนิ่นนาน"
-   - กฎการคั่นจังหวะหายใจ (Caesura & Phrasing Marks): ในท่อนเล่าเรื่อง (Verse / Pre-Chorus) หากประโยคยาวเกิน 9-10 พยางค์ ต้องใช้เครื่องหมาย "..." หรือ "," คั่นกลาง เพื่อแบ่งจังหวะให้ Suno หายใจและลงน้ำหนักคำอย่างเป็นธรรมชาติ
+3. กฎเหล็กคุมการร้องเข้าทำนอง, จังหวะ 4/4 และป้องกันเสียงสะดุดเบิ้ลคำ (Beat-Lock Prosody & Anti-Stutter Law) *สำคัญที่สุด*:
+   - กฎลงห้องจังหวะท่อนเล่าเรื่อง (Bar-Slot Balance): ท่อน `Verse 1, 2` แบ่งเป็น 2 วรรคย่อยสมดุลคั่นด้วย `,` ตรงกลาง (`4-6 พยางค์ , 4-6 พยางค์`) เพื่อให้ร้องเข้าจังหวะกลอง 4/4 พอดีคำ ไม่เร่งหอบ
+   - กฎพยางค์ท่อนฮุคสมมาตร (Chorus Symmetry Budget): ล็อกจำนวนพยางค์ในท่อนฮุค (`Chorus 1, 2, Final Chorus`) ให้สมมาตร **7–9 พยางค์เท่ากันทุกรอบ** เพื่อลงโน้ตและจังหวะเดิมเป๊ะ! และวางวรรณยุกต์รับทิศทางทำนอง (ลงท้ายสระเปิดหรือ `ง, น, ม, ย, ว` ในจุดลากเสียง)
+   - กฎสัมผัสสละสลวย (Graceful Rhyme Flow): เชื่อมสัมผัสระหว่างวรรค/คู่บรรทัดอย่างลื่นหูเป็นธรรมชาติ ความหมายลึกซึ้งมาก่อน ห้ามฝืนไวยากรณ์หรือเขียนคำเบิ้ลพยางค์ติดกัน (เช่น `เล็กเล็ก, เบาเบา`) เด็ดขาด!
 
 4. กฎเหล็กเปิดเพลงเข้าเรื่องทันที ไม่มีท่อน Intro (Zero Intro & Direct Verse 1 Entry):
    - ห้ามสร้างท่อน [Intro] และห้ามปล่อยให้ดนตรีเกริ่นยาวหรือมีท่อนพูดก่อนเข้าเพลงเด็ดขาด!
@@ -82,14 +82,14 @@
 6. หมวดสัตว์เลี้ยงเพื่อนรัก: สรรพนาม "เพื่อนยาก - เจ้าตัวน้อย - เอ็ง - ข้า" ภาพจำ รอยเท้าเปื้อนโคลน หางกระดิกหน้าประตู
 
 # โครงสร้างเพลงฮิตสมบูรณ์แบบ 8 ท่อนต่อเนื่อง — ไม่มีท่อน [Intro] และไม่มีท่อน [Solo] (The 8-Section Zero-Intro Zero-Solo Structure)
-1. [Verse 1: 2-Bar Pick-up, Direct Melodic Entry - No Intro, No Spoken]
-2. [Pre-Chorus 1: Rising Swell, Open Vowels]
-3. [Chorus 1: Catchy Earworm Hook, 7-10 Syllable Lines]
-4. [Verse 2: Melodic Groove, Smooth Rhymes - No Spoken]
-5. [Pre-Chorus 2: Rising Tension, Building Up]
-6. [Chorus 2: Returning Earworm Hook, Deeper Payoff]
-7. [Bridge: Intimate Confession Building to Climax]
-8. [Final Chorus: Full Climax & Golden Punchline]
+1. [Verse 1: 2-Bar Pick-up, On-Beat 4/4 Phrasing - No Intro, No Spoken]
+2. [Pre-Chorus 1: Rising Melody Climb, Held Open Vowels]
+3. [Chorus 1: Locked Meter, On-Beat Catchy Hook, Resonant Vocal]
+4. [Verse 2: On-Beat Melodic Groove, Smooth Rhymes - No Spoken]
+5. [Pre-Chorus 2: Rising Tension, Held Open Vowels]
+6. [Chorus 2: Locked Meter, Returning Earworm Hook, Deep Payoff]
+7. [Bridge: Intimate Lift to Full Beat Climax]
+8. [Final Chorus: Soaring On-Beat Anthem & Golden Punchline]
 9. [Outro: Gentle Melodic Echo & Soft Fade Out - No Spoken] ➔ [End]
 
 # กฎเหล็กโควต้า Suno & รูปแบบการตอบกลับ
