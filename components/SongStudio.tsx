@@ -160,15 +160,15 @@ export default function SongStudio({ apiKey, onSendToMv }: SongStudioProps) {
   };
 
   const extractStyle = (raw: string): string => {
-    const m = raw.match(/Style of Music[:\s*]+([^\n\r]+)/i);
+    const m = raw.match(/Style of Music\)?[:\s*]+([^\n\r]+)/i);
     if (m && m[1]) return m[1].replace(/[*_]/g, "").trim();
-    return "Thai epic acoustic folk-rock meets soulful boom-bap, fingerstyle guitar, warm piano, punchy drums, soulful male melodic rap-singing, guitar solo, through-composed, 84 bpm";
+    return "Thai folk-soul meets boom-bap, fingerstyle guitar, warm piano, melodic male rap-singing, catchy hook, 84 bpm";
   };
 
   const extractExclude = (raw: string): string => {
-    const m = raw.match(/Exclude Styles[:\s*]+([^\n\r]+)/i);
+    const m = raw.match(/Exclude Styles\)?[:\s*]+([^\n\r]+)/i);
     if (m && m[1]) return m[1].replace(/[*_]/g, "").trim();
-    return "spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, repeated chorus, looped chorus, repeating lines, duplicate verse, short song, early fade out";
+    return "spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out";
   };
 
   const extractHook = (raw: string): string => {
@@ -237,414 +237,421 @@ export default function SongStudio({ apiKey, onSendToMv }: SongStudioProps) {
     "🔒 [สไตล์ร็อกเพื่อชีวิตร่วมสมัย] เสียงชายแหบเสน่ห์ทรงพลัง (Raspy Soul-Rock Anthem): กลองเบสแน่น กีตาร์โซโล่บาดใจ ฮุกระเบิดพลังเสียงเต็มปอด",
   ];
 
-  // 100% Sung and Rapped Outputs (v120.0: 4+ Min Epic 12-Movement Marathon, Zero Spoken Word, 100% Unique Lines across all 76 lines)
+  // 100% Sung Hit Outputs (v125.0: Zero Intro Section, Seamless Natural Rhyme & Flow, Catchy Earworm Hook, Show Don't Tell)
   const sampleSongs = {
-    tripartite: `ชื่อเพลง: รวงข้าวไม่เคยอวดรวง (The Humble Golden Grain - 4+ Min Epic Marathon)
-การถอดรหัสแก่นเรื่องและคู่ตรงข้ามเปรียบเทียบ (SD PMR Parallel Contrast): รวงข้าวที่ยิ่งมีเมล็ดทองยิ่งโน้มลงต่ำ & ทองคำแท้ที่ไม่ต้องส่งเสียง VS ต้นหญ้าที่ไร้รวงแต่ชูยอดผยอง & กลองที่กลวงข้างในแต่ตีเสียงดัง
-คำพาดหัวสะกิดใจ: กลองที่กลวงยิ่งตีดัง... ยิ่งฟังยิ่งรู้ว่าข้างในว่าง! คนจริงไม่ต้องอวด ให้ผลงานพูดแทนตัวเอง 🌾
-ประโยคหมุดทองคำ: กลองที่กลวงยิ่งตีดัง ยิ่งฟังยิ่งรู้ว่าข้างในว่าง / ทองคำแท้ไม่ส่งเสียงพราง ยังมีค่าต่อให้ไร้คนชม!
-Style of Music: Thai epic acoustic folk-rock meets soulful boom-bap, fingerstyle guitar, warm piano, punchy drums, soulful male melodic rap-singing, guitar solo, through-composed, 84 bpm
-Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, repeated chorus, looped chorus, repeating lines, duplicate verse, short song, early fade out
+    tripartite: `ชื่อเพลง: รวงข้าวที่ไม่เคยอวดตน (Golden Grain in Silence)
+คำพาดหัวสะกิดใจ: กลองยิ่งกลวงยิ่งตีดัง... ทองแท้ไม่เคยต้องอวดใคร ให้เวลาและผลงานตอบแทนเอง 🌾
+ประโยคหมุดทองคำ: กลองยิ่งกลวงยิ่งตีให้ก้องกว้าง / ยิ่งได้ฟังยิ่งรู้ว่าข้างในว่าง / ทองคำแท้ไม่เคยต้องอวดคน / ยิ่งนานวันยิ่งเห็นค่าในตน
+Style of Music: Thai folk-soul meets boom-bap, fingerstyle guitar, warm piano, melodic male rap-singing, catchy hook, 84 bpm
+Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out
 
-[Voice: Locked Warm Soulful Male Baritone-Tenor, 100% Pitched Melodic Rap-Folk Groove, Multi-Syllable Chopper Bounce, Soaring Anthemic Chorus, Strictly Zero Spoken Word]
+[Voice: Warm Soulful Male Baritone-Tenor, Smooth Melodic Rap-Folk Groove, Catchy Anthemic Chorus, No Spoken Word]
 
-[Intro: Fingerstyle Acoustic Guitar & Clean Electric Lead, 100% Sung Melodic Vocal Hook - No Spoken Word]
-เคยเห็นไหมเล่าคนหนึ่ง, ที่พูดเหมือนรู้ทุกอย่าง
-เดินคุยโวไปทุกทาง, ว่าตนนั้นเหนือกว่าใคร
-ชี้นิ้วคอยสอนคนอื่น, เหมือนยืนอยู่บนยอดเขา
-แต่ยามต้องก้าวด้วยเท้า, กลับเหลือเพียงเงาว่างเปล่า
+[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]
+มองรวงข้าวสีทองกลางทุ่งนา, ยิ่งมีค่าเท่าไรยิ่งโน้มลง
+ผ่านแดดฝนพัดซัดอย่างมั่นคง, ไม่เคยอวดทรนงว่าเหนือใคร
+ต้นหญ้าข้างคันนาที่ว่างเปล่า, ชูยอดสูงท้าลมในฟ้าใส
+พอลมแรงพัดโหมซัดลงไป, ก็หักโค่นพับหายไปกับตา
+เห็นบางคนพูดเก่งอยู่เสมอ, ดีแต่เพ้ออวดตัวให้คนมอง
+พอถึงคราวลำบากต้องประคอง, กลับหลบหายหน้าหมองไม่เห็นเงา
+แต่คนจริงทำงานอยู่หลังเงา, ยอมเหน็ดเหนื่อยสร้างทางด้วยสองมือ
+ให้ผลงานเป็นคำร่ำลือ, ไม่ต้องชูป้ายอวดให้วุ่นวาย
 
-[Verse 1: Act I - Sung Melodic Rap-Folk Storytelling, Smooth 6-8+6-8 Groove - No Spoken Word]
-รวงข้าวคราวออกรวง, ยิ่งหนักยิ่งก้มลงต่ำ
-มิได้ร้องบอกใครซ้ำ, ว่าตนนั้นมีเมล็ดทอง
-ต้นหญ้ากลับชูยอด, ลมพัดกอดก็ยังผยอง
-ไร้รวงแต่เสียงก้อง, เหมือนตนสูงกว่าพื้นดิน
-ภูเขาสูงสงบนิ่ง, ไม่เคยวิ่งประกาศตน
-ไม่ต้องเรียกผู้คน, ให้แหงนหน้ามองขึ้นไป
-แต่เนินดินก้อนเล็ก, กลับอยากเบ่งให้ยิ่งใหญ่
-ยืนเขย่งสักเท่าไร, ก็ยังต่ำกว่าภูผา
+[Pre-Chorus 1: Rising Emotional Lift, Smooth Sustained Open Vowels]
+ราคาคนไม่เคยวัดที่คำคุย,
+วัดกันยามลมลุยไม่เหลือใคร,
+ทองคำแท้ต่อให้ตกอยู่กลางดิน,
+ยังเป็นทองส่องสว่างตลอดไป
 
-[Pre-Chorus 1: Emotional Sung Melodic Lift, Sustained Long Vowels]
-ความรู้ไม่ใช่ถ้อยคำ, มิใช่เพียงจำมาเล่า
-ของจริงอยู่ยามเงียบเหงา, เมื่อไม่มีใครเฝ้ามอง
-คุณค่าที่แท้ข้างใน, ไม่ต้องให้ใครรับรอง
-เวลาจะช่วยคัดกรอง, ว่าสิ่งใดคือทองแท้จริง
+[Chorus 1: Catchy Anthemic Hook, Punchy 7-10 Syllable Lines, Emotional Peak]
+กลองยิ่งกลวงยิ่งตีให้ก้องกว้าง,
+ยิ่งได้ฟังยิ่งรู้ว่าข้างในว่าง,
+ทองคำแท้ไม่เคยต้องอวดคน,
+ยิ่งนานวันยิ่งเห็นค่าในตน,
+เหมือนรวงข้าวเต็มรวงยอมโน้มลง,
+ด้วยศรัทธามั่นคงไม่เคยหลง,
+ให้ผลงานตอบแทนทุกคำถาม,
+ดีกว่าคำสวยงามแต่ไม่ทำตาม
 
-[Chorus 1: Act I Anthemic Sung Hook, 8 Unique Lines, Single Pass, Do Not Repeat]
-กลองที่กลวงยิ่งตีดัง, ยิ่งฟังยิ่งรู้ว่าข้างในว่าง
-ทองคำแท้ไม่ส่งเสียงพราง, ยังมีค่าต่อให้ไร้คนชม
-คนฉลาดไม่ต้องอวด, คนที่รู้จริงยิ่งถ่อมตน
-คนบางคนพูดเสียจน, เหมือนเก่งล้นโลกทั้งใบ
-อย่าดูคนจากเสียงดัง, อย่าฟังเพียงคำที่เขาพูดไว้
-ให้ดูคราวต้องลงมือทำ, แล้วความจริงจะตอบแทนเอง
-แม่น้ำสายที่ลึกสุด, ย่อมไหลรุดไปอย่างเงียบงัน
-มีเพียงลำธารตื้นเขินเท่านั้น, ที่ส่งเสียงครึกโครมก้องป่า!
+[Instrumental Solo Interlude: Expressive Acoustic & Clean Electric Guitar Solo - 4-8 Bars]
 
-[Instrumental Solo Interlude: Melodic Acoustic & Clean Electric Guitar Solo - 8 Bars, Direct to Verse 2]
+[Verse 2: Deepening Story & Dynamic Melodic Groove, Smooth Internal & Tail Rhymes - No Spoken Word]
+เริ่มจากศูนย์ไม่มีทุนติดตัว, เดินฝ่าความมืดมัวเพียงลำพัง
+เสื้อตัวเก่าซักซ้ำจนสีจาง, ยังก้มหน้าสร้างทางด้วยความหวัง
+โดนดูถูกเหยียบซ้ำมานับครั้ง, เก็บเป็นแรงผลักดันไว้ข้างใน
+คำนินทารอบข้างไม่เก็บมา, ใช้สองมือฟันฝ่าข้ามผ่านไป
+หนังสือดีไม่วัดกันที่หน้าปก, ทองแท้ไม่สะทกเมื่อลองไฟ
+คนพูดน้อยมักจริงจังกว่าคำใคร, รอวันฟ้าเปิดใจให้เห็นจริง
+ไม่ต้องแข่งเสียงดังกับใครเขา, ยืนบนขาของเราอย่างแน่นิ่ง
+ความซื่อตรงไม่เคยทรยศใคร, เป็นเข็มทิศนำใจทุกก้าวเดิน
 
-[Verse 2: Act II - Flip-Flow Pitched Melodic Rap Bounce, 4-Pocket Internal Rhyme Cascade - No Spoken Word]
-บอกตัวเองว่าเพิ่งเริ่ม, ยังมีฝันเอาไว้ให้วาด
-ตั้งใจทำโดยไม่พล่าม, และไม่มีเวลาให้พลาด
-มโนมั่นสลักจิต, ตรึงสนิทไม่บิดเบือน
-สัจจะศักดิ์ซัดสะเทือน, เหนือกระแสไม่แชเชือน
-หนังสือปกงามเด่น, อาจซ่อนเล่มที่ว่างเปล่า
-ถ้อยคำดูแพรวพราว, แต่เปิดอ่านไร้ความหมาย
-หนังสือปกเก่าคร่ำ, อาจเก็บคำสอนมากมาย
-มิจำเป็นต้องเร่ขาย, ว่าทุกหน้าของตนนั้นดี
+[Pre-Chorus 2: Stronger Harmonic Swell, Brand-New Escalating Lyrics]
+เหรียญหล่นพื้นย่อมส่งเสียงดังไกล,
+แต่ใบพันหล่นลงกลับเงียบงัน,
+คนที่รู้จริงจังไม่คุยโว,
+ก้มหน้าทำตามฝันทุกคืนวัน
 
-[Pre-Chorus 2: Rising Soulful Harmonic Swell, Sustained Melodic Notes - 4 Brand-New Lines]
-เหรียญบาทที่ตกกระทบพื้น, ส่งเสียงสะท้อนกังวานไกล
-แต่ธนบัตรใบพันใบใหญ่, ร่วงหล่นลงไปไร้เสียงดัง
-คนมีของจริงอยู่ในอก, ไม่ตื่นตระหนกยามลำพัง
-ให้การกระทำเป็นพลัง, ส่องทางสว่างด้วยตัวเอง
+[Chorus 2: Returning Signature Earworm Hook + Evolving Emotional Payoff]
+กลองยิ่งกลวงยิ่งตีให้ก้องกว้าง,
+ยิ่งได้ฟังยิ่งรู้ว่าข้างในว่าง,
+ทองคำแท้ไม่เคยต้องอวดคน,
+ยิ่งนานวันยิ่งเห็นค่าในตน,
+ลมปากคนผ่านมาแล้วก็ผ่าน,
+เหลือเพียงใจกล้าหาญที่คงทน,
+หยาดเหงื่อรินสร้างค่าให้ผู้คน,
+ไม่ต้องพูดสักคำคนก็จำ!
 
-[Chorus 2: Act II Evolving Anthemic Sung Hook, 8 Brand-New Lines, Single Pass, Do Not Repeat]
-เปลือกนอกที่ฉาบสีทอง, อาจปกคลุมเนื้อไม้ผุพัง
-คำเยินยอที่เคยได้ฟัง, เป็นเพียงลมที่พัดผ่านเลย
-เพชรแท้แม้จมโคลนตม, ยังคงคมและงามดั่งเคย
-ไม่ต้องเอ่ยคำพูดเฉลย, แสงในตัวย่อมส่องประกาย
-คนลวงโลกชอบสร้างภาพ, ใช้คำหวานอาบไว้ทั้งกาย
-แต่พอถึงวันต้องพิสูจน์ชาย, กลับละลายหายไปกับตา
-คนจริงยืนหยัดด้วยงาน, ก้าวข้ามผ่านทุกคำนินทา
-ให้หยาดเหงื่อและกาลเวลา, เป็นผู้ตัดสินคุณค่าคน!
+[Bridge: Stripped-Back Intimate Confession Building to Soaring Vocal Climax]
+แม่น้ำสายที่ลึกที่สุดนั้น,
+ไหลผ่านกาลเวลาอย่างเงียบงัน,
+ยิ่งชีวิตก้าวสูงขึ้นเท่าไร,
+ยิ่งถ่อมตัวลงไปในทุกวัน!
 
-[Beat Switch: Direct Transition to Verse 3, Zero Chorus Repeat]
+[Final Chorus: Full Band Goosebumps Anthem, Maximum Vocal Power & Golden Punchline]
+กลองยิ่งกลวงยิ่งตีให้ก้องกว้าง,
+ยิ่งได้ฟังยิ่งรู้ว่าข้างในว่าง,
+ทองคำแท้ไม่เคยต้องอวดคน,
+ยิ่งนานวันยิ่งเห็นค่าในตน,
+เหมือนรวงข้าวค้อมรวงลงหาดิน,
+เลี้ยงผู้คนให้ได้กินทุกถิ่นฐาน,
+ให้เวลาเป็นเครื่องพิสูจน์งาน,
+คือตำนานที่งดงามตลอดกาล!
 
-[Verse 3: Act III - Deep Melodic Rap-Soul Cadence & Multi-Syllable Rhyme Lock - No Spoken Word]
-เงาไม่เคยสูงกว่าคน, ยามแดดร่มลมตกก็จางหาย
-แต่คนหลงเงาของตน, กลับคิดว่าตัวสูงกว่าใคร
-เงาใหญ่เพราะแสงอาทิตย์, หาใช่เพราะฤทธิ์ที่ยิ่งใหญ่
-เมื่อตะวันลับขอบฟ้าไป, เงาทั้งหลายก็มืดมิดลง
-อนัตตาเผยความจริง, ทุกสิ่งล้วนไม่ยั่งยืน
-ปล่อยวางความยึดมั่น, แม้ต้องกลืนก็ต้องฝืน
-ดวงจันทร์ไม่เคยบอก, ว่าตัวเองส่องโลกทั้งคืน
-มีแต่จิตที่รู้ตื่น, จึงหยัดยืนเหนือกาลเวลา
-
-[Bridge: Soaring High-Note Soul-Rock Melodic Climax, Full Vocal Belt]
-คนมีปัญญาแท้จริง, ย่อมรู้ว่ายังมีสิ่งไม่รู้
-ยิ่งเดินยิ่งเห็นโลกกว้าง, ยิ่งเข้าใจยิ่งถ่อมตัวลง
-วันหนึ่งเมื่อพายุโหมกระหน่ำ, ต้นไม้ที่หยั่งรากลึกมั่นคง
-จะยังคงยืนหยัดทะนง, ท่ามกลางสายฝนที่โปรยปราย!
-
-[Verse 4: Act IV - Final Melodic Chopper Surge & Philosophical Triumph - No Spoken Word]
-เริ่มต้นจากศูนย์ด้วยสองมือ, ยึดถือความซื่อสัตย์เป็นที่ตั้ง
-ก้าวเดินทีละก้าวอย่างระวัง, สร้างพลังจากความพากเพียร
-ไม่เคยเหยียบไหล่ใครขึ้นไป, ไม่เคยใช้เล่ห์กลหมุนเวียน
-ใช้ชีวิตเป็นดั่งบทเรียน, เขียนตำนานด้วยหยาดเหงื่อจริง
-ใครจะอวดอ้างช่างเขาไป, เราเพียงตั้งใจทำทุกสิ่ง
-ความสำเร็จที่แท้จริง, ไม่ต้องวิ่งไปป่าวประกาศ
-เมื่อรากฐานมั่นคงแข็งแกร่ง, ย่อมทอแสงสว่างใสสะอาด
-เป็นเกียรติยศที่ไม่เคยขาด, อยู่คู่แผ่นดินอย่างภาคภูมิ!
-
-[Chorus 3: Act IV Grand Finale Anthemic Sung Hook, 8 Brand-New Climax Lines, Do Not Repeat]
-เสียงตบมือจากคำลวงหลอก, อยู่ได้ไม่นานก็จางหายไป
-แต่ผลงานที่สร้างด้วยใจ, จะจารึกไว้ในแผ่นดิน
-ทองแท้ไม่กลัวไฟหลอม, คนจริงไม่ยอมเสียสัตย์สิ้น
-ก้มหน้าสร้างค่าอาจินต์, ให้แผ่นดินได้จดจำชื่อ
-ไม่ต้องแข่งกับเสียงตะโกน, ไม่ต้องโยนคำพูดอื้ออึง
-ความจริงใจเพียงหนึ่งคำนึง, จะตราตรึงอยู่ในหัวใจ
-รวงข้าวสีทองค้อมลงดิน, จึงหล่อเลี้ยงชีวินผู้คนได้
-คุณค่าของคนอยู่ที่ใจ, และผลงานที่ทิ้งไว้ให้โลกจำ!
-
-[Transition: Direct to Melodic Outro, Zero Chorus Repeat]
-
-[Outro: Intimate Sung Melodic Finale & Long Instrumental Acoustic Fade - No Spoken Word]
-รวงข้าวโน้มกิ่งลงหาดิน, เพราะเมล็ดเต็มรวงเปี่ยมคุณค่า...
-ขุนเขาตั้งตระหง่านคู่ฟ้า, โดยไม่ต้องเอ่ยคำพูดใด...
-จงเป็นดั่งทองคำเนื้อแท้, ที่ส่องแสงสว่างในหัวใจ...
-ให้ความดีและผลงานยิ่งใหญ่, พูดแทนตัวเราตลอดกาล...
+[Outro: Gentle Lingering Melodic Echo & Soft Instrumental Fade - No Spoken Word]
+รวงข้าวโน้มลงดินอย่างอ่อนโยน,
+ทิ้งความดีไว้แทนเสียงตะโกน...
 
 [End]`,
-    phaw: `ชื่อเพลง: กอดพ่อได้เพียง (Only in Dreams)
-ภาพเปรียบเทียบสัจธรรม (Central Metaphor): ตลับเมตรและรอยถากไม้ของพ่อ (สัจธรรมคนสร้างบ้านงามให้คนอื่น แต่สร้างใจลูกให้ซื่อตรงดั่งทองแท้)
-คำพาดหัวสะกิดใจ: ถ้าวันนั้นรู้ว่าเป็นกอดสุดท้าย... คงไม่ปล่อยมือ 💔
-ประโยคหมุดทองคำ: กอดพ่อได้เพียง, แค่ในความฝัน / สองมือกร้านหยาบ, ค้ำจุนลูกยา
-สไตล์ดนตรี (Style of Music): Thai modern acoustic folk, soulful boom-bap, warm hypnotic male vocal, acoustic guitar, soft isan phin, smooth melodic singing, crisp rhythm, single-pass choruses, zero repeat, 84 bpm
+    phaw: `ชื่อเพลง: กอดพ่อได้แค่ในฝัน (Holding Father Only in Dreams)
+คำพาดหัวสะกิดใจ: ซองเงินเดือนก้อนแรกพร้อมแล้ว... แต่เพิงไม้เก่าไม่มีพ่อรอรับ 💔
+ประโยคหมุดทองคำ: วันนี้ได้กอดพ่อเพียงแค่ในฝัน / เหลือแค่เสื้อเปื้อนเหงื่อที่ผูกพัน / ซองเงินเดือนก้อนแรกที่ตั้งใจมา / ทำได้เพียงวางไว้หน้ารูปพ่อทั้งน้ำตา
+Style of Music: Thai acoustic folk-soul, warm fingerstyle guitar, soft isan phin, emotional male vocal, catchy chorus, 78 bpm
+Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out
 
-[Voice: Locked Hypnotic Warm Baritone-Tenor, Silky Smooth Singing, Magnetic Resonance]
+[Voice: Warm Soulful Male Baritone-Tenor, Deeply Emotional Storytelling, Catchy Heartfelt Chorus, No Spoken Word]
 
-[Intro: Acoustic Guitar Fingerpicking, Soft Melancholic Phin Riff]
-กอดพ่อได้เพียง, แค่ในความฝัน...
+[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]
+เสียงกบไสไม้ในเพิงเก่าเงียบลง, ตลับเมตรยังวางตรงข้างประตู
+เสื้อยืดตัวเก่าซักแขวนรอพ่ออยู่, มีกลิ่นไม้ที่ลูกคุ้นมาแสนนาน
+ฝ่ามือกร้านที่เคยจับมือลูกเดิน, แลกค่าเทอมด้วยรอยแผลในวันวาน
+พ่อไม่เคยบ่นเหนื่อยยากตอนทำงาน, ยอมอดมื้อเพื่อให้ลูกได้เรียนไกล
+คืนฝนสาดเพิงไม้เก่าจนเกือบเช้า, พ่อนั่งกอดลูกเอาไว้กันลมหนาว
+บอกลูกเพียงขอให้สู้และก้าวต่อ, ขอแค่ลูกตั้งใจเรียนให้ถึงดาว
+วันนี้ลูกหอบเงินเดือนก้อนแรกมา, หวังให้พ่อได้พักสายตาไม่ห่วงใย
+แต่พ่อกลับหลับตาลงไปแสนไกล, ไม่ทันได้ยินคำขอบคุณจากใจเลย
 
-[Verse 1: Laid-back Storytelling, Silk-Flow Rhymes, 4+4 Symmetry]
-เสียงกบไสไม้, จางหายไปลับ
-ความเงียบเข้ามา, พัดพาใจสั่น
-เพิงเก่าสังกะสี, ที่ผ่านคืนวัน
-สองมือผูกพัน, กรำงานอดทน
-เสื้อเก่าตัวเดิม, ชุ่มเหงื่อรินหลั่ง
-สร้างลูกยืนหยัด, ดั่งใจมุ่งหวัง
-ถากไม้สร้างเรือน, เตือนจิตจริงจัง
-สอนให้ระวัง, ตั้งใจทำดี
+[Pre-Chorus 1: Rising Emotional Lift, Smooth Sustained Open Vowels]
+ซองเงินขาวอยู่ในมือสั่นเทา,
+หน้าประตูเพิงไม้เงียบเหงาเกินทน,
+อยากตะโกนเรียกพ่อให้ตื่นมา,
+แต่มีเพียงสายลมที่พัดวน
 
-[Pre-Chorus: Melodic Soul Ballad, Emotional Swell]
-ลูกก้าวกลับมา, น้ำตารินไหล
-เงินเดือนก้อนแรก, แลกความหวังไว้
-หวังให้พ่อพัก, จากงานเหนื่อยใจ
-แต่พ่อหลับไป, ไม่หวนคืนมา
+[Chorus 1: Catchy Anthemic Hook, Punchy 7-10 Syllable Lines, Emotional Peak]
+วันนี้ได้กอดพ่อเพียงแค่ในฝัน,
+เหลือแค่เสื้อเปื้อนเหงื่อที่ผูกพัน,
+เสียงตอกไม้ยังดังก้องในใจ,
+แต่ไม่มีใครอยู่ให้ลูกกราบไหว้,
+สองมือกร้านสร้างบ้านให้คนมานอน,
+สอนให้ลูกซื่อตรงกว่าเงินทุกก้อน,
+ซองเงินเดือนก้อนแรกที่ลูกหอบมา,
+ทำได้เพียงวางไว้หน้ารูปพ่อทั้งน้ำตา!
 
-[Chorus 1: Full 8-Line Continuous Hook, Single Pass, Do Not Repeat]
-กอดพ่อได้เพียง, แค่ในความฝัน
-กลิ่นเหงื่อเสื้อเก่า, เฝ้าร้อยผูกพัน
-สองมือกร้านหยาบ, ค้ำจุนลูกยา
-พระคุณล้นฟ้า, ตราตรึงวิญญาณ์!
-คำสอนพ่อยัง, ฝังแน่นในใจ
-นำทางก้าวไป, ไม่หวั่นสิ่งใด
-สัจจะลูกชาย, ไม่คลายศรัทธา
-กอดพ่อในฝัน, ตราบวันลับลา!
+[Instrumental Solo Interlude: Emotional Acoustic Guitar & Soft Isan Phin Solo - 4-8 Bars]
 
-[Beat Switch: Direct Transition to Verse 2, Zero Chorus Repeat]
+[Verse 2: Deepening Story & Dynamic Melodic Groove, Smooth Internal & Tail Rhymes - No Spoken Word]
+เปิดกล่องเครื่องมือที่พ่อรักนักหนา, หยิบสิ่วเก่าขึ้นมาลูบเบาด้วยมือสั่น
+รอยถากไม้ยังชัดเจนอยู่ทุกอัน, เหมือนคำสอนที่พ่อพูดอยู่ทุกวัน
+พ่อสร้างบ้านหลังงามให้คนอื่นอยู่, แต่เพิงเรากลับมีรอยรั่วมาเนิ่นนาน
+ไม่เคยมีทองกองโตไว้ในบ้าน, แต่พ่อฝากเกียรติศักดิ์ศรีให้ลูกชาย
+รูปข้างฝาที่ยิ้มอ่อนอย่างใจดี, คอยมองลูกคนนี้ไม่ห่างหาย
+เหนื่อยแค่ไหนไม่เคยทำให้ใจคลาย, เมื่อคิดถึงแผ่นหลังพ่อที่ฝ่าฟัน
+ขอสัญญาจากหัวใจลูกคนนี้, จะใช้ชีวิตเป็นคนดีไม่แปรผัน
+ให้สมกับหยาดเหงื่อพ่อที่สร้างทาง, แม้วันนี้จะเดินคนละฟากฝั่งฟ้า
 
-[Verse 2: Smooth Chopper Flow, Multi-Syllable Rhymes]
-ตลับเมตรเก่า, ที่เคยวัดไม้
-ถากถางทางกว้าง, สร้างลูกเติบใหญ่
-หยดเหงื่อรินรด, หยดลงผืนดิน
-แลกข้าวให้กิน, สู้จนคุ้นชิน
-วันนี้เหลือเพียง, เสียงรอยสะท้อน
-ลึกซึ้งตรึงใจ, ในคำสั่งสอน
-สร้างคนสร้างใจ, ไม่ไหวไม่คลอน
-ซื่อตรงดั่งทอง, ผ่องพ้นเวลา
+[Pre-Chorus 2: Stronger Harmonic Swell, Brand-New Escalating Lyrics]
+จุดธูปหนึ่งดอกต่อหน้ารูปถ่าย,
+ก้มกราบลงข้างเท้าในความทรงจำ,
+คำสัญญาของลูกยังชัดเจนอยู่,
+จะทำดีตามคำที่พ่อเคยย้ำ
 
-[Chorus 2: Full 8-Line Continuous Hook, Single Pass, Do Not Repeat, Evolving Lyrics]
-คำสอนของพ่อ, ยังก้องในใจ
-ส่องทางก้าวเดิน, เผชิญโลกกว้าง
-ลูกจะยืนหยัด, สู้บนเส้นทาง
-ความดีส่องสว่าง, กลางความมืดมน!
-สร้างคนสร้างใจ, ให้ซื่อตรงแท้
-ไม่เคยยอมแพ้, แม้มีขวากหนาม
-เดินตามรอยพ่อ, ทุกช่วงโมงยาม
-ฝากชื่อคนงาม, ค้ำฟ้าดินเอย!
+[Chorus 2: Returning Signature Earworm Hook + Evolving Emotional Payoff]
+วันนี้ได้กอดพ่อเพียงแค่ในฝัน,
+เหลือแค่เสื้อเปื้อนเหงื่อที่ผูกพัน,
+เสียงตอกไม้ยังดังก้องในใจ,
+แต่ไม่มีใครอยู่ให้ลูกกราบไหว้,
+กอดพ่อผ่านภาพจำในทุกคืนวัน,
+ความรักพ่อยิ่งใหญ่เกินฟ้ากางกั้น,
+ขอบคุณมือสองข้างที่สร้างตัวลูกมา,
+ไม่เคยลืมพระคุณตลอดเวลา!
 
-[Beat Switch: Direct Transition to Verse 3, Zero Chorus Repeat]
+[Bridge: Stripped-Back Intimate Confession Building to Soaring Vocal Climax]
+ถ้าวันนั้นลูกกอดพ่อให้นานกว่าเดิม,
+คงไม่เจ็บปวดใจมากขนาดนี้,
+แต่ลูกโตพอแล้วพ่อไม่ต้องห่วง,
+หลับตาพักผ่อนให้สบายเถิดคนดี!
 
-[Verse 3: Philosophical Street Cadence, Deep Reflection]
-มองเครื่องมือช่าง, ที่วางข้างฝา
-ทุกรอยถากไม้, ล้ำค่ายิ่งกว่า
-พ่อสร้างบ้านงาม, ให้คนพักพิง
-สอนลูกให้จริง, ยิ่งในความดี
-ไม่มีกองทอง, ปองไว้ให้เห็น
-แต่มีเกียรติยศ, ปรากฏชัดเจน
-จิตใจผ่องใส, ไกลความลำเค็ญ
-เป็นคนซื่อตรง, มั่นคงศรัทธา
+[Final Chorus: Full Band Goosebumps Anthem, Maximum Vocal Power & Golden Punchline]
+วันนี้ได้กอดพ่อเพียงแค่ในฝัน,
+เหลือแค่เสื้อเปื้อนเหงื่อที่ผูกพัน,
+เสียงตอกไม้ยังดังก้องในใจ,
+แต่ไม่มีใครอยู่ให้ลูกกราบไหว้,
+จากเด็กน้อยในเพิงไม้ที่พ่อประคอง,
+วันนี้ลูกยืนได้ด้วยใจซื่อตรง,
+ส่งรักขึ้นไปหาพ่อบนฟากฟ้า,
+หลับให้สบายเถิดพ่อ... ลูกดูแลตัวเองได้แล้วนะ!
 
-[Bridge: Soaring Soul Melodic Climax, Emotional Peak]
-มองรูปข้างฝา, น้ำตารินไหล
-คำสอนของพ่อ, คลอเคล้าข้างใจ
-สัจจะลูกชาย, มุ่งหน้าก้าวไป
-เพื่อพ่อคนดี, ที่ลูกบูชา!
-
-[Chorus 3: Full 8-Line Continuous Hook, Single Pass, Do Not Repeat, Grand Climax]
-กอดพ่อในใจ, ตราบสิ้นชีวา
-พระคุณนำพา, สว่างกลางใจ
-ลูกจะไม่ลืม, สัจจะให้ไว้
-เป็นคนดีให้ได้, ดั่งใจพ่อหวัง!
-ลูกยืนตรงนี้, ด้วยความภูมิใจ
-ส่งรักขึ้นไป, สู่ฟ้าแดนไกล
-ลูกโตพอแล้ว, ไม่ต้องห่วงใย
-หลับตาพักใจ, ในฟ้าครามเอย!
-
-[Transition: Direct to Outro, Zero Chorus Repeat]
-
-[Outro: Warm Harmonic Singing, Lonely Acoustic Guitar Fade]
-หลับตาเถิดพ่อ, พักผ่อนให้สบาย...
-คำสอนของพ่อ, จะอยู่กับลูกตลอดไป...
+[Outro: Gentle Lingering Melodic Echo & Soft Instrumental Fade - No Spoken Word]
+หลับให้สบายนะพ่อในคืนนี้,
+คำสอนพ่อจะอยู่กับลูกชั่วนิรันดร์...
 
 [End]`,
-    love: `ชื่อเพลง: รักแรกพบ (First Light)
-ภาพเปรียบเทียบสัจธรรม (Central Metaphor): แสงแดดอุ่นกลางสายฝนพรำ (ความรักบริสุทธิ์ที่เข้ามาเติมเต็มหัวใจอย่างเรียบง่าย)
-คำพาดหัวสะกิดใจ: ตั้งแต่วันที่ได้พบเธอ โลกใบเดิมก็เปลี่ยนไป ✨
-ประโยคหมุดทองคำ: รักแรกพบใจ, ไม่เคยคาดฝัน / ขอบคุณทุกวัน, ที่ผ่านเข้ามา
-สไตล์ดนตรี (Style of Music): Thai warm acoustic pop, soulful melody, hypnotic warm male vocal, nylon string guitar, gentle percussion, crisp rhythm, single-pass choruses, zero repeat, 80 bpm
+    love: `ชื่อเพลง: แสงแรกกลางวันฝนพรำ (First Light in the Rain)
+คำพาดหัวสะกิดใจ: แค่รอยยิ้มข้างโต๊ะกาแฟวันฝนตก... โลกที่เคยเหงาก็อุ่นขึ้นมาทันที ☕✨
+ประโยคหมุดทองคำ: ขอบคุณสายฝนที่พาเธอเดินเข้ามา / เติมความอุ่นในวันที่โลกเย็นชา / แค่ได้มองตากันก็เข้าใจ / เธอคือแสงเช้าในใจตลอดไป
+Style of Music: Thai warm acoustic pop-soul, nylon guitar, mellow piano, smooth warm male vocal, catchy chorus, 80 bpm
+Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out
 
-[Voice: Locked Hypnotic Warm Baritone-Tenor, Silky Smooth Singing, Magnetic Resonance]
+[Voice: Smooth Warm Male Pop-Soul Vocal, Intimate Acoustic Groove, Catchy Sweet Chorus, No Spoken Word]
 
-[Intro: Acoustic Guitar Fingerpicking, Sweet Warm Hum]
-สบตาคราแรก, ก็แทรกซึมใจ...
+[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]
+กาแฟร้อนวางอยู่ข้างหน้าต่างใส, เม็ดฝนเย็นร่วงลงมาไม่ขาดสาย
+ผู้คนเดินกางร่มผ่านไปมากมาย, มีเพียงฉันนั่งมองฟ้าอย่างเดียวดาย
+จนเสียงกระดิ่งหน้าประตูดังเบา, เธอสะบัดร่มคันเล็กเดินเข้ามา
+พอเผลอหันมาประสานกันทางสายตา, กลับทำให้ใจเต้นแรงอย่างไม่รู้ตัว
+รอยยิ้มอ่อนโยนที่เธอส่งคืนให้, ละลายความเหงาในอกจนหมดสิ้น
+โลกที่เคยเงียบเหงาเหมือนหยุดหมุนเวียน, กลายเป็นเพลงอุ่นละมุนอยู่รอบตัว
+ไม่ต้องพูดคำหวานให้ดูสวยหรู, แค่ได้นั่งฟังเสียงฝนอยู่ใกล้เธอ
+ความสบายใจเกิดขึ้นอย่างง่ายดาย, เหมือนรู้จักกันมานานก่อนได้เจอ
 
-[Verse 1: Laid-back Storytelling, Silk-Flow Rhymes, 4+4 Symmetry]
-วันฝนโปรยปราย, สายลมพัดพรม
-มุมร้านกาแฟ, แลดูรื่นรมย์
-ผู้คนมากมาย, ก้าวผ่านสายตา
-ยังไม่เคยพบ, สบใครมีค่า
-จนเธอเดินมา, พาสดใสเยือน
-รอยยิ้มละมุน, อุ่นใจติดเตือน
-ดั่งแสงตะวัน, พลันส่องสว่าง
-ปัดเป่าความเหงา, ให้จางหมดไป
+[Pre-Chorus 1: Rising Emotional Lift, Smooth Sustained Open Vowels]
+จากคนแปลกหน้าในบ่ายวันฝนพรำ,
+กลายเป็นเรื่องงดงามที่เฝ้ารอเจอ,
+หัวใจที่เคยปิดประตูไว้แน่น,
+ก็เริ่มเปิดออกกว้างเพียงเพราะเธอ
 
-[Pre-Chorus: Melodic Soul Ballad, Sweet & Rising]
-หัวใจดวงนี้, ที่เคยเหน็บหนาว
-เริ่มมองเห็นดาว, สกาวสดใส
-ก้าวเข้ามาเติม, เสริมความมั่นใจ
-พร้อมเดินเคียงคู่, สู่ฝันงดงาม
+[Chorus 1: Catchy Anthemic Hook, Punchy 7-10 Syllable Lines, Emotional Peak]
+ขอบคุณสายฝนที่พาเธอเดินเข้ามา,
+เติมความอุ่นในวันที่โลกเย็นชา,
+แค่ได้มองตากันก็เข้าใจ,
+เธอคือแสงเช้าในใจตลอดไป,
+ไม่ต้องการคำสัญญาที่ยิ่งใหญ่,
+ขอแค่เดินกางร่มเคียงข้างกันไป,
+โลกจะหมุนเปลี่ยนผันสักเท่าไร,
+แค่มีเธอก็อุ่นใจทุกเวลา!
 
-[Chorus 1: Full 8-Line Continuous Hook, Single Pass, Do Not Repeat]
-รักแรกพบใจ, ไม่เคยคาดฝัน
-ขอบคุณทุกวัน, ที่ผ่านเข้ามา
-สบตาคู่นั้น, มั่นใจสัญญา
-รักเธอแก้วตา, ตราบชั่วชีวัน!
-แววตาคู่นั้น, สดใสจับใจ
-ละลายความเหงา, ให้หายหมดไป
-อยู่เคียงข้างเธอ, ไม่คิดเปลี่ยนใจ
-ของขวัญล้ำค่า, ตลอดชีวัน!
+[Instrumental Solo Interlude: Sweet Acoustic Nylon Guitar & Soft Piano Melody - 4-8 Bars]
 
-[Beat Switch: Direct Transition to Verse 2, Zero Chorus Repeat]
+[Verse 2: Deepening Story & Dynamic Melodic Groove, Smooth Internal & Tail Rhymes - No Spoken Word]
+จากวันนั้นเราก็มักเจอกันบ่อย, เก้าอี้เดิมโต๊ะไม้ตัวข้างกระจก
+เล่าเรื่องเล็กน้อยให้กันฟังไม่ตลก, แค่เธอหัวเราะโลกทั้งใบก็สดใส
+วันไหนงานหนักจนฉันเกือบหมดแรง, เธอไม่ถามมากแค่จับมือกันไว้
+ความเงียบที่ไม่ต้องอธิบายสิ่งใด, แต่กลับซึ้งลึกซึ้งกว่าคำพูดเป็นพัน
+ไม่ต้องแต่งเติมอะไรให้วุ่นวาย, เราต่างเป็นพื้นที่พักใจของกัน
+ฝนตกแดดออกก็ยังเดินเคียงข้าง, ทุกเช้าตื่นมามีความหมายทุกวัน
+จากความบังเอิญเล็กน้อยในร้านเดิม, กลายเป็นความจริงที่งดงามที่สุด
+อยากดูแลเธอให้นานที่สุดเท่าทำได้, ให้รอยยิ้มนี้ไม่จางหายไปไหน
 
-[Verse 2: Smooth Chopper Flow, Multi-Syllable Rhymes]
-ร้อยเรียงเรื่องราว, ยามเราพูดคุย
-ความสุขล้นเอ่อ, เลอค่าเคียงกาย
-ไม่ต้องประดิษฐ์, จิตใจผ่อนคลาย
-รอยยิ้มเธอพราย, คลายความกังวล
-ผ่านวันคืนเหงา, เข้าสู่แสงทอง
-จับมือเคียงข้าง, สองเรามั่นคง
-ร่วมสร้างทางรัก, ปักใจซื่อตรง
-ไม่เคยลืมหลง, คงมั่นศรัทธา
+[Pre-Chorus 2: Stronger Harmonic Swell, Brand-New Escalating Lyrics]
+ต่อให้ฤดูเปลี่ยนเวียนวนผ่านไป,
+ความรู้สึกแรกไม่เคยลดน้อยลง,
+ทุกครั้งที่ฝนโปรยลงมาข้างทาง,
+ยังนึกถึงวันแรกที่เรามองตาตรง
 
-[Chorus 2: Full 8-Line Continuous Hook, Single Pass, Do Not Repeat, Evolving Lyrics]
-รักแรกพบใจ, ยิ่งใหญ่ลึกซึ้ง
-รอยยิ้มตราตรึง, ซาบซึ้งอุรา
-โลกใบนี้สดใส, เมื่อได้พบตา
-ร่วมทางฟันฝ่า, คว้าฝันด้วยกัน!
-ขอบคุณฟากฟ้า, นำพามาพบ
-รักแท้บรรจบ, สบความสุขสันต์
-จะดูแลเธอ, เสมอผูกพัน
-รักเรานิรันดร์, ตราบสิ้นดินฟ้า!
+[Chorus 2: Returning Signature Earworm Hook + Evolving Emotional Payoff]
+ขอบคุณสายฝนที่พาเธอเดินเข้ามา,
+เติมความอุ่นในวันที่โลกเย็นชา,
+แค่ได้มองตากันก็เข้าใจ,
+เธอคือแสงเช้าในใจตลอดไป,
+จะจับมือเธอเดินผ่านทุกฤดู,
+เป็นคนข้างกายที่ไม่ปล่อยให้เหงาใจ,
+ความรักเรียบง่ายแต่ซื่อตรงข้างใน,
+คือของขวัญล้ำค่าที่สุดในชีวิต!
 
-[Transition: Direct to Outro, Zero Chorus Repeat]
+[Bridge: Stripped-Back Intimate Confession Building to Soaring Vocal Climax]
+ไม่เคยคิดว่าความรักแท้หน้าตาแบบไหน,
+จนวันที่เธอเอียงร่มบังฝนให้ฉัน,
+เพิ่งเข้าใจว่าความสุขที่ไม่ต้องตามหา,
+คือการได้ตื่นมาเจอเธอทุกวัน!
 
-[Outro: Soft Acoustic Guitar & Warm Hum Fade]
-ขอบคุณโชคชะตา, ที่พาเรามาพบกัน...
-รักเธอเสมอไป...
+[Final Chorus: Full Band Goosebumps Anthem, Maximum Vocal Power & Golden Punchline]
+ขอบคุณสายฝนที่พาเธอเดินเข้ามา,
+เติมความอุ่นในวันที่โลกเย็นชา,
+แค่ได้มองตากันก็เข้าใจ,
+เธอคือแสงเช้าในใจตลอดไป,
+ต่อให้วันข้างหน้าฟ้าไม่เป็นใจ,
+ฉันจะกางร่มคอยปกป้องเธอเอง,
+อยู่ด้วยกันไปจนวันผมเปลี่ยนสี,
+รักเธอแบบนี้ไม่มีวันเปลี่ยนแปลง!
 
-[End]`,
-    rain: `ชื่อเพลง: คืนฝนพรำ (Midnight Rain Reflection)
-ภาพเปรียบเทียบสัจธรรม (Central Metaphor): แสงไฟนีออนสะท้อนน้ำฝน (กาลเวลาที่ชะล้างความเจ็บปวด เหลือเพียงความหวังดีในความทรงจำ)
-คำพาดหัวสะกิดใจ: ฝนตกทีไร หัวใจก็แอบคิดถึงเธอทุกที 🌧️
-ประโยคหมุดทองคำ: คืนฝนพรำนี้, ที่ไร้เงาเธอ / เก็บความทรงจำ, สุขล้ำทุกคน
-สไตล์ดนตรี (Style of Music): Melancholic Thai city pop, warm vintage rhodes piano, rainy jazz groove, soft breath vocal, single-pass choruses, zero repeat, 78 bpm
-
-[Voice: Locked Hypnotic Warm Baritone-Tenor, Silky Smooth Singing, Magnetic Resonance]
-
-[Intro: Electric Rhodes & Soft Rainy Street Ambience]
-สายฝนโปรยปราย, ใจยังคิดถึง...
-
-[Verse 1: Laid-back Storytelling, Silk-Flow Rhymes, 4+4 Symmetry]
-มองออกนอกหน้าต่าง, สว่างแสงไฟ
-นีออนสะท้อน, ซอกซอยเปียกปอน
-หยดน้ำฝนริน, ถวิลอาวรณ์
-คิดถึงวันก่อน, อ่อนหวานในใจ
-ร่มคันเก่าเดิม, เคยเดินเคียงกัน
-วันนี้เหลือเพียง, เงาฉันก้าวไป
-สายฝนพัดพา, หยาดน้ำรินไหล
-ความคิดถึงไกล, ลอยไปตามลม
-
-[Pre-Chorus: Melodic Soul Ballad, Melancholic Swell]
-แม้กาลเวลา, พัดพาเปลี่ยนผัน
-แต่เรื่องราวนั้น, ไม่เคยลบเลือน
-มองสายฝนพรำ, ย้ำเตือนในใจ
-ขอให้เธอได้, พบสิ่งสวยงาม
-
-[Chorus 1: Full 8-Line Continuous Hook, Single Pass, Do Not Repeat]
-คืนฝนพรำนี้, ที่ไร้เงาเธอ
-ใจยังละเมอ, เหม่อมองนภา
-ฝากลมกระซิบ, ผ่านหยาดน้ำตา
-ขอให้แก้วตา, มีสุขทุกวัน!
-เสียงหยดน้ำริน, ตกดินสลาย
-ความเจ็บคลี่คลาย, หายไปกับฝน
-เก็บความทรงจำ, สุขล้ำทุกคน
-ก้าวข้ามผ่านพ้น, บนทางของเธอ!
-
-[Beat Switch: Direct Transition to Verse 2, Zero Chorus Repeat]
-
-[Verse 2: Smooth Chopper Flow, City Lights Cadence]
-เมืองใหญ่ยามค่ำ, น้ำฝนพร่างพรม
-คนเร่งรีบกลับ, ลับตาสายลม
-ฉันยืนเดียวดาย, ไม่คลายชื่นชม
-ยินดีกับเธอ, เจอะเจอสิ่งดี
-ไม่มีโกรธเคือง, เรื่องราววันวาน
-ปล่อยผ่านเลยไป, ให้ใจสงบ
-ยินดีที่รัก, เคยได้บรรจบ
-แม้ต้องพลัดพราก, จากกันแสนไกล
-
-[Chorus 2: Full 8-Line Continuous Hook, Single Pass, Do Not Repeat, Evolving Lyrics]
-ฝนยังโปรยปราย, ในคืนเงียบเหงา
-ลมพัดเรื่องเก่า, บรรเทาใจลง
-ไม่มีน้ำตา, พาระทมตรม
-มีเพียงความสุข, ที่เคยได้รัก!
-ขอให้เธอสุข, ทุกก้าวเดินไป
-พบคนจริงใจ, ในทางข้างหน้า
-คืนฝนพรำนี้, มีเพียงเมตตา
-ฝากดาวบนฟ้า, นำทางให้เธอ!
-
-[Transition: Direct to Outro, Zero Chorus Repeat]
-
-[Outro: Fading Rhodes & Rainy Ambience]
-ยังคิดถึงเธอเสมอ... แม้ในวันที่ฝนซา...
-โชคดีนะคนไกล...
+[Outro: Gentle Lingering Melodic Echo & Soft Instrumental Fade - No Spoken Word]
+แสงแดดอ่อนส่องลงกลางสายฝนพรำ,
+ตั้งแต่มีเธออยู่ข้างกันก็อุ่นใจ...
 
 [End]`,
-    rock: `ชื่อเพลง: สุดทางฝัน (Chasing the Horizon)
-ภาพเปรียบเทียบสัจธรรม (Central Metaphor): หินผาแกร่งต้านแรงคลื่นซัด (ความมุ่งมั่นที่ไม่ยอมสยบต่ออุปสรรค)
-คำพาดหัวสะกิดใจ: ล้มกี่ครั้งก็ไม่ถอย ถ้าหัวใจยังเต้นอยู่! ⚡
-ประโยคหมุดทองคำ: จะวิ่งไปให้ถึง, ปลายทางสายฝัน / สองมือฟันฝ่า, คว้าชัยกลับมา
-สไตล์ดนตรี (Style of Music): High energy Thai rock anthem, driving electric guitars, punchy drums, powerful hypnotic vocals, single-pass choruses, zero repeat, 138 bpm
+    rain: `ชื่อเพลง: คืนฝนพรำที่ยังหวังดี (Midnight Rain Reflection)
+คำพาดหัวสะกิดใจ: ฝนตกทีไรก็แอบคิดถึงเธอ... ไม่โกรธเลยสักนิด แค่ขอให้เธอมีความสุข 🌧️
+ประโยคหมุดทองคำ: คืนฝนพรำตรงหน้าต่างที่ไร้เธอ / ใจยังเผลอคิดถึงอยู่เสมอ / ขอให้ทางเดินใหม่มีแต่คนใจดี / ฝนซาเมื่อไรขอให้เธอยิ้มสักที
+Style of Music: Melancholic Thai city pop-soul, vintage rhodes piano, smooth rainy groove, warm male vocal, catchy hook, 78 bpm
+Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out
 
-[Voice: Locked Hypnotic Powerful Rock Vocal, Dynamic Grit, High Energy Projection]
+[Voice: Warm Melancholic Male Vocal, Intimate Rhodes Groove, Catchy Emotional Chorus, No Spoken Word]
 
-[Intro: High Energy Guitar Riff & Punchy Drum Fill]
-จะวิ่งสุดใจ, ไปให้ถึงฝัน!
+[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]
+แสงไฟนีออนสะท้อนบนกระจกเปียก, เสียงเม็ดฝนเคาะหน้าต่างยามดึกดื่น
+ร่มคันเดิมยังวางพิงข้างประตูยืน, เหมือนรอคนที่เคยเดินกลับพร้อมกัน
+ถนนข้างล่างรถวิ่งผ่านเชื่องช้า, น้ำขังสะท้อนแสงเมืองที่แสนเงียบงัน
+แก้วกาแฟว่างเปล่าบนโต๊ะข้างฉัน, ชวนให้นึกถึงเรื่องราววันวานของเรา
+เคยเดินเบียดใต้ร่มเล็กคันเดียวกัน, หัวเราะอย่างอุ่นใจกลางซอยมืดตอนฝนตก
+วันนี้เดินคนเดียวท่ามกลางลมหนาว, ไหล่ข้างซ้ายเปียกปอนกว่าที่เคยเป็น
+แต่พอหลับตานึกถึงรอยยิ้มเธอ, ความเหงากลับกลายเป็นความห่วงใยที่ชัดเจน
+แค่เธอไปเจอวันพรุ่งนี้ที่ดีกว่า, ฉันก็พร้อมยอมรับทุกอย่างด้วยเต็มใจ
 
-[Verse 1: Driving Bass & Drums, Punchy Flow, 4+4 Symmetry]
-หยาดเหงื่อรินหลั่ง, ยังสู้ไม่ถอย
-ก้าวผ่านรอยช้ำ, กรำงานอดทน
-ทางชันข้างหน้า, ฝ่าฟันทุกคน
-ก้าวข้ามความจน, บนลำแข้งตน
-เสียงคนรอบข้าง, ช่างบอกให้หยุด
-แต่ใจไม่สุด, ไม่หยุดก้าวไป
-เปลวไฟความหวัง, สั่งใจให้ลุย
-ไม่ขอถอยหนี, ก้มหน้าสู้ตาย
+[Pre-Chorus 1: Rising Emotional Lift, Smooth Sustained Open Vowels]
+กาลเวลาพัดพาเราห่างกันไปไกล,
+แต่ความหวังดีไม่เคยลบเลือนหาย,
+คืนที่ฝนตกหนักกว่าทุกค่ำคืน,
+ยังแอบถามฟ้าว่าเธอสบายดีไหม
 
-[Pre-Chorus: Melodic Rock Ballad, Rising Power]
-ล้มกี่ร้อยครั้ง, ยังลุกขึ้นใหม่
-บาดแผลในใจ, กลายเป็นพลัง
-เลือดนักสู้เดือด, ปลุกจิตจริงจัง
-พร้อมพุ่งทะยาน, สู่แดนเส้นชัย!
+[Chorus 1: Catchy Anthemic Hook, Punchy 7-10 Syllable Lines, Emotional Peak]
+คืนฝนพรำตรงหน้าต่างที่ไร้เธอ,
+ใจยังเผลอคิดถึงอยู่เสมอ,
+ขอให้ทางเดินใหม่มีแต่คนใจดี,
+ฝนซาเมื่อไรขอให้เธอยิ้มสักที,
+ไม่เคยเสียใจที่ได้รักเธอวันนั้น,
+ขอบคุณทุกความทรงจำที่แสนดี,
+ต่อให้วันนี้เราไม่ได้เดินร่วมทาง,
+แค่เธอปลอดภัยฉันก็สบายใจแล้ว!
 
-[Chorus 1: Full 8-Line Continuous Hook, Single Pass, Do Not Repeat]
-จะวิ่งไปให้ถึง, ปลายทางสายฝัน
-จะไม่ยอมหยุดยั้ง, ฟาดฟันคว้าชัย
-เลือดนักสู้เดือด, ร้อนแรงในใจ
-ตราบชีพมลาย, ก้าวไปคว้าฝัน!
-ล้มลงกี่ครั้ง, พร้อมลุกประชัน
-ให้โลกรู้กัน, ว่าคนอย่างเรา
-ไม่เคยยอมก้ม, ให้โชคชะตา
-สองมือฟันฝ่า, คว้าชัยกลับมา!
+[Instrumental Solo Interlude: Moody Vintage Rhodes Piano & Clean Guitar Solo - 4-8 Bars]
 
-[Beat Switch: Direct Transition to Verse 2, Zero Chorus Repeat]
+[Verse 2: Deepening Story & Dynamic Melodic Groove, Smooth Internal & Tail Rhymes - No Spoken Word]
+เลื่อนดูรูปเก่าในมือถือเพียงลำพัง, ยังจำได้ทุกมุมร้านที่เราเคยไป
+ข้อความสุดท้ายไม่ได้ลบออกจากใจ, เก็บไว้เตือนว่าครั้งหนึ่งเคยรักมากเพียงใด
+เมืองใหญ่ยามค่ำผู้คนต่างรีบเร่ง, ซ่อนความเหนื่อยล้าไว้ใต้ร่มคนละคัน
+ฉันยืนมองแสงไฟริมทางจางลง, ปล่อยความคิดถึงลอยไปกับสายลมเย็น
+ไม่มีคำต่อว่าหรือความโกรธเคือง, มีเพียงความเข้าใจในสิ่งที่ผ่านพ้น
+เราต่างเติบโตคนละเส้นทางของตน, เก็บบทเรียนงดงามไว้ในหัวใจ
+หากวันไหนเธอเหนื่อยจากโลกภายนอก, จำไว้ว่าเคยมีคนนี้คอยเอาใจช่วย
+ส่งกำลังใจผ่านคืนฝนพรำแสนไกล, ให้ท้องฟ้าเปิดรับเธอด้วยความอบอุ่น
 
-[Verse 2: High Energy Flip-Flow Rock Rhythm]
-รอยแผลที่ได้, คือบทเรียนล้ำ
-ตราความทรงจำ, นำทางชีวี
-ขวากหนามขวางกั้น, ประจัญทันที
-ทะยานเต็มที่, ไม่มีลังเล
-โลกอาจท้าทาย, พายุโหมกระหน่ำ
-กัดฟันก้าวซ้ำ, ลุยพายุฝน
-ศิลาแกร่งกล้า, ท้าคลื่นประจัญ
-ไม่เคยหวั่นไหว, สู้ใจสุดแรง
+[Pre-Chorus 2: Stronger Harmonic Swell, Brand-New Escalating Lyrics]
+เสียงหยดฝนกระทบพื้นถนนดังเบา,
+ช่วยชะล้างความเจ็บให้เจือจาง,
+เหลือไว้เพียงคำอวยพรที่จริงใจ,
+ส่งไปให้คนไกลบนเส้นทางของเธอ
 
-[Chorus 2: Full 8-Line Continuous Hook, Single Pass, Do Not Repeat, Grand Climax]
-จะวิ่งไปให้ถึง, สุดขอบฟ้ากว้าง
-ส่องประกายสว่าง, บนทางสายฝัน
-เสียงเชียร์กึกก้อง, ปลุกเร้าพลัง
-ก้าวสู่เส้นชัย, ด้วยใจศรัทธา!
-คนจริงไม่ถอย, สู้รอยพายุ
-พลังใจทะลุ, สู่ฟ้าแดนไกล
-สองมือสองเท้า, ก้าวคว้าชัยมา
-เกียรติยศค้ำฟ้า, ชั่วนิรันดร์กาล!
+[Chorus 2: Returning Signature Earworm Hook + Evolving Emotional Payoff]
+คืนฝนพรำตรงหน้าต่างที่ไร้เธอ,
+ใจยังเผลอคิดถึงอยู่เสมอ,
+ขอให้ทางเดินใหม่มีแต่คนใจดี,
+ฝนซาเมื่อไรขอให้เธอยิ้มสักที,
+ขอให้ทุกเช้าของเธอสดใสกว่าเดิม,
+เจอคนที่พร้อมดูแลไม่ทำให้เสียน้ำตา,
+คืนฝนพรำนี้แม้ต้องเหงาลำพัง,
+ยังดีใจที่ครั้งหนึ่งเคยได้รักกัน!
 
-[Transition: Direct to Outro, Zero Chorus Repeat]
+[Bridge: Stripped-Back Intimate Confession Building to Soaring Vocal Climax]
+อาจมีบางคืนที่เผลอเหงาขึ้นมา,
+เวลาที่ฝนโปรยลงมาไม่ทันตั้งตัว,
+แต่แค่รู้ว่าตรงนั้นเธอมีความสุขดี,
+เท่านี้หัวใจฉันก็หายห่วงแล้ว!
 
-[Outro: Driving Electric Guitar Solo Fade]
-วิ่งไปข้างหน้า... จนกว่าจะถึงเส้นชัย!
-อย่ายอมแพ้!
+[Final Chorus: Full Band Goosebumps Anthem, Maximum Vocal Power & Golden Punchline]
+คืนฝนพรำตรงหน้าต่างที่ไร้เธอ,
+ใจยังเผลอคิดถึงอยู่เสมอ,
+ขอให้ทางเดินใหม่มีแต่คนใจดี,
+ฝนซาเมื่อไรขอให้เธอยิ้มสักที,
+เก็บรอยยิ้มเธอไว้เป็นความทรงจำงาม,
+ก้าวต่อไปข้างหน้าอย่างเข้มแข็งกว่าเดิม,
+ขอให้โชคดีนะคนเคยร่วมทาง,
+รักและหวังดีเสมอแม้ฝนซาแล้ว...
+
+[Outro: Gentle Lingering Melodic Echo & Soft Instrumental Fade - No Spoken Word]
+คืนฝนพรำผ่านพ้นไปในราตรี,
+โชคดีนะ... จากคนที่ยังหวังดีเสมอ...
+
+[End]`,
+    rock: `ชื่อเพลง: สุดทางฝันที่ไม่เคยถอย (No Turning Back)
+คำพาดหัวสะกิดใจ: ล้มกี่ครั้งก็ไม่ถอย... ปลายนิ้วที่ด้านชาจากสายกีตาร์ จะพาเราไปยืนบนเวทีจริง ⚡🎸
+ประโยคหมุดทองคำ: ต่อให้ล้มสักร้อยครั้งก็จะลุกขึ้นยืน / ต่อให้มืดทั้งคืนก็จะฝืนเดินไป / เลือดนักสู้ยังเต้นแรงอยู่ในหัวใจ / ไม่ถึงเส้นชัยไม่มีวันถอยกลับ!
+Style of Music: Thai modern folk-rock anthem, driving electric guitars, punchy drums, raspy male rock vocal, catchy chorus, 88 bpm
+Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out
+
+[Voice: Raspy Emotional Male Rock Vocal, 100% Pitched Melodic Verse, Soaring Catchy Power Chorus, No Spoken Word]
+
+[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]
+ห้องเช่าห้องเล็กกับกีตาร์ตัวเก่า, ซ้อมจนสายขาดและปลายนิ้วด้านชา
+เล่นหน้าเวทีที่ไร้คนเงยหน้ามอง, แลกค่าแรงน้อยนิดพอประทังเวลา
+เสียงหัวเราะเยาะจากคนที่ไม่เข้าใจ, ถามว่าเมื่อไรจะตื่นจากความฝัน
+เก็บคำดูถูกมาเป็นเชื้อไฟทุกวัน, ก้มหน้าซ้อมซ้ำจนเที่ยงคืนทุกคืน
+รองเท้าคู่เดิมที่พื้นใกล้หลุดรุ่ย, เดินแบกความหวังฝ่าถนนสายเดิม
+ไม่มีเส้นสายไม่มีใครคอยผลักดัน, มีเพียงหัวใจที่ไม่รู้จักยอมแพ้
+แผลเป็นบนมือบอกเล่าทุกก้าวที่ผ่านมา, ว่าราคาความฝันต้องแลกด้วยน้ำตา
+แต่วินาทีที่จับไมค์และดีดคอร์ด, ทั้งโลกก็รู้ว่าใจนี้ยังสู้ไหว
+
+[Pre-Chorus 1: Rising Emotional Lift, Smooth Sustained Open Vowels]
+ท้องฟ้ามืดครึ้มไม่เคยทำให้กลัว,
+รอยแผลตามตัวเป็นเครื่องหมายเตือนใจ,
+คนที่ไม่เคยล้มไม่รู้จักการลุก,
+คืนนี้ขอลุยสุดแรงที่มีข้างใน!
+
+[Chorus 1: Catchy Anthemic Hook, Punchy 7-10 Syllable Lines, Emotional Peak]
+ต่อให้ล้มสักร้อยครั้งก็จะลุกขึ้นยืน,
+ต่อให้มืดทั้งคืนก็จะฝืนเดินไป,
+เลือดนักสู้ยังเต้นแรงอยู่ในหัวใจ,
+ไม่ถึงเส้นชัยไม่มีวันถอยกลับ!
+เสียงฟ้าคำรามก็ไม่อาจขวางทาง,
+สองมือสองเท้ายันโลกไว้ไม่หวั่น,
+เกิดมาหนึ่งครั้งขอเดิมพันด้วยฝัน,
+จนกว่าจะถึงวันที่ฟ้าเป็นของเรา!
+
+[Instrumental Solo Interlude: Soaring Overdriven Electric Guitar Solo & Driving Drum Fill - 4-8 Bars]
+
+[Verse 2: Deepening Story & Dynamic Melodic Groove, Smooth Internal & Tail Rhymes - No Spoken Word]
+จำคืนฝนตกต้องนั่งกินบะหมี่ถ้วย, นั่งปรับเสียงร้องอยู่ข้างหน้าต่างบานเดิม
+บอกกับตัวเองว่าอย่าเพิ่งท้อเลยนะ, พรุ่งนี้อาจเป็นวันของเราเริ่มต้นใหม่
+เพื่อนร่วมวงที่กอดคอสู้ข้างกัน, แบ่งกันกินแบ่งกันฝันไม่เคยทิ้งหนี
+จากคนดูสามคนหน้าเวทีแคบเล็ก, วันนี้แสงไฟสาดส่องสว่างเต็มเวที
+ทุกหยาดเหงื่อที่เคยหยดลงพื้นซ้อม, กลายเป็นพลังให้ร้องก้องออกไป
+ไม่มีทางลัดสำหรับคนธรรมดา, มีเพียงวินัยและความกล้าในหัวใจ
+ใครจะมองว่าบ้าก็ปล่อยเขาพูดไป, เพราะคนที่ชนะคือคนที่ไม่หยุดเดิน
+แม้ลมจะแรงพัดซัดใส่หน้าเท่าไร, จะก้าวต่อไปจนสุดปลายเส้นขอบฟ้า!
+
+[Pre-Chorus 2: Stronger Harmonic Swell, Brand-New Escalating Lyrics]
+ได้ยินไหมเสียงหัวใจที่เต้นดัง,
+เสียงกลองปลุกพลังข้างในให้ลุกโชน,
+จากเด็กหลังห้องที่ใครเคยมองข้าม,
+วันนี้พร้อมก้าวขึ้นยืนกลางแสงไฟ!
+
+[Chorus 2: Returning Signature Earworm Hook + Evolving Emotional Payoff]
+ต่อให้ล้มสักร้อยครั้งก็จะลุกขึ้นยืน,
+ต่อให้มืดทั้งคืนก็จะฝืนเดินไป,
+เลือดนักสู้ยังเต้นแรงอยู่ในหัวใจ,
+ไม่ถึงเส้นชัยไม่มีวันถอยกลับ!
+ไม่ยอมขายฝันเพื่อแลกทางสบาย,
+ยืนหยัดด้วยลายเซ็นจริงที่ไม่เปลี่ยน,
+ทุกคำดูถูกในวันวานเป็นบทเรียน,
+ผลักให้เราก้าวมาไกลเกินใครคิด!
+
+[Bridge: Stripped-Back Intimate Confession Building to Soaring Vocal Climax]
+ตอนที่เหนื่อยจนแทบไม่มีแรงหายใจ,
+มองกลับไปหาเด็กคนเดิมในกระจก,
+บอกเขาว่าขอบคุณที่ไม่ยอมแพ้วันนั้น,
+วันนี้ความฝันของเรากำลังเป็นจริงแล้ว!
+
+[Final Chorus: Full Band Goosebumps Anthem, Maximum Vocal Power & Golden Punchline]
+ต่อให้ล้มสักร้อยครั้งก็จะลุกขึ้นยืน,
+ต่อให้มืดทั้งคืนก็จะฝืนเดินไป,
+เลือดนักสู้ยังเต้นแรงอยู่ในหัวใจ,
+ไม่ถึงเส้นชัยไม่มีวันถอยกลับ!
+ชูมือขึ้นฟ้าตะโกนก้องไปให้ไกล,
+บอกคนทั้งโลกว่าความฝันเป็นจริงได้,
+สองมือของฉันคว้าดาวมาด้วยหัวใจ,
+และนี่คือชัยชนะของคนไม่ยอมแพ้!
+
+[Outro: Gentle Lingering Melodic Echo & Soft Instrumental Fade - No Spoken Word]
+เดินหน้าต่อไป... อย่าหยุดฝัน,
+ปลายทางรอคนที่ไม่ยอมแพ้อยู่เสมอ!
 
 [End]`
   };
@@ -652,8 +659,8 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
   // Export as Agent SKILL.md
   const handleExportSkill = () => {
     const skillContent = `---
-name: suno-v6-mini-epic-magnum-opus
-description: บรมครูสถาปนิกเพลงมหากาพย์ Suno v6 - Mini รองรับการแร็ปบูมแบ็ปคมกริบ x สับไรม์สัมผัสในถี่จัด x ร้องโซลร่วมสมัย ไร้ท่อนพูด 100% ไร้ดราม่า
+name: suno-v6-mini-hit-songwriter
+description: บรมครูนักแต่งเพลงฮิต Suno v6 - Mini (v125.0) ไม่มีท่อน Intro และไร้ท่อนพูด 100% ฟังลื่นหู สัมผัสลงตัว ฮิตติดหู ความหมายดีเข้าถึงอารมณ์
 ---
 
 ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
@@ -688,24 +695,41 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
     });
   }, [outputResult, story, vocalStyle]);
 
-  // Live Lyric Quality, Zero-Repeat, Zero-Spoken & 4+ Min Marathon Scanner (v120.0)
+  // Live Hit Song Quality, Zero-Intro, Zero-Spoken & Natural Thai Scanner (v125.0)
   const lyricAuditSummary = useMemo(() => {
     const rawLyrics = extractLyrics(outputResult);
     if (!rawLyrics) return null;
 
-    const lines = rawLyrics
-      .split(/\r?\n/)
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0 && !l.startsWith("[") && !l.endsWith("]") && !l.startsWith("#") && !l.startsWith("*"));
+    const rawLines = rawLyrics.split(/\r?\n/).map((l) => l.trim());
+    const lines: string[] = [];
+    const nonChorusLines: string[] = [];
+    let inChorus = false;
 
-    const chorusCount = (rawLyrics.match(/\[Chorus/gi) || []).length;
+    for (const line of rawLines) {
+      if (!line || line.startsWith("#") || line.startsWith("*") || line.startsWith("-")) continue;
+      if (line.startsWith("[")) {
+        if (/^\[(Final\s+)?Chorus\b/i.test(line) && !/Pre-Chorus/i.test(line)) {
+          inChorus = true;
+        } else if (/^\[(Verse|Pre-Chorus|Bridge|Outro|Intro|Instrumental|Beat\s+Switch|Transition|End)/i.test(line)) {
+          inChorus = false;
+        }
+        continue;
+      }
+      lines.push(line);
+      if (!inChorus) {
+        nonChorusLines.push(line);
+      }
+    }
+
+    const chorusCount = (rawLyrics.match(/\[(Final\s+)?Chorus/gi) || []).length;
+    const hasIntroTag = /^\[Intro\b[^\]]*\]/im.test(rawLyrics);
     const breathPocketLines = lines.filter((l) => l.includes(",") || l.includes(" ")).length;
     const breathRatio = lines.length > 0 ? Math.round((breathPocketLines / lines.length) * 100) : 100;
 
-    // Duplicate line count check
+    // Duplicate line count inside Verses / Pre-Chorus / Bridge / Outro (Chorus Signature Hook repetition is preserved!)
     const seen = new Map<string, number>();
     let duplicateLineCount = 0;
-    for (const line of lines) {
+    for (const line of nonChorusLines) {
       const norm = line.replace(/[,.\s!?"'…]/g, "");
       if (norm.length >= 6) {
         const c = (seen.get(norm) || 0) + 1;
@@ -717,20 +741,24 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
     // Spoken word tag check
     const spokenMatches = rawLyrics.match(/\[(Spoken|Narration|Monologue|Talking|Speech|Dialogue|พูด|บทพูด)[^\]]*\]/gi) || [];
 
-    // Estimated duration in minutes:seconds (~3.35s per 14-syllable line + ~18s intro/interlude/outro)
-    const estTotalSec = Math.round(lines.length * 3.35 + (lines.length >= 40 ? 20 : 8));
+    // Estimated duration in minutes:seconds (~3.7s per line + ~22s solo interlude & transitions)
+    const estTotalSec = Math.round(lines.length * 3.7 + (lines.length >= 40 ? 22 : 10));
     const estMin = Math.floor(estTotalSec / 60);
     const estSec = (estTotalSec % 60).toString().padStart(2, "0");
     const estDurationStr = `${estMin}:${estSec} นาที`;
 
-    const redupMatches = rawLyrics.match(/(เล็กเล็ก|เบาเบา|ซ้ำซ้ำ|ไกลไกล|นานนาน|ช้าช้า|เร็วเร็ว)/g) || [];
+    const redupMatches =
+      rawLyrics.match(
+        /(เล็กเล็ก|เบาเบา|ซ้ำซ้ำ|ไกลไกล|นานนาน|ช้าช้า|เร็วเร็ว|ไปไป|มามา|ดีดี|ค่อยค่อย|เดินเดิน|มองมอง|คิดคิด|ทำทำ|วันวัน|ใครใคร|บางบาง|เงียบเงียบ|เปล่าเปล่า)/g
+      ) || [];
     const bracketClutter = rawLyrics.match(/\((?:สัมผัส|เสียง|หมายเหตุ)[^)]*\)/g) || [];
     const weirdPhrases = detectWeirdOrForcedThaiPhrases(rawLyrics, story);
 
     return {
       totalLines: lines.length,
       estDurationStr,
-      isMarathonLength: lines.length >= 68,
+      isOptimalLength: lines.length >= 44,
+      hasIntroTag,
       chorusCount,
       breathRatio,
       duplicateLineCount,
@@ -740,6 +768,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
       weirdPhrases,
       weirdCount: weirdPhrases.length,
       isClean:
+        !hasIntroTag &&
         redupMatches.length === 0 &&
         bracketClutter.length === 0 &&
         weirdPhrases.length === 0 &&
@@ -748,20 +777,36 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
     };
   }, [outputResult, story]);
 
-  // 1-Click Auto-Clean & Polish Lyrics for Suno (Also cleans known weird forced idioms, spoken tags & truncated words!)
+  // 1-Click Auto-Clean & Polish Lyrics for Suno (Also cleans Intro tag, spoken tags, archaic clichés & double syllables!)
   const handleAutoCleanLyrics = () => {
     if (!outputResult) return;
-    const cleaned = outputResult
+    let cleaned = outputResult
       .replace(/\((?:สัมผัส|เสียง|หมายเหตุ|ไรม์)[^)]*\)/gi, "")
       .replace(/\[(เสียง|สัมผัส):[^\]]*\]/gi, "")
-      .replace(/\[(Spoken|Narration|Monologue|Talking|Speech|Dialogue)[^\]]*\]/gi, "[Verse: 100% Sung Melodic Vocal - No Spoken Word]")
-      .replace(/จิตตั้ง/g, "ตั้งจิตมั่น")
-      .replace(/ใจหมาย/g, "มุ่งหมายในใจ")
-      .replace(/หมายใจ/g, "ตั้งใจมั่น")
+      .replace(/\[(Spoken|Narration|Monologue|Talking|Speech|Dialogue)[^\]]*\]/gi, "[Verse: 100% Sung Melodic Vocal - No Spoken Word]");
+
+    if (/\[Verse\s*1\b/i.test(cleaned)) {
+      cleaned = cleaned.replace(/^[ \t]*\[Intro\b[^\]]*\][ \t]*\r?\n?/gim, "");
+    } else {
+      cleaned = cleaned.replace(
+        /^\[Intro\b[^\]]*\]/gim,
+        "[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]"
+      );
+    }
+
+    cleaned = cleaned
+      .replace(/จิตตั้ง/g, "ตั้งใจมั่น")
+      .replace(/ใจหมาย/g, "มุ่งหวังในใจ")
+      .replace(/หมายใจ/g, "ตั้งใจไว้")
       .replace(/ทอนกำลัง/g, "บั่นทอนกำลังใจ")
       .replace(/คนหลอกมา/g, "คนที่เข้ามาหลอก")
       .replace(/คำจา|วจีจา/g, "คำพูดจา")
-      .replace(/ลูกยา/g, "ลูกหลาน")
+      .replace(/ลูกยา/g, "ลูกรัก")
+      .replace(/วิญญาณ์/g, "หัวใจ")
+      .replace(/ชีวิน/g, "ชีวิต")
+      .replace(/อาจินต์/g, "ทุกวัน")
+      .replace(/มโนมั่น/g, "ตั้งใจมั่น")
+      .replace(/ชั่วนิรันดร์กาล/g, "ตลอดไป")
       .replace(/แอบอ้างบรรเทา,\s*เศร้าหมองบังใบ/g, "แอบอ้างค้ำจุน, เอาบุญบังหน้า")
       .replace(/แอบอ้างบรรเทา,\s*เอาบุญบังใบ/g, "แอบอ้างค้ำจุน, เอาบุญบังหน้า")
       .replace(/เศร้าหมองบังใบ|เอาบุญบังใบ/g, "เอาบุญบังหน้า")
@@ -772,12 +817,17 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
       .replace(/น้ำค้างเปรมปรีดิ์/g, "น้ำค้างใสพราว")
       .replace(/ชื่อมูลนิ,\s*บังตาผู้คน/g, "ป้ายการกุศล, บังตาผู้คน")
       .replace(/มูลนิ(?!ธิ)/g, "การกุศล")
-      .replace(/เล็กเล็ก/g, "กระจ้อย")
+      .replace(/เล็กเล็ก/g, "หลังน้อย")
       .replace(/เบาเบา/g, "แผ่วเบา")
       .replace(/ซ้ำซ้ำ/g, "ตอกย้ำ")
       .replace(/ไกลไกล/g, "แสนไกล")
       .replace(/นานนาน/g, "เนิ่นนาน")
-      .replace(/ช้าช้า/g, "เนิบช้า");
+      .replace(/ช้าช้า/g, "เนิบนาบ")
+      .replace(/ดีดี/g, "งดงาม")
+      .replace(/ค่อยค่อย/g, "เริ่มจะ")
+      .replace(/บางบาง/g, "อ่อนโยน")
+      .replace(/เงียบเงียบ/g, "ลำพัง")
+      .replace(/เปล่าเปล่า/g, "เพียงลำพัง");
     setOutputResult(cleaned);
   };
 
@@ -818,20 +868,20 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30">
-                  ขั้นตอนที่ 1: สกัดแม่แบบพรอพ (Suno v6 Mini Engine)
+                  ขั้นตอนที่ 1: สกัดแม่แบบพรอพ (Suno v6 Mini Hit Engine)
                 </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center space-x-1">
                   <Zap className="w-3 h-3" />
                   <span>Suno v6 - Mini Optimized</span>
                 </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                  🚫 ZERO SPOKEN WORD (ไม่มีท่อนพูด 100%)
+                  🚫 NO INTRO & ZERO SPOKEN WORD
                 </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  🔒 ZERO DUPLICATE LINES (ไม่ซ้ำท่อน & ไม่ซ้ำบรรทัดตลอดเพลง 100%)
+                  🔥 CATCHY EARWORM HOOK (ฮิตติดหู)
                 </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                  ⏱️ 4+ MIN EPIC MARATHON (12 ท่อนมหากาพย์ / 76 บรรทัดเต็ม)
+                  🎵 ฟังลื่นหู & สัมผัสลงตัว
                 </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center space-x-1">
                   <Sparkles className="w-3 h-3 text-purple-300" />
@@ -839,14 +889,14 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-fuchsia-500/20 text-amber-200 border border-amber-500/40 flex items-center space-x-1">
                   <Sparkles className="w-3 h-3 text-amber-300" />
-                  <span>🎯 โฟลว์ 6-8+6-8 & ไรม์พวง 2-4 พยางค์ (v120.0)</span>
+                  <span>❤️ ความหมายดีเข้าถึงอารมณ์ (v125.0)</span>
                 </span>
               </div>
               <h2 className="text-lg font-bold text-white mt-1.5">
-                ระบบสกัดพรอพเพลงมหากาพย์ 4 นาที+ จาก DNA 3 ศิลปิน (SD PMR × P9D × NS-A755 Engine v120.0)
+                ระบบสกัดพรอพแต่งเพลงฮิตติดหู ฟังลื่นหู กินใจ (SD PMR × P9D × NS-A755 Refined v125.0)
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
-                บังคับโครงสร้าง <strong>มหากาพย์ 12 ท่อน 4 องก์ (76 บรรทัดเต็ม สำหรับความยาว 4.00 - 4.50+ นาที)</strong>: <strong>ไร้ท่อนพูด 100%</strong> + <strong>ไร้ท่อนซ้ำและไร้บรรทัดซ้ำตลอดทั้งเพลง 100% (แม้แต่ Chorus 1, 2, 3 ก็เขียนเนื้อร้องใหม่ทุกท่อน!)</strong> + <strong>โฟลว์ 6-8+6-8 (SD PMR)</strong> + <strong>ล็อกสัมผัสพวง 2-4 พยางค์ (P9D)</strong> + <strong>สาดสัมผัสในรัว (NS-A755)</strong>!
+                <strong>เอาท่อน [Intro] ออก 100% เปิดเข้า [Verse 1] ทันที</strong> • <strong>ไร้ท่อนพูด 100%</strong> • <strong>สร้างประโยคฮุคจำหลัก (Signature Earworm Hook) ฮิตติดหู</strong> + <strong>ฟังลื่นหู สัมผัสลงตัวไม่ฝืนคำ</strong> + <strong>เล่าเรื่องด้วยภาพจำจริง (Show, Don&apos;t Tell) เข้าถึงอารมณ์คนฟัง!</strong>
               </p>
             </div>
           </div>
@@ -921,9 +971,9 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                       : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                   }`}
                 >
-                  <span className="text-xs font-bold block text-fuchsia-300">👑 ไตรภาคี 3 ศิลปิน</span>
+                  <span className="text-xs font-bold block text-fuchsia-300">👑 ไตรภาคีฮิตติดชาร์ต</span>
                   <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
-                    SD PMR × P9D × NS-A755 โฟลว์ 6-8+6-8 ลื่นหู + ฮุกพุ่งทะยาน
+                    เปิดเข้า Verse ทันที ลื่นหู สัมผัสลงตัว + ฮุคจำติดหู
                   </span>
                 </button>
 
@@ -938,7 +988,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 >
                   <span className="text-xs font-bold block text-amber-300">🌾 สไตล์ SD PMR</span>
                   <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
-                    โฟล์คร็อก-แร็ปเมโลดี้ คู่ตรงข้ามเปรียบเทียบ ฮุกจำขึ้นใจ
+                    เพื่อชีวิตร่วมสมัย เห็นภาพจริง ลากสระกินใจ ฮุคติดหู
                   </span>
                 </button>
 
@@ -953,7 +1003,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 >
                   <span className="text-xs font-bold block text-cyan-300">🎤 สไตล์ P9D × NS-A755</span>
                   <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
-                    ล็อกสัมผัสพวงท้ายบาร์ 2-4 คำ + สาดสัมผัสในรัว 86 BPM
+                    บูมแบ็ปสตรีท สัมผัสพวงภาษาพูดเด้งรับบีท 84 BPM
                   </span>
                 </button>
               </div>
@@ -964,14 +1014,14 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               <div className="flex items-center justify-between">
                 <label className="text-xs font-semibold text-slate-200 flex items-center space-x-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>ระดับความเข้มข้นของสัมผัส & พลังสะกดใจ:</span>
+                  <span>ระดับความลงตัวของสัมผัส & จังหวะร้อง:</span>
                 </label>
                 <span className="text-[10px] text-amber-300 font-bold">
                   {rhymeIntensity === "supreme"
-                    ? "👑 ไรม์ขั้นสุดยอด (Supreme)"
+                    ? "👑 สัมผัสลงตัวลื่นหู (Balanced Hit)"
                     : rhymeIntensity === "sharp"
-                    ? "⚡ คมกริบสตรีท (Sharp)"
-                    : "🌸 ละมุนฟังเพลิน (Melodic)"}
+                    ? "⚡ คมชัดลงบีท (Sharp Natural)"
+                    : "🌸 ละมุนเข้าปาก (Melodic Flow)"}
                 </span>
               </div>
 
@@ -985,9 +1035,9 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                       : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                   }`}
                 >
-                  <span className="text-xs font-bold block text-amber-300">👑 ไรม์ขั้นสุดยอด</span>
+                  <span className="text-xs font-bold block text-amber-300">👑 ลงตัวลื่นหูขั้นสุด</span>
                   <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
-                    สัมผัสพวง 2-4 คำ + สัมผัสอักษรคู่ตรี + เชื่อมสระกลางวรรค
+                    สัมผัสพวงธรรมชาติ + เชื่อมวรรคเนียน ไม่ลิ้นพัน
                   </span>
                 </button>
 
@@ -1000,9 +1050,9 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                       : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                   }`}
                 >
-                  <span className="text-xs font-bold block text-fuchsia-300">⚡ คมกริบสตรีท</span>
+                  <span className="text-xs font-bold block text-fuchsia-300">⚡ คมชัดลงบีท</span>
                   <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
-                    ล็อคสัมผัสพวง 2-3 คำท้ายบาร์ + ไรม์คู่บาร์ หมัดฮุกกระตุกใจ
+                    สัมผัสพวง 2-3 พยางค์ภาษาพูดจริง เด้งติดหู
                   </span>
                 </button>
 
@@ -1015,9 +1065,9 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                       : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                   }`}
                 >
-                  <span className="text-xs font-bold block text-cyan-300">🌸 ละมุนฟังเพลิน</span>
+                  <span className="text-xs font-bold block text-cyan-300">🌸 ละมุนเข้าปาก</span>
                   <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
-                    สัมผัสในพริ้วไหว เมโลดี้กลอนธรรมชาติ ร้องตามง่ายติดหู
+                    อารมณ์นำสัมผัส เมโลดี้ร้องตามง่าย ซึ้งกินใจ
                   </span>
                 </button>
               </div>
@@ -1031,17 +1081,17 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                     <span>คลังสัมผัสพวง & สะพานไรม์ลื่นหู (คลิกเพื่อเติมลงเรื่องราว):</span>
                   </span>
-                  <span className="text-[10px] text-amber-300/80 font-mono">v50.0 Earworm Vault</span>
+                  <span className="text-[10px] text-amber-300/80 font-mono">v125.0 Hit Vault</span>
                 </div>
 
                 {/* Multi-Syllable Rhyme Chains */}
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 block mb-1">⚡ สัมผัสพวง 2-4 พยางค์คมกริบ:</span>
+                  <span className="text-[10px] font-bold text-slate-400 block mb-1">⚡ สัมผัสพวงภาษาพูดจริง 2-3 พยางค์:</span>
                   <div className="flex flex-wrap gap-1.5">
                     {[
                       { pair: "เส้นทาง ➔ เคว้งคว้าง", text: " ยืนหยัดบนเส้นทาง, ฝ่าพายุเคว้งคว้าง" },
                       { pair: "รวงข้าว ➔ เรื่องราว", text: " รวงข้าวโน้มลงดิน, ผ่านร้อยพันเรื่องราว" },
-                      { pair: "สะท้อน ➔ คำสั่งสอน", text: " เสียงก้องรอยสะท้อน, จำลึกคำสั่งสอน" },
+                      { pair: "เวลา ➔ น้ำตา", text: " ผ่านวันและเวลา, เช็ดหยดน้ำตา" },
                       { pair: "ซื่อตรง ➔ มั่นคง", text: " ยืนหยัดด้วยซื่อตรง, สร้างชีวิตมั่นคง" },
                       { pair: "รากไม้ ➔ ยิ่งใหญ่", text: " หยาดเหงื่อรดรากไม้, เติบโตอย่างยิ่งใหญ่" },
                       { pair: "ก้าวไป ➔ สว่างไสว", text: " มุ่งหน้าก้าวเดินไป, สู่ใจสว่างไสว" },
@@ -1063,13 +1113,13 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
 
                 {/* Whip-Rhyme Internal Bridges */}
                 <div className="pt-1 border-t border-slate-800/60">
-                  <span className="text-[10px] font-bold text-cyan-300/90 block mb-1">🌊 สะพานสัมผัสรับส่งกลางบรรทัด 6-8+6-8 (สไตล์ SD PMR × NS-A755):</span>
+                  <span className="text-[10px] font-bold text-cyan-300/90 block mb-1">🌊 สะพานสัมผัสรับส่งลื่นหู & วลีเข้าถึงอารมณ์:</span>
                   <div className="flex flex-wrap gap-1.5">
                     {[
-                      { label: "กลองที่กลวงยิ่งตีดัง, ยิ่งฟังยิ่งรู้ว่าข้างในว่าง", text: " กลองที่กลวงยิ่งตีดัง, ยิ่งฟังยิ่งรู้ว่าข้างในว่าง" },
+                      { label: "กลองยิ่งกลวงยิ่งตีดัง, ยิ่งฟังยิ่งรู้ว่าข้างในว่าง", text: " กลองยิ่งกลวงยิ่งตีดัง, ยิ่งฟังยิ่งรู้ว่าข้างในว่าง" },
                       { label: "อย่าไปยืนในที่นั้น, ที่เขาไม่เคยเห็นค่าเรา", text: " อย่าไปยืนในที่นั้น, ที่เขาไม่เคยเห็นค่าเรา" },
-                      { label: "บอกตัวเองว่าเพิ่งเริ่ม, กูยังมีฝันเอาไว้ให้วาด", text: " บอกตัวเองว่าเพิ่งเริ่ม, กูยังมีฝันเอาไว้ให้วาด" },
-                      { label: "มโนมั่นสลักจิต, ตรึงสนิทไม่บิดเบือน", text: " มโนมั่นสลักจิต, ตรึงสนิทไม่บิดเบือน" },
+                      { label: "บอกตัวเองว่าเพิ่งเริ่ม, เรายังมีฝันเอาไว้ให้วาด", text: " บอกตัวเองว่าเพิ่งเริ่ม, เรายังมีฝันเอาไว้ให้วาด" },
+                      { label: "ผ่านคืนวันที่เหน็บหนาว, รอแสงเช้าของวันใหม่", text: " ผ่านคืนวันที่เหน็บหนาว, รอแสงเช้าของวันใหม่" },
                     ].map((b, idx) => (
                       <button
                         key={idx}
@@ -1085,12 +1135,12 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
 
                 {/* Golden Punchline Hooks */}
                 <div className="space-y-1 pt-1 border-t border-slate-800/60">
-                  <span className="text-[10px] font-bold text-fuchsia-300/90 block">🌟 หมุดทองคำคู่ขนานติดหู (SD PMR × P9D Parallel Hooks):</span>
+                  <span className="text-[10px] font-bold text-fuchsia-300/90 block">🌟 หมุดทองคำท่อนฮุคติดหู (Signature Earworm Hooks):</span>
                   {[
-                    "กลองที่กลวงยิ่งตีดัง ยิ่งฟังยิ่งรู้ว่าข้างในว่าง / ทองคำแท้ไม่ส่งเสียงพราง ยังมีค่าต่อให้ไร้คนชม!",
-                    "ให้ค่ากับคนเห็นค่า ดีกว่าทนส่วนเกิน / ไม่ต้องฝืนไม่ต้องเขิน เมื่อรู้ว่าเขาไม่รัก!",
-                    "คนฉลาดไม่ต้องอวด คนที่รู้จริงยิ่งถ่อมตน / ให้ดูคราวต้องลงมือทำ แล้วความจริงจะตอบแทนเอง!",
-                    "บอกตัวเองว่ามันเพิ่งเริ่ม กูยังมีฝันเอาไว้ให้วาด / ไม่มีเวลาให้พล่าม และกูไม่มีเวลาให้พลาด!",
+                    "กลองยิ่งกลวงยิ่งตีให้ก้องกว้าง / ยิ่งได้ฟังยิ่งรู้ว่าข้างในว่าง / ทองคำแท้ไม่เคยต้องอวดคน!",
+                    "ให้ค่ากับคนเห็นค่า ดีกว่าทนเป็นส่วนเกิน / ไม่ต้องฝืนไม่ต้องเขิน เมื่อรู้ว่าเขาไม่รัก!",
+                    "คนฉลาดไม่ต้องอวด คนที่รู้จริงยิ่งถ่อมตน / ให้เวลาและผลงานตอบแทนเอง!",
+                    "ต่อให้ล้มสักร้อยครั้งก็จะลุกขึ้นยืน / ต่อให้มืดทั้งคืนก็จะฝืนเดินไป!",
                   ].map((hook, idx) => (
                     <button
                       key={idx}
@@ -1278,14 +1328,14 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               <div className="flex items-center space-x-2">
                 <FileCode className="w-4 h-4 text-fuchsia-400" />
                 <h3 className="text-sm font-bold text-white">
-                  ระบบสายพาน 3 ขั้นตอน (v120.0 มหากาพย์ 4 นาที+ • ไร้ท่อนพูด • ไร้ท่อนซ้ำ 100%)
+                  ระบบสายพาน 3 ขั้นตอน (v125.0 ไม่มี Intro • ลื่นหู • สัมผัสลงตัว • ฮิตติดหู)
                 </h3>
               </div>
               <div className="flex flex-wrap items-center gap-1.5">
                 <button
                   onClick={handleCopyPrompt}
                   className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs bg-fuchsia-600/30 hover:bg-fuchsia-600 text-fuchsia-200 hover:text-white border border-fuchsia-500/40 transition-all font-semibold"
-                  title="ขั้นที่ 1: คัดลอกพรอมต์แต่งเพลงมหากาพย์ 4 นาที+ (12 ท่อน 76 บรรทัด ไร้ท่อนพูด ไร้ท่อนซ้ำ)"
+                  title="ขั้นที่ 1: คัดลอกพรอมต์แต่งเพลงฮิต (ไม่มีท่อน Intro, ฟังลื่นหู, สัมผัสลงตัว, ฮุคติดหู & กินใจ)"
                 >
                   {copiedFullPrompt ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedFullPrompt ? "คัดลอกขั้นที่ 1 แล้ว!" : "1. พรอมต์แต่งเพลง"}</span>
@@ -1293,7 +1343,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 <button
                   onClick={handleCopyAuditPrompt}
                   className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs bg-amber-600/30 hover:bg-amber-600 text-amber-200 hover:text-white border border-amber-500/40 transition-all font-semibold"
-                  title="ขั้นที่ 2: คัดลอกพรอมต์ตรวจสอบรอบแรก (ผ่าตัดขยายครบ 76 บรรทัด ล้างท่อนพูด/ท่อนซ้ำ & อัดไรม์ 3 ศิลปิน)"
+                  title="ขั้นที่ 2: คัดลอกพรอมต์ผ่าตัดรอบแรก (เอา Intro/ท่อนพูดออก, เกลาคำลื่นหู, ปั้นฮุคติดหู & สัมผัสลงตัว)"
                 >
                   {copiedAuditPrompt ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Wand2 className="w-3.5 h-3.5 text-amber-300" />}
                   <span>{copiedAuditPrompt ? "คัดลอกรอบแรกแล้ว!" : "2. พรอมต์ตรวจสอบรอบแรก"}</span>
@@ -1301,7 +1351,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 <button
                   onClick={handleCopyFinalAuditPrompt}
                   className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 hover:text-white border border-emerald-500/40 transition-all font-semibold"
-                  title="ขั้นที่ 3: คัดลอกพรอมต์ตรวจสอบรอบสุดท้าย (เกลาคำร้องเข้าปาก 100% ยืนยันไร้บรรทัดซ้ำ/ไร้ท่อนพูด & ล็อก Gold Master)"
+                  title="ขั้นที่ 3: คัดลอกพรอมต์ขัดเกลารอบสุดท้าย (จำลองร้องจริงในห้องอัด, วรรณยุกต์เข้าปาก & Gold Master)"
                 >
                   {copiedFinalAuditPrompt ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />}
                   <span>{copiedFinalAuditPrompt ? "คัดลอกรอบสุดท้ายแล้ว!" : "3. พรอมต์ตรวจสอบรอบสุดท้าย"}</span>
@@ -1310,7 +1360,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed">
-              แม่แบบมหากาพย์ 4 นาทีขึ้นไป <strong>(12 ท่อน 4 องก์ / 76 บรรทัดเต็ม v120.0)</strong>: บังคับ <strong>ไร้ท่อนพูด 100% (100% Sung / Melodic Rap)</strong> + <strong>ไร้ท่อนซ้ำและไร้บรรทัดซ้ำตลอดทั้งเพลง 100% (แม้แต่ Chorus 1, 2, 3 ก็เขียนเนื้อร้องใหม่ทั้งหมด!)</strong> + <strong>โฟลว์ 6-8+6-8 & ไรม์ 3 ศิลปิน (SD PMR × P9D × NS-A755)</strong>:
+              แม่แบบเพลงฮิตติดชาร์ต <strong>(9 ท่อน ~54–56 บรรทัด / 3:20–4:10 นาที v125.0)</strong>: <strong>เอาท่อน [Intro] ออก 100% เปิดเข้า [Verse 1] ทันที</strong> • <strong>ไร้ท่อนพูด</strong> • <strong>ฟังลื่นหู สัมผัสลงตัว &amp; วรรณยุกต์เข้าปาก</strong> • <strong>มีฮุคจำติดหู (Earworm Hook)</strong> • <strong>ความหมายดีเข้าถึงอารมณ์ (Show, Don&apos;t Tell)</strong>:
             </p>
 
             {/* Scrollable Live Code Preview */}
@@ -1325,7 +1375,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               <div className="flex items-center space-x-2">
                 <Music className="w-4 h-4 text-cyan-400" />
                 <h3 className="text-sm font-bold text-white">
-                  2. นำผลลัพธ์บทเพลงจากแชท AI มาวางที่นี่ (เพื่อทำปก & MV ต่อ)
+                  2. นำผลลัพธ์บทเพลงจากแชท AI มาวางที่นี่ (เพื่อทำปก &amp; MV ต่อ)
                 </h3>
               </div>
 
@@ -1354,7 +1404,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 rows={outputResult ? 4 : 5}
                 value={outputResult}
                 onChange={(e) => setOutputResult(e.target.value)}
-                placeholder="วางผลลัพธ์จาก ChatGPT / Gemini / Claude ที่นี่ (เช่น ชื่อเพลง, สไตล์ดนตรี, เนื้อร้อง [Intro]...)"
+                placeholder="วางผลลัพธ์จาก ChatGPT / Gemini / Claude ที่นี่ (เช่น ชื่อเพลง, สไตล์ดนตรี, เนื้อร้อง [Verse 1]...)"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition-all font-mono"
               />
             </div>
@@ -1368,13 +1418,13 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-amber-200 flex items-center space-x-1.5">
-                      <span>🔍 ระบบตรวจสอบ 2 ด่าน (รอบแรก: ผ่าตัดมหากาพย์ 76 บรรทัด ไร้ท่อนซ้ำ/ท่อนพูด ➔ รอบสุดท้าย: เกลาคำร้องเข้าปาก ไร้คำแปลก 100%)</span>
+                      <span>🔍 ระบบตรวจสอบ 2 ด่าน (รอบแรก: เอา Intro ออก, ปั้นฮุคติดหู &amp; ลื่นหู ➔ รอบสุดท้าย: จำลองร้องในห้องอัด, วรรณยุกต์เข้าปาก 100%)</span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
-                        v120.0 3-Stage
+                        v125.0 3-Stage
                       </span>
                     </h4>
                     <p className="text-[11px] text-slate-300">
-                      แยกภารกิจชัดเจนเพื่อให้ AI โฟกัสได้เต็ม 100%: <strong>ตรวจสอบรอบแรก</strong> (ขยายครบ 12 ท่อน 76 บรรทัด สำหรับเพลงยาว 4 นาที+ ล้างท่อนพูด/ท่อนซ้ำ & อัดไรม์ 3 ศิลปิน) ➔ <strong>ตรวจสอบรอบสุดท้าย</strong> (จำลองการร้องออกเสียงจริง ล้างคำฝืนไรม์ ยืนยันไร้บรรทัดซ้ำ 100% & ล็อก Gold Master!)
+                      แยกภารกิจชัดเจนเพื่อให้เพลงสมบูรณ์ที่สุด: <strong>ตรวจสอบรอบแรก</strong> (เอา [Intro]/ท่อนพูดออก ปั้นฮุคฮิตติดหู สัมผัสลงตัว &amp; ภาพจำกินใจ) ➔ <strong>ตรวจสอบรอบสุดท้าย</strong> (จำลองร้องออกเสียงจริง วรรณยุกต์ลงตัว ร้องเข้าปาก &amp; ล็อก Gold Master!)
                     </p>
                   </div>
                 </div>
@@ -1392,11 +1442,11 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               <div className="flex flex-wrap items-center gap-1.5 text-[10px] pt-0.5">
                 <span className="text-slate-400 font-semibold">โหมดเน้นพิเศษ (รอบแรก):</span>
                 {[
-                  { id: 'all', label: '🎯 ครบทุกมิติ (มหากาพย์ 4 นาที+ ไร้ท่อนพูด/ไร้ท่อนซ้ำ)' },
-                  { id: 'antirepeat', label: '🚫 ล้างท่อนซ้ำ & ล้างท่อนพูด 100% (76 บรรทัดใหม่ล้วน)' },
-                  { id: 'natural', label: '🗣️ กวาดล้างคำแปลก & คำฝืนไรม์ 100%' },
-                  { id: 'rhyme', label: '⚡ ไรม์พวง P9D 2-4 คำ & สาดสัมผัส NS-A755' },
-                  { id: 'flow', label: '⏱️ ขยายครบ 12 ท่อน (76 บรรทัด) & โฟลว์ 6-8+6-8' },
+                  { id: 'all', label: '🎯 ครบทุกมิติ (ไม่มี Intro • ลื่นหู • ฮุคติดหู • กินใจ)' },
+                  { id: 'antirepeat', label: '🔥 เอา Intro/พูดออก & ปั้นฮุคติดหู' },
+                  { id: 'natural', label: '❤️ ภาษาธรรมชาติ & ภาพจำ Show Don’t Tell' },
+                  { id: 'rhyme', label: '✨ สัมผัสลงตัว ลื่นไหลไม่ฝืนคำ' },
+                  { id: 'flow', label: '🎵 ไดนามิกพยางค์ & วรรณยุกต์เข้าปาก' },
                 ].map((item) => (
                   <button
                     key={item.id}
@@ -1417,9 +1467,9 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               <div className="p-3 rounded-xl bg-slate-950/70 border border-amber-500/30 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-amber-300">
-                    🛠️ ด่านที่ 1 (ขั้นที่ 2): พรอมต์ตรวจสอบรอบแรก — ขยายครบ 76 บรรทัด (4 นาที+) ล้างท่อนพูด/ท่อนซ้ำ & อัดไรม์ 3 ศิลปิน
+                    🛠️ ด่านที่ 1 (ขั้นที่ 2): พรอมต์ผ่าตัดรอบแรก — เอา Intro/พูดออก, ปั้นฮุคติดหู, เกลาสัมผัสลงตัว &amp; ภาพจำกินใจ
                   </span>
-                  <span className="text-[10px] text-amber-400/80 font-mono">Stage 2: 4+ Min Epic & Zero-Repeat Surgery</span>
+                  <span className="text-[10px] text-amber-400/80 font-mono">Stage 2: Zero-Intro &amp; Hit Hook Surgery</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button
@@ -1466,9 +1516,9 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               <div className="p-3 rounded-xl bg-slate-950/70 border border-emerald-500/30 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-emerald-300">
-                    👑 ด่านที่ 2 (ขั้นที่ 3): พรอมต์ตรวจสอบรอบสุดท้าย — เกลาคำร้องเข้าปาก 100% ล้างคำฝืนไรม์ & ล็อก Gold Master
+                    👑 ด่านที่ 2 (ขั้นที่ 3): พรอมต์ขัดเกลารอบสุดท้าย — จำลองร้องจริงเข้าปาก 100%, วรรณยุกต์ลงตัว &amp; Gold Master
                   </span>
-                  <span className="text-[10px] text-emerald-400/80 font-mono">Stage 3: Final Vocal Mouth-Feel & Gold Master</span>
+                  <span className="text-[10px] text-emerald-400/80 font-mono">Stage 3: Studio Vocal Polish &amp; Gold Master</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button
@@ -1545,7 +1595,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               )}
 
               <div className="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
-                <span>💡 <strong>ทำไมต้องแยกตรวจสอบ 2 รอบ?:</strong> รอบแรก AI จะทุ่มสมองผ่าตัดโครงสร้างและอัดไรม์ 3 ศิลปินให้แน่น (ซึ่งบางครั้ง AI อาจเผลอหยิบคำแปลกมาเพื่อให้ลงสัมผัส) ➔ รอบสุดท้ายจึงทำหน้าที่เป็น <strong>"โปรดิวเซอร์คุมร้อง"</strong> กวาดล้างคำฝืนไรม์ให้เป็นภาษาพูดธรรมชาติ 100% โดยที่ไรม์ไม่หลุด!</span>
+                <span>💡 <strong>ทำไมต้องขัดเกลา 2 รอบ?:</strong> รอบแรกช่วยตัดท่อน [Intro] ที่ยืดเยื้อออก วางฮุคติดหู และเล่าเรื่องเห็นภาพจริง ➔ รอบสุดท้ายสวมบทโปรดิวเซอร์คุมร้องจริงในห้องอัด เช็กวรรณยุกต์ จังหวะหายใจ และล้างคำฝืนสัมผัสให้ร้องเข้าปากลื่นหู 100%!</span>
               </div>
             </div>
 
@@ -1559,7 +1609,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                       <div className="flex items-center space-x-2">
                         <ShieldCheck className="w-4 h-4 text-emerald-400" />
                         <span className="text-xs font-bold text-slate-200">
-                          ผลชันสูตรคุณภาพเพลงมหากาพย์ 4 นาที+ (ไร้ท่อนพูด • ไร้บรรทัดซ้ำ • ไร้คำแปลก v120.0):
+                          ผลชันสูตรคุณภาพเพลงฮิต (ไม่มี Intro • ไร้ท่อนพูด • ลื่นหู • ฮุคติดหู v125.0):
                         </span>
                       </div>
                       {!lyricAuditSummary.isClean && (
@@ -1569,40 +1619,42 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                           className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 hover:text-white border border-emerald-500/40 transition-all flex items-center space-x-1"
                         >
                           <Sparkles className="w-3 h-3" />
-                          <span>✨ คลีนคำแปลก & แท็กพูดอัตโนมัติ (1-Click Clean)</span>
+                          <span>✨ คลีน Intro, คำแปลก &amp; แท็กพูดอัตโนมัติ (1-Click Clean)</span>
                         </button>
                       )}
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px]">
                       <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80">
-                        <span className="text-slate-400 block text-[10px]">ความยาวมหากาพย์</span>
-                        <span className={`font-bold ${lyricAuditSummary.isMarathonLength ? 'text-emerald-400' : 'text-amber-300'}`}>
+                        <span className="text-slate-400 block text-[10px]">ความยาวเพลงฮิต</span>
+                        <span className={`font-bold ${lyricAuditSummary.isOptimalLength ? 'text-emerald-400' : 'text-amber-300'}`}>
                           {lyricAuditSummary.totalLines} บรรทัด (~{lyricAuditSummary.estDurationStr})
                         </span>
                       </div>
                       <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80">
-                        <span className="text-slate-400 block text-[10px]">เช็กท่อนซ้ำ/บรรทัดซ้ำ</span>
+                        <span className="text-slate-400 block text-[10px]">ท่อน Intro &amp; พูด</span>
+                        <span className={`font-bold ${!lyricAuditSummary.hasIntroTag && lyricAuditSummary.spokenCount === 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {!lyricAuditSummary.hasIntroTag && lyricAuditSummary.spokenCount === 0
+                            ? '✅ ไม่มี Intro/พูด 100%'
+                            : `🚨 พบ ${lyricAuditSummary.hasIntroTag ? 'Intro ' : ''}${lyricAuditSummary.spokenCount > 0 ? `พูด(${lyricAuditSummary.spokenCount})` : ''}`}
+                        </span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80">
+                        <span className="text-slate-400 block text-[10px]">Verse ไม่ซ้ำซาก</span>
                         <span className={`font-bold ${lyricAuditSummary.duplicateLineCount === 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {lyricAuditSummary.duplicateLineCount === 0
-                            ? '✅ ไม่ซ้ำเลย 100%'
+                            ? `✅ สดใหม่ (ฮุค ${lyricAuditSummary.chorusCount} รอบ)`
                             : `🚨 ซ้ำ ${lyricAuditSummary.duplicateLineCount} บรรทัด`}
                         </span>
                       </div>
                       <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80">
-                        <span className="text-slate-400 block text-[10px]">เช็กท่อนพูด (Spoken)</span>
-                        <span className={`font-bold ${lyricAuditSummary.spokenCount === 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {lyricAuditSummary.spokenCount === 0 ? '✅ ไร้ท่อนพูด 100%' : `🚨 พบแท็กพูด ${lyricAuditSummary.spokenCount} จุด`}
-                        </span>
-                      </div>
-                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80">
-                        <span className="text-slate-400 block text-[10px]">จังหวะ 6-8+6-8 (,)</span>
+                        <span className="text-slate-400 block text-[10px]">จังหวะหายใจ (,)</span>
                         <span className={`font-bold ${lyricAuditSummary.breathRatio >= 70 ? 'text-emerald-400' : 'text-amber-300'}`}>
                           {lyricAuditSummary.breathRatio}% ลื่นหู
                         </span>
                       </div>
                       <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80">
-                        <span className="text-slate-400 block text-[10px]">คำแปลก/สำนวนฝืน</span>
+                        <span className="text-slate-400 block text-[10px]">คำแปลก/ภาษาลิเก</span>
                         <span className={`font-bold ${lyricAuditSummary.weirdCount === 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {lyricAuditSummary.weirdCount === 0
                             ? '✅ ธรรมชาติ 100%'
@@ -1613,7 +1665,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
 
                     {lyricAuditSummary.weirdPhrases.length > 0 && (
                       <div className="p-2 rounded-lg bg-rose-950/40 border border-rose-500/30 text-[11px] text-rose-200 space-y-1">
-                        <span className="font-bold block">🚨 ตรวจพบคำแปลก/สำนวนฝืนสัมผัส (กดปุ่ม 1-Click Clean ด้านบน หรือก๊อปพรอพผ่าตัดไปสั่ง AI แก้ได้ทันที):</span>
+                        <span className="font-bold block">🚨 ตรวจพบจุดที่ควรขัดเกลา (กดปุ่ม 1-Click Clean ด้านบน หรือก๊อปพรอมต์ตรวจสอบไปให้ AI เกลาได้ทันที):</span>
                         {lyricAuditSummary.weirdPhrases.map((wp, i) => (
                           <div key={i} className="text-[10px] text-rose-300">• {wp}</div>
                         ))}
@@ -1639,7 +1691,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                       ) : (
                         <FileCode className="w-3.5 h-3.5 text-fuchsia-400 group-hover:scale-110 transition-transform" />
                       )}
-                      <span>{copiedLyricsOnly ? "คัดลอกแล้ว!" : "ก๊อป Lyrics (ฮุก 8 บาร์เต็ม)"}</span>
+                      <span>{copiedLyricsOnly ? "คัดลอกแล้ว!" : "ก๊อป Lyrics (พร้อมวางใน Suno)"}</span>
                     </span>
                   </button>
 
@@ -1741,7 +1793,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               /* If empty: Quick Preset Tester buttons */
               <div className="pt-2 border-t border-slate-800/80 space-y-2">
                 <span className="text-[11px] font-bold text-slate-400 block text-center">
-                  หรือคลิกเลือกตัวอย่างเพลงสำเร็จรูป (100% ร้อง & แร็ป ไร้ท่อนพูด) เพื่อทดสอบทันที:
+                  หรือคลิกเลือกตัวอย่างเพลงสำเร็จรูป (ไม่มี Intro • ฟังลื่นหู • ฮิตติดหู • กินใจ) เพื่อทดสอบทันที:
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                   <button
@@ -1750,8 +1802,8 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     className="p-2.5 rounded-xl bg-gradient-to-b from-fuchsia-950/40 to-slate-950 border border-fuchsia-500/50 hover:border-amber-400 text-left transition-all group col-span-2 sm:col-span-1"
                   >
                     <span className="text-base block mb-0.5">🌾</span>
-                    <span className="text-xs font-bold text-amber-300 block group-hover:text-amber-200">รวงข้าวในสายลม</span>
-                    <span className="text-[10px] text-slate-400 truncate block">สัมผัสคม ลื่นหู ติดหู</span>
+                    <span className="text-xs font-bold text-amber-300 block group-hover:text-amber-200">รวงข้าวไม่อวดตน</span>
+                    <span className="text-[10px] text-slate-400 truncate block">สัมผัสลงตัว ฮุคติดหู</span>
                   </button>
 
                   <button
@@ -1760,8 +1812,8 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500/60 text-left transition-all group"
                   >
                     <span className="text-base block mb-0.5">🌾</span>
-                    <span className="text-xs font-bold text-white block group-hover:text-amber-400">เพื่อชีวิต ("พ่อ")</span>
-                    <span className="text-[10px] text-slate-400 truncate block">ไม่มีท่อนพูด</span>
+                    <span className="text-xs font-bold text-white block group-hover:text-amber-400">เพื่อชีวิต (&quot;พ่อ&quot;)</span>
+                    <span className="text-[10px] text-slate-400 truncate block">กินใจ น้ำตาซึม ไม่มี Intro</span>
                   </button>
 
                   <button
@@ -1770,8 +1822,8 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-pink-500/60 text-left transition-all group"
                   >
                     <span className="text-base block mb-0.5">🌸</span>
-                    <span className="text-xs font-bold text-white block group-hover:text-pink-400">เพลงรัก ("รักแรกพบ")</span>
-                    <span className="text-[10px] text-slate-400 truncate block">ป๊อปอะคูสติกหวาน</span>
+                    <span className="text-xs font-bold text-white block group-hover:text-pink-400">เพลงรัก (&quot;แสงแรก&quot;)</span>
+                    <span className="text-[10px] text-slate-400 truncate block">อบอุ่น ลื่นหู ฮุคหวาน</span>
                   </button>
 
                   <button
@@ -1780,8 +1832,8 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500/60 text-left transition-all group"
                   >
                     <span className="text-base block mb-0.5">🌧️</span>
-                    <span className="text-xs font-bold text-white block group-hover:text-cyan-400">อกหัก ("คืนฝนพรำ")</span>
-                    <span className="text-[10px] text-slate-400 truncate block">ซิตี้ป๊อปยามค่ำคืน</span>
+                    <span className="text-xs font-bold text-white block group-hover:text-cyan-400">อกหัก (&quot;คืนฝนพรำ&quot;)</span>
+                    <span className="text-[10px] text-slate-400 truncate block">ซิตี้ป๊อป ลึกซึ้งหวังดี</span>
                   </button>
 
                   <button
@@ -1790,8 +1842,8 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-purple-500/60 text-left transition-all group"
                   >
                     <span className="text-base block mb-0.5">🎸</span>
-                    <span className="text-xs font-bold text-white block group-hover:text-purple-400">ร็อก ("สุดทางฝัน")</span>
-                    <span className="text-[10px] text-slate-400 truncate block">ร็อกทรงพลัง มีพลัง</span>
+                    <span className="text-xs font-bold text-white block group-hover:text-purple-400">ร็อก (&quot;สุดทางฝัน&quot;)</span>
+                    <span className="text-[10px] text-slate-400 truncate block">พลังใจ ฮุคติดหู ไม่มี Intro</span>
                   </button>
                 </div>
 

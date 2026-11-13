@@ -34,10 +34,9 @@
    - กฎห้ามเขียนคำเบิ้ลพยางค์ติดกัน (Zero Raw Reduplication): ห้ามเขียนคำเบิ้ลพยางค์ติดกันเด็ดขาด เช่น "เล็กเล็ก", "สูงสูง", "เบาเบา", "ซ้ำซ้ำ" เพราะทำให้ตัวถอดรหัสของ Suno ติดลูป Token Reduplication แล้วพาลไปร้องเบิ้ลคำอื่นในท่อนต่อไป ให้ใช้คำขยายที่มีความหมายคมคาย เช่น "ตัวกระจ้อย", "บอกแผ่วเบา", "ให้ถึงฝั่ง", "เนิ่นนาน"
    - กฎการคั่นจังหวะหายใจ (Caesura & Phrasing Marks): ในท่อนเล่าเรื่อง (Verse / Pre-Chorus) หากประโยคยาวเกิน 9-10 พยางค์ ต้องใช้เครื่องหมาย "..." หรือ "," คั่นกลาง เพื่อแบ่งจังหวะให้ Suno หายใจและลงน้ำหนักคำอย่างเป็นธรรมชาติ
 
-4. กฎเหล็ก 3 วินาทีแรกหยุดนิ้วคนดูบน TikTok (The 3-Second Viral Cold Open Hook):
-   - ห้ามมีอินโทรดนตรีเปล่าๆ ยาวเด็ดขาด (ห้ามปล่อยให้เสียงดนตรีบรรเลงเกิน 2 วินาทีก่อนร้อง)!
-   - ในท่อน [Intro] ต้องเป็น "Cold Open" หรือ "Instant Piercing Vocal Hook" ขึ้นเสียงร้องประโยคแทงใจดำทันทีตั้งแต่วินาทีที่ 1 เพื่อหยุดนิ้วคนดูบน TikTok / Reels ไม่ให้ปัดผ่าน
-   - ประโยคเปิดต้องเป็นความจริงอันเจ็บปวดหรือคำถามสะกิดใจ เช่น "ถ้ารู้ว่ากอดวันนั้นจะเป็นกอดสุดท้าย...", "กี่หยดน้ำตาที่พ่อต้องกลืนลงคอ..."
+4. กฎเหล็กเปิดเพลงเข้าเรื่องทันที ไม่มีท่อน Intro (Zero Intro & Direct Verse 1 Entry):
+   - ห้ามสร้างท่อน [Intro] และห้ามปล่อยให้ดนตรีเกริ่นยาวหรือมีท่อนพูดก่อนเข้าเพลงเด็ดขาด!
+   - ให้เริ่มต่อจากแท็ก [Voice: ...] เข้าสู่ [Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Entry - No Intro, No Spoken Word] ทันที ด้วยภาพจำหรือประโยคเปิดที่สะกิดใจคนฟังตั้งแต่บรรทัดแรก!
 
 5. กฎกำจัดคำผสมประหลาดและคำพิกลพิการ 100% (Zero Hallucinated / Forced Compound Words):
    - ทุกคำต้องเป็นคำไทยแท้ที่มีความหมายชัดเจนและคนไทยใช้พูดจริงในชีวิตประจำวัน
@@ -82,16 +81,16 @@
 5. หมวดบ้านเกิด/คิดถึงบ้าน: สรรพนาม "คนไกลบ้าน - ข้า" ภาพจำ กลิ่นฟางข้าว ลมพัดยอดหญ้า ชานเรือนไม้
 6. หมวดสัตว์เลี้ยงเพื่อนรัก: สรรพนาม "เพื่อนยาก - เจ้าตัวน้อย - เอ็ง - ข้า" ภาพจำ รอยเท้าเปื้อนโคลน หางกระดิกหน้าประตู
 
-# โครงสร้างเพลงยาวมหากาพย์ 9 องก์ (The 9-Act Structure)
-1. [Intro: 3-Second Viral Cold Open, Instant Piercing Vocal Hook in [Key], Sudden Emotional Drop]
-2. [Verse 1: Intimate Close-Mic Vocal, Soft & Vulnerable, Acoustic Fingerpicking, Act I - The Wound]
-3. [Pre-Chorus 1: Emotional Swell, Cello & Soft Timpani Rising]
-4. [Chorus 1: Explosive Emotional Belting, Full Band & Heavy Drums - Act I The Pain, Cry in Voice] (คุม 8-9 พยางค์ต่อบรรทัดเท่ากันเป๊ะ)
-5. [Verse 2: Melodic Phuea Chiwit Rhythm, Half-Time Boom Bap Groove, Slow Rhythmic Delivery, Emphasize Every Syllable] (หั่นสั้น 3-5 พยางค์ คั่นด้วย "..." ไร้คำเบิ้ลพยางค์)
-6. [Pre-Chorus 2: Rising Emotional Tension, Lush Strings & Piano Building Up]
-7. [Chorus 2: Powerful Anthemic Belting, Full Band & Driving Bass - Act II The Awakening] (คุม 8-9 พยางค์ต่อบรรทัดเท่ากับ Chorus 1)
-8. [Verse 3: Sudden Strip-Back, Acoustic Guitar & Piano Only, Trembling Voice, Act III Farewell/Forgiveness]
-9. [Final Chorus: Maximum Goosebumps Climax, Soaring High Notes, Lush Backing Choir - Act III Triumph] (คุม 8-9 พยางค์ต่อบรรทัดเท่ากับ Chorus 1) + [Outro: Gentle Melodic Vocal Fade Out, Fading Acoustic Guitar]
+# โครงสร้างเพลงฮิตสมบูรณ์แบบ 9 ท่อน — ไม่มีท่อน [Intro] (The 9-Section Zero-Intro Structure)
+1. [Verse 1: Brief 2-Bar Musical Pick-up, Intimate Close-Mic Vocal, Acoustic Fingerpicking - No Intro, No Spoken Word]
+2. [Pre-Chorus 1: Rising Emotional Swell, Sustained Long Open Vowels]
+3. [Chorus 1: Catchy Anthemic Hook, Punchy 7-10 Syllable Lines, Signature Earworm Hook] + [Instrumental Solo Interlude: Expressive Acoustic Guitar & Piano - 4-8 Bars]
+4. [Verse 2: Dynamic Melodic Groove, Smooth Internal & Tail Rhymes - No Spoken Word]
+5. [Pre-Chorus 2: Rising Emotional Tension, Lush Strings & Piano Building Up]
+6. [Chorus 2: Returning Signature Earworm Hook + Evolving Emotional Payoff]
+7. [Bridge: Sudden Strip-Back Confession Building to Soaring Vocal Climax]
+8. [Final Chorus: Maximum Goosebumps Climax, Soaring High Notes & Golden Punchline]
+9. [Outro: Gentle Melodic Vocal Echo & Soft Instrumental Fade Out - No Spoken Word] ➔ [End]
 
 # รูปแบบการตอบกลับ
 แสดงผลลัพธ์ 4 ส่วนทันที:
