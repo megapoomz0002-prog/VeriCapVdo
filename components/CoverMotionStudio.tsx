@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Sparkles,
   Copy,
@@ -10,14 +10,12 @@ import {
   Upload,
   Download,
   Bot,
-  ExternalLink,
   Wand2,
   FileCode,
   Image as ImageIcon,
   Film,
   Layers,
   ShieldCheck,
-  Maximize2,
   Heart,
   MessageCircle,
   Bookmark,
@@ -25,6 +23,8 @@ import {
   Music,
   Search,
   Smartphone,
+  AlertTriangle,
+  RotateCcw,
 } from "lucide-react";
 import {
   buildFullCoverArtMegaPrompt,
@@ -32,17 +32,68 @@ import {
   buildGoogleFlowMotionPrompt,
   TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT,
 } from "@/lib/prompts";
+import { copyTextToClipboard } from "@/lib/clipboard";
 
 interface CoverMotionStudioProps {
-  apiKey?: string;
-  songData: { title: string; lyrics: string; mood: string; credit?: string };
+  songData: {
+    title: string;
+    lyrics: string;
+    mood: string;
+    credit?: string;
+    hookHeadline?: string;
+  };
   onSendToMvStudio: (data: {
     title: string;
     coverImage: string;
     backgroundVideo?: string;
     credit: string;
     lyrics?: string;
+    hookHeadline?: string;
   }) => void;
+}
+
+const DEFAULT_SAMPLE_LYRICS = `เสียงกบไสไม้... ค่อยจางหายไป
+กอดพ่อได้เพียง... แค่ในความทรงจำ
+กลิ่นเหงื่อคราบไคล... บนเสื้อลายสก็อตตัวเก่า
+ยังคงตราตรึง... อยู่ในใจลูกเสมอ
+พ่อเหนื่อยมาทั้งชีวิต... เพื่อให้ลูกได้มีวันพรุ่งนี้`;
+
+function isCreditDisabled(val: string): boolean {
+  const trimmed = (val || "").trim();
+  return !trimmed || /^(ไม่ใส่|ไม่ต้องใส่|none|no|no\s*credit|-)$/i.test(trimmed);
+}
+
+function drawRoundedRectPath(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) {
+  if (typeof ctx.roundRect === "function") {
+    ctx.roundRect(x, y, w, h, r);
+    return;
+  }
+  const radius = Math.min(r, w / 2, h / 2);
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + w, y, x + w, y + h, radius);
+  ctx.arcTo(x + w, y + h, x, y + h, radius);
+  ctx.arcTo(x, y + h, x, y, radius);
+  ctx.arcTo(x, y, x + w, y, radius);
+  ctx.closePath();
+}
+
+function triggerBlobOrUrlDownload(href: string, fileName: string, revokeAfterDownload = false) {
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  if (revokeAfterDownload) {
+    setTimeout(() => URL.revokeObjectURL(href), 1000);
+  }
 }
 
 function extractLyricHighlight(rawLyrics: string, songTitle: string): string {
@@ -62,21 +113,14 @@ function extractLyricHighlight(rawLyrics: string, songTitle: string): string {
 }
 
 export default function CoverMotionStudio({
-  apiKey,
   songData,
   onSendToMvStudio,
 }: CoverMotionStudioProps) {
   // Inputs matching # THAI TIKTOK SONG COVER & MV MASTER v8.0 (จาก สร้างปก.txt)
   const [songTitle, setSongTitle] = useState(songData.title || "กอดพ่อได้เพียง");
-  const [lyrics, setLyrics] = useState(
-    songData.lyrics ||
-      `เสียงกบไสไม้... ค่อยจางหายไป
-กอดพ่อได้เพียง... แค่ในความทรงจำ
-กลิ่นเหงื่อคราบไคล... บนเสื้อลายสก็อตตัวเก่า
-ยังคงตราตรึง... อยู่ในใจลูกเสมอ
-พ่อเหนื่อยมาทั้งชีวิต... เพื่อให้ลูกได้มีวันพรุ่งนี้`
-  );
-  const [credit, setCredit] = useState(songData.credit || "FRANKYTEAM");
+  const [lyrics, setLyrics] = useState(songData.lyrics || DEFAULT_SAMPLE_LYRICS);
+  const [credit, setCredit] = useState(songData.credit ?? "FRANKYTEAM");
+  const [hookHeadline, setHookHeadline] = useState(songData.hookHeadline || "");
   const [mode, setMode] = useState<"cover-only" | "loop-mv">("loop-mv");
   const [moodTone, setMoodTone] = useState<string>("AUTO");
   const [characterSymbol, setCharacterSymbol] = useState<string>("AUTO");
@@ -87,9 +131,7 @@ export default function CoverMotionStudio({
   );
 
   // Uploaded or chosen cover image (Defaults to sample cover with title 'พ่อ' & 'FRANKYTEAM' already embedded)
-  const [coverImageUrl, setCoverImageUrl] = useState(
-    "/covers/phaw_carpenter_cover.jpg"
-  );
+  const [coverImageUrl, setCoverImageUrl] = useState("/covers/phaw_carpenter_cover.jpg");
   const [imageFileName, setImageFileName] = useState("");
   const [isVideoCover, setIsVideoCover] = useState(false);
 
@@ -98,12 +140,33 @@ export default function CoverMotionStudio({
   const [showTikTokSimulator, setShowTikTokSimulator] = useState(true);
   const [enableTypographyOverlay, setEnableTypographyOverlay] = useState(false);
 
-  // Copy status indicators
-  const [copiedDirectPrompt, setCopiedDirectPrompt] = useState(false);
-  const [copiedMegaPrompt, setCopiedMegaPrompt] = useState(false);
-  const [copiedMotionPrompt, setCopiedMotionPrompt] = useState(false);
-  const [copiedSkill, setCopiedSkill] = useState(false);
+  // Unified copy / toast status indicators with cleanup
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [copyError, setCopyError] = useState("");
   const [justUploaded, setJustUploaded] = useState(false);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const uploadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerCopyFeedback = async (id: string, text: string, duration = 2200) => {
+    setCopyError("");
+    const ok = await copyTextToClipboard(text);
+    if (ok) {
+      setCopiedKey(id);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => {
+        setCopiedKey((prev) => (prev === id ? null : prev));
+      }, duration);
+    } else {
+      setCopyError("เบราว์เซอร์จำกัดสิทธิ์คลิปบอร์ด — กดเลือกข้อความแล้วคัดลอกด้วย Ctrl+C ได้ทันที");
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      if (uploadTimerRef.current) clearTimeout(uploadTimerRef.current);
+    };
+  }, []);
 
   // Dynamic Prompts Generated in Real-Time
   const directImagePrompt = buildDirectImageGenPrompt({
@@ -130,18 +193,22 @@ export default function CoverMotionStudio({
     lyrics
   );
 
-  // Download cover image (with burned-in typography if enableTypographyOverlay is active)
+  // Download cover image (with burned-in typography inside 15-28% Title Safe Zone if active)
   const handleDownloadCoverImage = async () => {
-    const fileName = `${(songTitle || "MusicCover").replace(/\s+/g, "_")}_9x16.${isVideoCover ? "mp4" : "jpg"}`;
+    const rawExt = isVideoCover ? imageFileName.split(".").pop()?.toLowerCase() : "jpg";
+    const safeExt = rawExt && /^[a-z0-9]{2,5}$/.test(rawExt) ? rawExt : isVideoCover ? "mp4" : "jpg";
+    const fileName = `${(songTitle || "MusicCover").trim().replace(/\s+/g, "_")}_9x16.${safeExt}`;
+
     if (isVideoCover || !enableTypographyOverlay) {
-      const a = document.createElement("a");
-      a.href = coverImageUrl;
-      a.download = fileName;
-      a.click();
+      triggerBlobOrUrlDownload(coverImageUrl, fileName, false);
       return;
     }
 
     try {
+      if (typeof document !== "undefined" && document.fonts?.ready) {
+        await document.fonts.ready;
+      }
+
       const img = new Image();
       img.crossOrigin = "anonymous";
       await new Promise<void>((resolve, reject) => {
@@ -164,43 +231,50 @@ export default function CoverMotionStudio({
       const dy = (canvas.height - drawH) / 2;
       ctx.drawImage(img, dx, dy, drawW, drawH);
 
-      // Subtle top vignette for title legibility
-      const topGrad = ctx.createLinearGradient(0, 0, 0, 420);
-      topGrad.addColorStop(0, "rgba(0,0,0,0.65)");
+      // Subtle upper vignette covering 10%-30% Title Safe Zone for crisp legibility
+      const topGrad = ctx.createLinearGradient(0, 120, 0, 620);
+      topGrad.addColorStop(0, "rgba(0,0,0,0)");
+      topGrad.addColorStop(0.25, "rgba(0,0,0,0.68)");
       topGrad.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = topGrad;
-      ctx.fillRect(0, 0, canvas.width, 420);
+      ctx.fillRect(0, 120, canvas.width, 500);
 
-      // Song Title at top safe zone
+      // Song Title centered at 18% vertical height (strictly inside 15%-28% TikTok Safe Zone)
+      const titleText = songTitle.trim() || "ชื่อเพลงของคุณ";
+      let titleFontSize = 72;
       ctx.save();
-      ctx.font = '900 72px "Kanit", "Prompt", sans-serif';
+      ctx.font = `900 ${titleFontSize}px "Noto Sans Thai", "Kanit", sans-serif`;
+      while (titleFontSize > 42 && ctx.measureText(titleText).width > canvas.width - 140) {
+        titleFontSize -= 4;
+        ctx.font = `900 ${titleFontSize}px "Noto Sans Thai", "Kanit", sans-serif`;
+      }
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.shadowColor = "rgba(0,0,0,0.95)";
       ctx.shadowBlur = 24;
       ctx.lineWidth = 10;
       ctx.strokeStyle = "rgba(0,0,0,0.85)";
-      const titleText = songTitle || "ชื่อเพลงของคุณ";
-      ctx.strokeText(titleText, canvas.width / 2, 180);
+      const titleY = 345;
+      ctx.strokeText(titleText, canvas.width / 2, titleY);
       ctx.fillStyle = "#ffffff";
-      ctx.fillText(titleText, canvas.width / 2, 180);
+      ctx.fillText(titleText, canvas.width / 2, titleY);
       ctx.restore();
 
-      // Credit at bottom safe zone if provided
-      if (credit && credit.trim()) {
+      // Credit pill right below Title (~24.5%) — strictly inside Safe Zone, clear of TikTok bottom 25% UI!
+      if (!isCreditDisabled(credit)) {
         ctx.save();
-        ctx.font = '700 30px "Kanit", "Prompt", sans-serif';
+        ctx.font = '700 30px "Noto Sans Thai", "Kanit", sans-serif';
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         const creditStr = credit.trim();
         const metrics = ctx.measureText(creditStr);
-        const pillW = Math.min(canvas.width - 120, metrics.width + 64);
-        const pillH = 56;
+        const pillW = Math.min(canvas.width - 140, metrics.width + 64);
+        const pillH = 54;
         const pillX = (canvas.width - pillW) / 2;
-        const pillY = canvas.height - 130;
+        const pillY = 425;
         ctx.fillStyle = "rgba(0,0,0,0.72)";
         ctx.beginPath();
-        ctx.roundRect(pillX, pillY, pillW, pillH, 28);
+        drawRoundedRectPath(ctx, pillX, pillY, pillW, pillH, 27);
         ctx.fill();
         ctx.strokeStyle = "rgba(255,255,255,0.28)";
         ctx.lineWidth = 2;
@@ -213,26 +287,22 @@ export default function CoverMotionStudio({
       canvas.toBlob(
         (blob) => {
           if (!blob) return;
-          const a = document.createElement("a");
-          a.href = URL.createObjectURL(blob);
-          a.download = fileName;
-          a.click();
+          const url = URL.createObjectURL(blob);
+          triggerBlobOrUrlDownload(url, fileName, true);
         },
         "image/jpeg",
         0.95
       );
     } catch {
-      const a = document.createElement("a");
-      a.href = coverImageUrl;
-      a.download = fileName;
-      a.click();
+      triggerBlobOrUrlDownload(coverImageUrl, fileName, false);
     }
   };
 
   // Sync props when user passes data from Step 1
   useEffect(() => {
     if (songData.title) setSongTitle(songData.title);
-    if (songData.credit) setCredit(songData.credit);
+    if (songData.credit !== undefined) setCredit(songData.credit);
+    if (songData.hookHeadline !== undefined) setHookHeadline(songData.hookHeadline);
     if (songData.lyrics) {
       setLyrics(songData.lyrics);
       setHighlightQuote(extractLyricHighlight(songData.lyrics, songData.title));
@@ -248,27 +318,23 @@ export default function CoverMotionStudio({
       setImageFileName(file.name);
       setIsVideoCover(file.type.startsWith("video/"));
       setJustUploaded(true);
-      setTimeout(() => setJustUploaded(false), 3000);
+      if (uploadTimerRef.current) clearTimeout(uploadTimerRef.current);
+      uploadTimerRef.current = setTimeout(() => setJustUploaded(false), 3000);
     }
+    e.target.value = "";
   };
 
   // 1-Click Copy Handlers
   const handleCopyDirectPrompt = () => {
-    navigator.clipboard.writeText(directImagePrompt);
-    setCopiedDirectPrompt(true);
-    setTimeout(() => setCopiedDirectPrompt(false), 2500);
+    void triggerCopyFeedback("direct", directImagePrompt, 2500);
   };
 
   const handleCopyMegaPrompt = () => {
-    navigator.clipboard.writeText(fullMegaPrompt);
-    setCopiedMegaPrompt(true);
-    setTimeout(() => setCopiedMegaPrompt(false), 2500);
+    void triggerCopyFeedback("mega", fullMegaPrompt, 2500);
   };
 
   const handleCopyMotionPrompt = () => {
-    navigator.clipboard.writeText(motionPrompt);
-    setCopiedMotionPrompt(true);
-    setTimeout(() => setCopiedMotionPrompt(false), 2500);
+    void triggerCopyFeedback("motion", motionPrompt, 2500);
   };
 
   const handleExportSkill = () => {
@@ -280,12 +346,13 @@ description: Creative Director, Album Cover Specialist, Typography Director แ�
 ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
 
     const blob = new Blob([skillContent], { type: "text/markdown;charset=utf-8" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "TIKTOK_COVER_MV_MASTER_v8.skill.md";
-    a.click();
-    setCopiedSkill(true);
-    setTimeout(() => setCopiedSkill(false), 2500);
+    const url = URL.createObjectURL(blob);
+    triggerBlobOrUrlDownload(url, "TIKTOK_COVER_MV_MASTER_v8.skill.md", true);
+    setCopiedKey("skill");
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => {
+      setCopiedKey((prev) => (prev === "skill" ? null : prev));
+    }, 2500);
   };
 
   return (
@@ -317,8 +384,8 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
             className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800/90 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 transition-all whitespace-nowrap"
             title="ดาวน์โหลดเป็นไฟล์ทักษะ SKILL.md"
           >
-            {copiedSkill ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Download className="w-3.5 h-3.5" />}
-            <span>{copiedSkill ? "บันทึก SKILL.md แล้ว" : "บันทึกเป็นทักษะ (SKILL.md)"}</span>
+            {copiedKey === "skill" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Download className="w-3.5 h-3.5" />}
+            <span>{copiedKey === "skill" ? "บันทึก SKILL.md แล้ว" : "บันทึกเป็นทักษะ (SKILL.md)"}</span>
           </button>
         </div>
       </div>
@@ -380,27 +447,51 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
 
             {/* Input 1: Song Title */}
             <div>
-              <label className="text-xs font-semibold text-slate-200 block mb-1">
+              <label htmlFor="cover-song-title-input" className="text-xs font-semibold text-slate-200 block mb-1">
                 ชื่อเพลง (Song Title) *
               </label>
               <input
+                id="cover-song-title-input"
                 type="text"
                 value={songTitle}
                 onChange={(e) => setSongTitle(e.target.value)}
                 placeholder="ใส่ชื่อเพลง เช่น กอดพ่อได้เพียง..."
                 className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-all font-semibold"
               />
+              {!songTitle.trim() && (
+                <p className="text-[10.5px] text-amber-300 mt-1 flex items-center space-x-1">
+                  <AlertTriangle className="w-3 h-3 shrink-0" />
+                  <span>ควรใส่ชื่อเพลง เพื่อให้พรอพท์และหน้าปกแสดงชื่อเพลงได้ครบถ้วน</span>
+                </p>
+              )}
             </div>
 
             {/* Input 2: Lyrics / Story / Hook */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-slate-200 block">
+                <label htmlFor="cover-lyrics-input" className="text-xs font-semibold text-slate-200 block">
                   เนื้อร้อง / แก่นเรื่อง / ท่อนฮุก *
                 </label>
-                <span className="text-[10px] text-cyan-400 font-medium">คลังภาพจำ & อารมณ์</span>
+                <div className="flex items-center space-x-2">
+                  {lyrics !== DEFAULT_SAMPLE_LYRICS && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLyrics(DEFAULT_SAMPLE_LYRICS);
+                        setSongTitle((prev) => prev || "กอดพ่อได้เพียง");
+                        setHighlightQuote(extractLyricHighlight(DEFAULT_SAMPLE_LYRICS, songTitle || "กอดพ่อได้เพียง"));
+                      }}
+                      className="text-[10px] text-slate-400 hover:text-cyan-300 flex items-center space-x-1"
+                    >
+                      <RotateCcw className="w-2.5 h-2.5" />
+                      <span>ใช้ตัวอย่างเริ่มต้น</span>
+                    </button>
+                  )}
+                  <span className="text-[10px] text-cyan-400 font-medium">คลังภาพจำ & อารมณ์</span>
+                </div>
               </div>
               <textarea
+                id="cover-lyrics-input"
                 rows={4}
                 value={lyrics}
                 onChange={(e) => {
@@ -410,20 +501,43 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
                 placeholder="วางเนื้อเพลงทั้งหมด หรือเฉพาะท่อนสำคัญ..."
                 className="w-full bg-slate-950 border border-slate-700/80 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-all leading-relaxed font-sans"
               />
+              {!lyrics.trim() && (
+                <p className="text-[10.5px] text-amber-300 mt-1 flex items-center space-x-1">
+                  <AlertTriangle className="w-3 h-3 shrink-0" />
+                  <span>กรุณาวางเนื้อเพลงหรือแก่นเรื่อง เพื่อให้ AI ตีความภาพปกตรงกับเพลงที่สุด</span>
+                </p>
+              )}
             </div>
 
-            {/* Input 3: Credit */}
-            <div>
-              <label className="text-xs font-semibold text-slate-200 block mb-1">
-                ชื่อคนแต่ง / เครดิต (Songwriter Credit)
-              </label>
-              <input
-                type="text"
-                value={credit}
-                onChange={(e) => setCredit(e.target.value)}
-                placeholder="ใส่ชื่อ เช่น FRANKYTEAM หรือระบุว่า ไม่ใส่"
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-medium"
-              />
+            {/* Input 3: Credit & Hook Headline */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="cover-credit-input" className="text-xs font-semibold text-slate-200 block mb-1">
+                  ชื่อคนแต่ง / เครดิต (Credit)
+                </label>
+                <input
+                  id="cover-credit-input"
+                  type="text"
+                  value={credit}
+                  onChange={(e) => setCredit(e.target.value)}
+                  placeholder="ใส่ชื่อ หรือระบุ ไม่ใส่"
+                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-medium"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="cover-hook-input" className="text-xs font-semibold text-slate-200 block mb-1">
+                  คำพาดหัวสะกิดใจ (3s Hook • ส่งต่อ Step 3)
+                </label>
+                <input
+                  id="cover-hook-input"
+                  type="text"
+                  value={hookHeadline}
+                  onChange={(e) => setHookHeadline(e.target.value)}
+                  placeholder="คำโปรยสั้น 1-2 บรรทัดบน MV (ไม่บังคับ)"
+                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-medium"
+                />
+              </div>
             </div>
 
             {/* Input 4: Mood & Tone */}
@@ -631,10 +745,15 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
                   onClick={handleCopyDirectPrompt}
                   className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white rounded-lg text-xs font-bold shadow-md shadow-cyan-600/30 transition-all shrink-0"
                 >
-                  {copiedDirectPrompt ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedDirectPrompt ? "คัดลอกแล้ว!" : "คัดลอกคำสั่งภาพปกนี้"}</span>
+                  {copiedKey === "direct" ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedKey === "direct" ? "คัดลอกแล้ว!" : "คัดลอกคำสั่งภาพปกนี้"}</span>
                 </button>
               </div>
+              {copyError && (
+                <div role="alert" className="p-2 rounded-lg bg-amber-950/70 border border-amber-500/40 text-[11px] text-amber-200">
+                  {copyError}
+                </div>
+              )}
               <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-cyan-200/90 whitespace-pre-wrap leading-relaxed select-all max-h-48 overflow-y-auto">
                 {directImagePrompt}
               </div>
@@ -643,7 +762,7 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
             {/* 2. Google Flow / Omni Flash Motion Prompt (Mode 2) */}
             {mode === "loop-mv" && (
               <div className="space-y-2 pt-2 border-t border-slate-800">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <label className="text-xs font-bold text-indigo-300 flex items-center space-x-1.5">
                       <Film className="w-3.5 h-3.5 text-indigo-400" />
@@ -658,8 +777,8 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
                     onClick={handleCopyMotionPrompt}
                     className="flex items-center space-x-1.5 px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold shadow-md shadow-indigo-600/30 transition-all shrink-0"
                   >
-                    {copiedMotionPrompt ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedMotionPrompt ? "คัดลอกแล้ว!" : "คัดลอกคำสั่งวิดีโอ"}</span>
+                    {copiedKey === "motion" ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedKey === "motion" ? "คัดลอกแล้ว!" : "คัดลอกคำสั่งวิดีโอ"}</span>
                   </button>
                 </div>
                 <div className="p-3 bg-slate-950 border border-indigo-500/30 rounded-xl text-xs font-mono text-indigo-200 whitespace-pre-wrap leading-relaxed select-all">
@@ -706,8 +825,8 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
                   onClick={handleCopyMegaPrompt}
                   className="flex items-center space-x-1.5 px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold shadow-md shadow-amber-600/30 transition-all shrink-0"
                 >
-                  {copiedMegaPrompt ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedMegaPrompt ? "คัดลอกแล้ว!" : "คัดลอก Mega-Prompt"}</span>
+                  {copiedKey === "mega" ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedKey === "mega" ? "คัดลอกแล้ว!" : "คัดลอก Mega-Prompt"}</span>
                 </button>
               </div>
               <div className="p-3 bg-slate-950 border border-amber-500/30 rounded-xl text-xs font-mono text-amber-200/90 max-h-48 overflow-y-auto whitespace-pre-wrap leading-relaxed select-all">
@@ -721,7 +840,7 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
         <div className="lg:col-span-6 space-y-4">
           <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col items-center">
             {/* Top Bar: Title & Upload */}
-            <div className="w-full flex items-center justify-between mb-3">
+            <div className="w-full flex flex-wrap items-center justify-between gap-2 mb-3">
               <div className="flex items-center space-x-2">
                 <Eye className="w-4 h-4 text-emerald-400" />
                 <h3 className="text-sm font-bold text-white">
@@ -730,10 +849,15 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
               </div>
 
               {/* Upload Button */}
-              <label className="cursor-pointer flex items-center space-x-1.5 text-xs px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white rounded-xl font-bold shadow-md shadow-cyan-600/25 transition-all">
+              <label className="cursor-pointer flex items-center space-x-1.5 text-xs px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white rounded-xl font-bold shadow-md shadow-cyan-600/25 transition-all focus-within:ring-2 focus-within:ring-cyan-300">
                 <Upload className="w-3.5 h-3.5" />
                 <span>📁 นำเข้าภาพ/คลิป 9:16</span>
-                <input type="file" accept="image/*,video/*,.png,.jpg,.jpeg,.webp,.mp4,.mov,.webm" onChange={handleMediaUpload} className="hidden" />
+                <input
+                  type="file"
+                  accept="image/*,video/*,.png,.jpg,.jpeg,.webp,.mp4,.mov,.webm"
+                  onChange={handleMediaUpload}
+                  className="sr-only"
+                />
               </label>
             </div>
 
@@ -810,9 +934,9 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
             {/* All-Genre Sample Covers Quick Switcher */}
             <div className="w-full space-y-1 mb-3">
               <span className="text-[10px] font-bold text-slate-300 block">
-                เลือกชมภาพปกตัวอย่างตามแนวเพลง (1-Click Switch):
+                เลือกชมภาพปกตัวอย่างตามแนวเพลง (1-Click Switch • ครบทั้ง 6 ปก):
               </span>
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
                 {[
                   {
                     name: "เพื่อชีวิต (พ่อ)",
@@ -821,13 +945,25 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
                     url: "/covers/phaw_carpenter_cover.jpg",
                   },
                   {
-                    name: "เพลงรัก (รักแรกพบ)",
+                    name: "ช่างไม้ (คิดถึง)",
+                    icon: "🪵",
+                    title: "กลิ่นขี้เลื่อยในเสื้อตัวเก่า",
+                    url: "/covers/woodworker_father_cover.jpg",
+                  },
+                  {
+                    name: "สายใย (พ่อ-ลูก)",
+                    icon: "🏡",
+                    title: "อ้อมกอดของพ่อ",
+                    url: "/covers/father_memory_son_cover.jpg",
+                  },
+                  {
+                    name: "เพลงรัก (คาเฟ่)",
                     icon: "🌸",
                     title: "รักแรกพบ",
                     url: "/covers/love_acoustic_cover.jpg",
                   },
                   {
-                    name: "อกหัก (คืนฝนพรำ)",
+                    name: "อกหัก (ฝนพรำ)",
                     icon: "🌧️",
                     title: "คืนฝนพรำ",
                     url: "/covers/rain_city_melancholy_cover.jpg",
@@ -845,6 +981,7 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
                     onClick={() => {
                       setCoverImageUrl(cov.url);
                       setSongTitle(cov.title);
+                      setImageFileName("");
                       setIsVideoCover(false);
                     }}
                     className={`py-1.5 px-1 rounded-xl text-[10px] font-semibold border text-center transition-all truncate flex flex-col items-center space-y-0.5 ${
@@ -931,7 +1068,7 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
                     <div className="relative flex flex-col items-center">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 p-0.5 shadow-lg border border-white">
                         <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center text-[9px] font-black text-white">
-                          {credit ? credit.slice(0, 2).toUpperCase() : "FT"}
+                          {!isCreditDisabled(credit) ? credit.trim().slice(0, 2).toUpperCase() : "VC"}
                         </div>
                       </div>
                       <div className="absolute -bottom-1 w-3.5 h-3.5 rounded-full bg-rose-500 text-white flex items-center justify-center text-[9px] font-black shadow border border-white">
@@ -975,15 +1112,18 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
                   {/* Bottom: TikTok Post Caption & Audio Ticker (คำโพสต์ของ TikTok) */}
                   <div className="w-full pr-12 pb-1 space-y-1">
                     <div className="text-[11px] font-black text-white drop-shadow flex items-center space-x-1">
-                      <span>@{credit ? credit.toLowerCase().replace(/\s+/g, "") : "frankyteam"}</span>
+                      <span>@{!isCreditDisabled(credit) ? credit.trim().toLowerCase().replace(/\s+/g, "") : "vericapvdo"}</span>
                       <span className="text-white/60 text-[9px] font-normal">· 1 วันที่แล้ว</span>
                     </div>
                     <p className="text-[10px] text-white font-medium leading-snug drop-shadow line-clamp-2">
-                      {songTitle}... บทเพลงแห่งความทรงจำ 🌾 ฟังแล้วน้ำตาซึม #{songTitle.replace(/\s+/g, "")} #เพลงเพื่อชีวิต #fyp
+                      {hookHeadline.trim() || `${songTitle || "บทเพลงของคุณ"}... บทเพลงแห่งความทรงจำ 🌾`}{" "}
+                      #{songTitle ? songTitle.replace(/\s+/g, "") : "เพลงใหม่"} #เพลงฮิต #fyp
                     </p>
                     <div className="flex items-center space-x-1 text-[9px] text-white/90 drop-shadow">
                       <Music className="w-2.5 h-2.5 text-white shrink-0 animate-bounce" />
-                      <span className="truncate">เสียงต้นฉบับ - {credit || "FRANKYTEAM"} • {songTitle}</span>
+                      <span className="truncate">
+                        เสียงต้นฉบับ - {!isCreditDisabled(credit) ? credit.trim() : "VeriCapVdo"} • {songTitle || "Music"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -994,7 +1134,7 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
                 <div className="absolute inset-0 pointer-events-none z-30 flex flex-col justify-between p-3 select-none">
                   {/* Title Safe Zone (Upper-Center: 15% - 28%) */}
                   <div
-                    className="w-full border-2 border-dashed border-emerald-400 rounded-xl bg-emerald-500/15 flex flex-col items-center justify-center p-2 text-center shadow-lg"
+                    className="w-full border-2 border-dashed border-emerald-400 rounded-xl bg-emerald-500/15 flex flex-col items-center justify-center p-2 text-center shadow-lg mt-[12%]"
                     style={{ height: "22%" }}
                   >
                     <span className="bg-emerald-600 text-white text-[9px] px-2 py-0.5 rounded-full font-bold shadow">
@@ -1051,27 +1191,23 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
                 </div>
               )}
 
-              {/* Optional Typography Burning Overlay (Off by default for pure covers) */}
+              {/* Optional Typography Burning Overlay placed strictly inside 15-28% Title Safe Zone */}
               {enableTypographyOverlay && (
-                <div className="absolute inset-0 pointer-events-none z-20 flex flex-col justify-between p-4">
-                  <div className="text-center pt-2">
-                    <h4
-                      className="text-lg font-black text-white tracking-wide drop-shadow-2xl px-2"
-                      style={{
-                        textShadow: "0 4px 16px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.9)",
-                      }}
-                    >
-                      {songTitle || "ชื่อเพลงของคุณ"}
-                    </h4>
-                  </div>
+                <div className="absolute inset-x-4 top-[14%] pointer-events-none z-20 flex flex-col items-center space-y-2 text-center">
+                  <h4
+                    className="text-lg font-black text-white tracking-wide drop-shadow-2xl px-2 leading-tight"
+                    style={{
+                      textShadow: "0 4px 16px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.9)",
+                    }}
+                  >
+                    {songTitle || "ชื่อเพลงของคุณ"}
+                  </h4>
 
-                  {credit && credit.trim() && (
-                    <div className="flex justify-center pb-2">
-                      <div className="px-3 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/25 shadow-lg max-w-[90%] truncate">
-                        <p className="text-[10px] font-bold text-slate-100 drop-shadow truncate">
-                          {credit.trim()}
-                        </p>
-                      </div>
+                  {!isCreditDisabled(credit) && (
+                    <div className="px-3 py-0.5 rounded-full bg-black/75 backdrop-blur-md border border-white/25 shadow-lg max-w-[90%] truncate">
+                      <p className="text-[10px] font-bold text-slate-100 drop-shadow truncate">
+                        {credit.trim()}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -1080,14 +1216,20 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
 
             {/* Optional Typography Toggle */}
             <div className="w-full max-w-[340px] mt-3 flex items-center justify-between text-xs text-slate-400 px-1">
-              <span>เผื่อใช้รูปเปล่าที่ยังไม่มีตัวหนังสือ:</span>
-              <button
-                type="button"
-                onClick={() => setEnableTypographyOverlay(!enableTypographyOverlay)}
-                className="text-[11px] text-cyan-400 hover:underline font-semibold"
-              >
-                {enableTypographyOverlay ? "ปิดการพิมพ์ข้อความทับ" : "พิมพ์ข้อความจำลองทับ"}
-              </button>
+              <span>
+                {isVideoCover
+                  ? "สำหรับวิดีโอ: แนะนำปรับข้อความในขั้นตอนที่ 3 (MV Studio)"
+                  : "เผื่อใช้รูปเปล่าที่ยังไม่มีตัวหนังสือ:"}
+              </span>
+              {!isVideoCover && (
+                <button
+                  type="button"
+                  onClick={() => setEnableTypographyOverlay(!enableTypographyOverlay)}
+                  className="text-[11px] text-cyan-400 hover:underline font-semibold shrink-0 ml-2"
+                >
+                  {enableTypographyOverlay ? "ปิดการพิมพ์ข้อความทับ" : "พิมพ์ข้อความจำลองทับ"}
+                </button>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -1098,7 +1240,13 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
                 className="flex items-center space-x-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700 transition-all"
               >
                 <Download className="w-3.5 h-3.5 text-cyan-400" />
-                <span>{enableTypographyOverlay ? "ดาวน์โหลดภาพปก (พร้อมชื่อเพลง)" : "ดาวน์โหลดภาพปกนี้"}</span>
+                <span>
+                  {isVideoCover
+                    ? "ดาวน์โหลดไฟล์วิดีโอนี้"
+                    : enableTypographyOverlay
+                    ? "ดาวน์โหลดภาพปก (พร้อมชื่อเพลง)"
+                    : "ดาวน์โหลดภาพปกนี้"}
+                </span>
               </button>
 
               <button
@@ -1108,8 +1256,9 @@ ${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}`;
                     title: songTitle,
                     coverImage: coverImageUrl,
                     backgroundVideo: isVideoCover ? coverImageUrl : undefined,
-                    credit: credit,
+                    credit: isCreditDisabled(credit) ? "" : credit.trim(),
                     lyrics: lyrics,
+                    hookHeadline: hookHeadline.trim() || undefined,
                   })
                 }
                 className="flex items-center space-x-1.5 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/30 transition-all hover:scale-105 ml-auto"

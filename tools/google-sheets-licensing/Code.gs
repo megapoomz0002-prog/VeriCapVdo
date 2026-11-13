@@ -3,32 +3,26 @@
  * VeriCapVdo Studio - ระบบจัดการลิขสิทธิ์และคีย์เข้าใช้งานบน Google Sheets
  * (Serverless License Management API for Google Sheets & Google Apps Script)
  * ==============================================================================
- * 
+ *
  * คุณสมบัติ:
  * 1. ตรวจสอบและผูก License Key ถาวร (1 คีย์ต่อ 1 เบราว์เซอร์/เครื่อง)
  * 2. เมนูบน Google Sheets สร้างคีย์อัตโนมัติ 20 / 50 / 100 คีย์ (รูปแบบ VCV-XXXX-XXXX-XXXX-XXXX)
- * 3. แจ้งเตือนเข้า LINE Notify อัตโนมัติเมื่อมีผู้เปิดใช้งานคีย์
+ * 3. แจ้งเตือนผ่าน Webhook URL (Discord / Slack / Relay Webhook) อัตโนมัติเมื่อเปิดใช้งานคีย์
  * 4. รองรับการระงับคีย์ (Revoke) ทันทีเพียงเปลี่ยนสถานะใน Sheet เป็น "ระงับการใช้งาน"
- * 5. มีระบบ LockService ป้องกันคำขอชนกัน (Concurrency Safe)
- * 
- * ขั้นตอนการติดตั้ง (ใช้เวลา 1-2 นาที):
- * 1. เปิด Google Sheets เปล่าใหม่ที่ https://sheets.new
- * 2. ตั้งชื่อไฟล์ เช่น "VeriCapVdo Studio - ระบบจัดการลิขสิทธิ์"
- * 3. ไปที่เมนู "ส่วนขยาย" (Extensions) > "Apps Script"
- * 4. ลบโค้ดเดิมออกทั้งหมด แล้ววางโค้ดไฟล์นี้ลงไป
- * 5. กดปุ่ม "บันทึก" (รูปแผ่นดิสก์)
- * 6. กดปุ่ม "ทำให้ใช้งานได้" (Deploy) > "การทำให้ใช้งานได้ใหม่" (New deployment)
- *    - เลือกประเภท: "เว็บแอป" (Web app)
- *    - คำอธิบาย: VeriCapVdo License API
- *    - ดำเนินการในฐานะ: ตัวฉัน (Me)
- *    - ผู้ที่มีสิทธิ์เข้าถึง: ทุกคน (Anyone)  <-- สำคัญมาก! เพื่อให้เว็บแอปเช็คคีย์ได้
- * 7. กด "ทำให้ใช้งานได้" (Deploy) แล้วคัดลอก "URL ของเว็บแอป"
- *    (รูปแบบ https://script.google.com/macros/s/.../exec)
- *    นำไปใส่ใน Vercel Environment Variable: LICENSE_API_URL
+ * 5. มีระบบ LockService ป้องกันคำขอชนกัน + ป้องกัน Sheets Formula Injection + รองรับ Shared Secret
  */
 
 const SHEET_LICENSES = "Licenses";
-const KEY_PREFIX = "VCV"; // Prefix คีย์สำหรับ VeriCapVdo Studio
+const KEY_PREFIX = "VCV";
+
+/**
+ * ป้องกัน Google Sheets Formula Injection สำหรับข้อมูลจากผู้ใช้
+ */
+function sanitizeSheetCell(value) {
+  const str = String(value || "").trim();
+  if (!str) return "";
+  return /^[=+\-@\t\r]/.test(str) ? "'" + str : str;
+}
 
 /**
  * สร้างเมนู VeriCapVdo บนแถบเครื่องมือของ Google Sheets อัตโนมัติ
@@ -42,8 +36,9 @@ function onOpen() {
     .addItem("➕ สร้างคีย์พร้อมใช้งาน 50 คีย์", "generate50Keys")
     .addItem("➕ สร้างคีย์พร้อมใช้งาน 100 คีย์", "generate100Keys")
     .addSeparator()
-    .addItem("🔔 ตั้งค่า LINE Notify Token", "configureLineNotify")
-    .addItem("🧪 ทดสอบส่งแจ้งเตือน LINE", "testLineNotify")
+    .addItem("🔔 ตั้งค่า Webhook แจ้งเตือน (Discord/Slack/Relay)", "configureWebhook")
+    .addItem("🔒 ตั้งค่า Shared Secret (ป้องกันยิงตรง)", "configureSharedSecret")
+    .addItem("🧪 ทดสอบส่งแจ้งเตือน Webhook", "testWebhookNotification")
     .addToUi();
 }
 
@@ -67,13 +62,13 @@ function setupSheets() {
     .setFontWeight("bold")
     .setHorizontalAlignment("center");
   licSheet.setFrozenRows(1);
-  licSheet.setColumnWidth(1, 240); // Key
-  licSheet.setColumnWidth(2, 110); // Status
-  licSheet.setColumnWidth(3, 200); // Customer/User
-  licSheet.setColumnWidth(4, 250); // Device ID
-  licSheet.setColumnWidth(5, 160); // Activated At
-  licSheet.setColumnWidth(6, 160); // Last Check
-  licSheet.setColumnWidth(7, 200); // Notes
+  licSheet.setColumnWidth(1, 240);
+  licSheet.setColumnWidth(2, 110);
+  licSheet.setColumnWidth(3, 200);
+  licSheet.setColumnWidth(4, 250);
+  licSheet.setColumnWidth(5, 160);
+  licSheet.setColumnWidth(6, 160);
+  licSheet.setColumnWidth(7, 200);
 
   SpreadUiAlert("ตั้งค่าสำเร็จ!", "สร้างแท็บ Licenses สำหรับ VeriCapVdo Studio พร้อมใช้งานเรียบร้อยแล้วครับ");
 }
@@ -83,7 +78,7 @@ function generate50Keys() { generateBatchKeys(50); }
 function generate100Keys() { generateBatchKeys(100); }
 
 /**
- * สร้างคีย์สุ่มแบบปลอดภัย (รูปแบบ VCV-XXXX-XXXX-XXXX-XXXX)
+ * สร้างคีย์สุ่มแบบปลอดภัย (รูปแบบ VCV-XXXX-XXXX-XXXX-XXXX) ด้วยเอนโทรปีจาก Utilities.getUuid()
  */
 function generateBatchKeys(count) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -103,16 +98,23 @@ function generateBatchKeys(count) {
   }
 
   const newRows = [];
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // ตัดตัวสับสน O, 0, I, 1 ออก
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
   for (let i = 0; i < count; i++) {
     let key = "";
     do {
+      const entropy = Utilities.computeDigest(
+        Utilities.DigestAlgorithm.SHA_256,
+        Utilities.getUuid() + ":" + Date.now() + ":" + Math.random()
+      );
+      let idx = 0;
       key = KEY_PREFIX;
       for (let segment = 0; segment < 4; segment++) {
         let part = "";
         for (let c = 0; c < 4; c++) {
-          part += chars.charAt(Math.floor(Math.random() * chars.length));
+          const byteVal = (entropy[idx % entropy.length] + 256) % 256;
+          part += chars.charAt(byteVal % chars.length);
+          idx++;
         }
         key += "-" + part;
       }
@@ -162,6 +164,11 @@ function handleRequest(e) {
       return jsonResponse({ success: true, message: "VeriCapVdo Studio License API Online", timestamp: new Date().toISOString() });
     }
 
+    const configuredSecret = (PropertiesService.getScriptProperties().getProperty("LICENSE_SHARED_SECRET") || "").trim();
+    if (configuredSecret && (params.secret || "").trim() !== configuredSecret) {
+      return jsonResponse({ success: false, message: "Unauthorized request" });
+    }
+
     if (action === "activate") {
       return handleActivate(params);
     }
@@ -182,15 +189,17 @@ function handleRequest(e) {
  * ประมวลผลการเปิดใช้งาน Key ถาวร
  */
 function handleActivate(params) {
-  const keyInput = (params.key || "").trim().toUpperCase().replace(/\s+/g, "");
-  const deviceId = (params.deviceId || params.machineId || "").trim().toUpperCase();
-  const userName = (params.userName || "").trim();
+  const keyInput = String(params.key || "").trim().toUpperCase().replace(/\s+/g, "");
+  const deviceId = String(params.deviceId || params.machineId || "").trim().toUpperCase().slice(0, 120);
+  const safeDeviceId = sanitizeSheetCell(deviceId);
+  const rawUserName = String(params.userName || "").trim().slice(0, 80);
+  const safeUserName = sanitizeSheetCell(rawUserName);
 
   if (!keyInput || keyInput.length < 6) {
     return jsonResponse({ success: false, message: "กรุณาระบุ License Key ให้ถูกต้อง" });
   }
-  if (!deviceId) {
-    return jsonResponse({ success: false, message: "ไม่พบรหัสอุปกรณ์ Device ID" });
+  if (!deviceId || deviceId === "VCV-WEB-CLIENT") {
+    return jsonResponse({ success: false, message: "ไม่พบรหัสอุปกรณ์ Device ID ที่ถูกต้อง" });
   }
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -210,7 +219,7 @@ function handleActivate(params) {
   let rowData = null;
 
   for (let i = 0; i < data.length; i++) {
-    const rowKey = String(data[i][0]).toUpperCase().trim().replace(/\s+/g, "");
+    const rowKey = String(data[i][0] || "").toUpperCase().trim().replace(/\s+/g, "");
     if (rowKey === keyInput || rowKey.replace(/-/g, "") === keyInput.replace(/-/g, "")) {
       targetRowIndex = i + 2;
       rowData = data[i];
@@ -223,28 +232,24 @@ function handleActivate(params) {
   }
 
   const currentStatus = String(rowData[1] || "").trim();
-  const boundDeviceId = String(rowData[3] || "").trim().toUpperCase();
+  const boundDeviceId = String(rowData[3] || "").trim().replace(/^'/, "").toUpperCase();
   const nowStr = Utilities.formatDate(new Date(), "GMT+7", "yyyy-MM-dd HH:mm:ss");
 
-  // กรณีคีย์ถูกระงับ
   if (currentStatus === "ระงับการใช้งาน" || currentStatus.toLowerCase() === "revoked") {
     return jsonResponse({ success: false, message: "License Key นี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" });
   }
 
-  // กรณีคีย์เคยถูกเปิดใช้งานแล้ว
   if (boundDeviceId && boundDeviceId.length > 0) {
     if (boundDeviceId === deviceId) {
-      // เครื่องเดิม/เบราว์เซอร์เดิม -> อนุญาตให้เปิดใช้งานซ้ำได้
       sheet.getRange(targetRowIndex, 6).setValue(nowStr);
       return jsonResponse({
         success: true,
         message: "อุปกรณ์นี้เปิดใช้งานด้วยคีย์นี้เรียบร้อยแล้ว (สิทธิ์ถาวรตลอดชีพ)",
         licenseKey: rowData[0],
-        userName: rowData[2] || userName,
+        userName: rowData[2] || rawUserName,
         licenseType: "Permanent"
       });
     } else {
-      // เครื่องอื่นแอบเอาคีย์ไปใช้
       return jsonResponse({
         success: false,
         message: "คีย์นี้ถูกเปิดใช้งานบนอุปกรณ์อื่นไปแล้ว (จำกัด 1 คีย์ต่อ 1 อุปกรณ์เท่านั้น)"
@@ -252,23 +257,24 @@ function handleActivate(params) {
     }
   }
 
-  // กรณีคีย์ยังว่างอยู่ -> ผูกเข้ากับ Device ID ทันที!
-  sheet.getRange(targetRowIndex, 2).setValue("ใช้งานแล้ว");
-  if (userName) {
-    sheet.getRange(targetRowIndex, 3).setValue(userName);
-  }
-  sheet.getRange(targetRowIndex, 4).setValue(deviceId);
-  sheet.getRange(targetRowIndex, 5).setValue(nowStr);
-  sheet.getRange(targetRowIndex, 6).setValue(nowStr);
+  const updatedName = safeUserName || String(rowData[2] || "");
+  sheet.getRange(targetRowIndex, 2, 1, 5).setValues([[
+    "ใช้งานแล้ว",
+    updatedName,
+    safeDeviceId,
+    nowStr,
+    nowStr
+  ]]);
 
-  // แจ้งเตือนเข้า LINE (ถ้ามีการตั้งค่าไว้)
-  sendLineNotification(`🎉 มีผู้เปิดใช้งานคีย์ใหม่บน VeriCapVdo Studio!\n🔑 คีย์: ${rowData[0]}\n👤 ผู้ใช้: ${userName || "ไม่ระบุ"}\n💻 Device ID: ${deviceId}\n⏰ เวลา: ${nowStr}`);
+  sendWebhookNotification(
+    `🎉 เปิดใช้งานคีย์ใหม่ VeriCapVdo Studio!\n🔑 คีย์: ${rowData[0]}\n👤 ผู้ใช้: ${rawUserName || "ไม่ระบุ"}\n💻 Device ID: ${deviceId}\n⏰ เวลา: ${nowStr}`
+  );
 
   return jsonResponse({
     success: true,
     message: "เปิดใช้งานสิทธิ์เข้าใช้งานสำเร็จเรียบร้อยแล้ว!",
     licenseKey: rowData[0],
-    userName: userName || rowData[2],
+    userName: rawUserName || String(rowData[2] || ""),
     licenseType: "Permanent"
   });
 }
@@ -277,8 +283,7 @@ function handleActivate(params) {
  * ตรวจสอบสถานะของคีย์
  */
 function handleCheckStatus(params) {
-  const keyInput = (params.key || "").trim().toUpperCase().replace(/\s+/g, "");
-
+  const keyInput = String(params.key || "").trim().toUpperCase().replace(/\s+/g, "");
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const licSheet = ss.getSheetByName(SHEET_LICENSES);
 
@@ -287,16 +292,16 @@ function handleCheckStatus(params) {
     if (lastRow > 1) {
       const data = licSheet.getRange(2, 1, lastRow - 1, 7).getValues();
       for (let i = 0; i < data.length; i++) {
-        const rowKey = String(data[i][0]).toUpperCase().trim().replace(/\s+/g, "");
+        const rowKey = String(data[i][0] || "").toUpperCase().trim().replace(/\s+/g, "");
         if (rowKey === keyInput || rowKey.replace(/-/g, "") === keyInput.replace(/-/g, "")) {
-          const status = data[i][1];
+          const status = String(data[i][1] || "").trim();
           const isValid = status !== "ระงับการใช้งาน" && status.toLowerCase() !== "revoked";
           return jsonResponse({
             success: isValid,
             key: data[i][0],
             status: status,
-            userName: data[i][2],
-            boundDeviceId: data[i][3],
+            userName: String(data[i][2] || ""),
+            boundDeviceId: String(data[i][3] || "").replace(/^'/, ""),
             activatedAt: data[i][4]
           });
         }
@@ -308,49 +313,78 @@ function handleCheckStatus(params) {
 }
 
 /**
- * LINE Notify Integration
+ * Webhook Notification Integration (แทนที่ LINE Notify ซึ่งยุติการให้บริการแล้ว)
  */
-function configureLineNotify() {
+function configureWebhook() {
   const ui = SpreadsheetApp.getUi();
   const prop = PropertiesService.getScriptProperties();
-  const currentToken = prop.getProperty("LINE_NOTIFY_TOKEN") || "";
+  const currentUrl = prop.getProperty("NOTIFY_WEBHOOK_URL") || "";
 
   const response = ui.prompt(
-    "ตั้งค่า LINE Notify Token",
-    "กรอก LINE Notify Token (รับได้ฟรีจาก notify-bot.line.me):\n(ปัจจุบัน: " + (currentToken ? "••••" + currentToken.slice(-4) : "ยังไม่ได้ตั้งค่า") + ")",
+    "ตั้งค่า Webhook แจ้งเตือน",
+    "วาง Discord Webhook / Slack Webhook URL (เว้นว่างเพื่อปิดการแจ้งเตือน):\n(ปัจจุบัน: " +
+      (currentUrl ? currentUrl.slice(0, 32) + "..." : "ยังไม่ได้ตั้งค่า") +
+      ")",
     ui.ButtonSet.OK_CANCEL
   );
 
   if (response.getSelectedButton() === ui.Button.OK) {
-    const token = response.getResponseText().trim();
-    if (token) {
-      prop.setProperty("LINE_NOTIFY_TOKEN", token);
-      SpreadUiAlert("บันทึกสำเร็จ", "บันทึก LINE Notify Token เรียบร้อยแล้วครับ");
+    const url = response.getResponseText().trim();
+    if (url) {
+      prop.setProperty("NOTIFY_WEBHOOK_URL", url);
+      SpreadUiAlert("บันทึกสำเร็จ", "บันทึก Webhook แจ้งเตือนเรียบร้อยแล้วครับ");
+    } else {
+      prop.deleteProperty("NOTIFY_WEBHOOK_URL");
+      SpreadUiAlert("อัปเดตสำเร็จ", "ลบการตั้งค่า Webhook แล้วครับ");
     }
   }
 }
 
-function testLineNotify() {
-  const success = sendLineNotification("🧪 ทดสอบการเชื่อมต่อระบบแจ้งเตือน LINE จาก VeriCapVdo Studio สำเร็จ 100%!");
-  if (success) {
-    SpreadUiAlert("สำเร็จ!", "ส่งข้อความทดสอบเข้า LINE เรียบร้อยแล้ว กรุณาเปิดดูในแชท");
-  } else {
-    SpreadUiAlert("ไม่สำเร็จ", "กรุณาตรวจสอบว่าได้ตั้งค่า LINE Notify Token หรือยัง");
+function configureSharedSecret() {
+  const ui = SpreadsheetApp.getUi();
+  const prop = PropertiesService.getScriptProperties();
+  const response = ui.prompt(
+    "ตั้งค่า Shared Secret",
+    "กรอกรหัสลับให้ตรงกับ LICENSE_SHARED_SECRET บน Vercel (เว้นว่างเพื่อปิด):",
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (response.getSelectedButton() === ui.Button.OK) {
+    const val = response.getResponseText().trim();
+    if (val) {
+      prop.setProperty("LICENSE_SHARED_SECRET", val);
+      SpreadUiAlert("บันทึกสำเร็จ", "ตั้งค่า Shared Secret เรียบร้อยแล้ว");
+    } else {
+      prop.deleteProperty("LICENSE_SHARED_SECRET");
+      SpreadUiAlert("อัปเดตสำเร็จ", "ลบ Shared Secret แล้ว");
+    }
   }
 }
 
-function sendLineNotification(message) {
-  try {
-    const token = PropertiesService.getScriptProperties().getProperty("LINE_NOTIFY_TOKEN");
-    if (!token) return false;
+function testWebhookNotification() {
+  const success = sendWebhookNotification("🧪 ทดสอบการเชื่อมต่อแจ้งเตือนจาก VeriCapVdo Studio สำเร็จ 100%!");
+  if (success) {
+    SpreadUiAlert("สำเร็จ!", "ส่งข้อความทดสอบเข้า Webhook เรียบร้อยแล้ว");
+  } else {
+    SpreadUiAlert("ไม่สำเร็จ", "กรุณาตรวจสอบว่าได้ตั้งค่า Webhook URL แล้วหรือยัง");
+  }
+}
 
-    UrlFetchApp.fetch("https://notify-api.line.me/api/notify", {
+function sendWebhookNotification(message) {
+  try {
+    const webhookUrl = PropertiesService.getScriptProperties().getProperty("NOTIFY_WEBHOOK_URL");
+    if (!webhookUrl) return false;
+
+    const payload = webhookUrl.includes("discord.com")
+      ? { content: message }
+      : { text: message, message: message };
+
+    const res = UrlFetchApp.fetch(webhookUrl, {
       method: "post",
-      headers: { "Authorization": "Bearer " + token },
-      payload: { "message": message },
+      contentType: "application/json",
+      payload: JSON.stringify(payload),
       muteHttpExceptions: true
     });
-    return true;
+    return res.getResponseCode() >= 200 && res.getResponseCode() < 300;
   } catch (e) {
     return false;
   }

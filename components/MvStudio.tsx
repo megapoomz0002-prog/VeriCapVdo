@@ -36,6 +36,7 @@ import {
   Zap,
   Eye,
   EyeOff,
+  X,
 } from "lucide-react";
 import {
   parseSubtitleFile,
@@ -54,6 +55,40 @@ import {
 } from "@/lib/srtParser";
 import { createAcousticDemoAudio } from "@/lib/audioDemo";
 import { exportMusicVideo } from "@/lib/videoExporter";
+import {
+  createMvParticles,
+  createMvSprites,
+  computeCameraTransform,
+  drawMvEffects,
+} from "@/lib/mvVisuals";
+
+function safeGetStorageItem(key: string): string {
+  try {
+    return typeof window !== "undefined" ? window.localStorage.getItem(key) || "" : "";
+  } catch {
+    return "";
+  }
+}
+
+function safeSetStorageItem(key: string, value: string): void {
+  try {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(key, value);
+    }
+  } catch {
+    // Ignore storage quota or private-mode errors
+  }
+}
+
+function safeRemoveStorageItem(key: string): void {
+  try {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(key);
+    }
+  } catch {
+    // Ignore private-mode errors
+  }
+}
 
 interface MvStudioProps {
   apiKey?: string;
@@ -77,15 +112,10 @@ export default function MvStudio({
   initialHookHeadline = "",
 }: MvStudioProps) {
   // API Key management (exclusively used in Step 3 for Audio & Subtitle Precision Sync)
-  const [apiKeyVal, setApiKeyVal] = useState<string>(() => {
-    if (apiKey) return apiKey;
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("gemini_api_key") || "";
-    }
-    return "";
-  });
+  const [apiKeyVal, setApiKeyVal] = useState<string>(() => apiKey || safeGetStorageItem("gemini_api_key"));
+  const [hasServerKey, setHasServerKey] = useState<boolean>(false);
   const [showKeyEditor, setShowKeyEditor] = useState<boolean>(false);
-  const [tempKeyInput, setTempKeyInput] = useState<string>(() => apiKey || "");
+  const [tempKeyInput, setTempKeyInput] = useState<string>(() => apiKey || safeGetStorageItem("gemini_api_key"));
   const [showTempKeyPassword, setShowTempKeyPassword] = useState<boolean>(false);
 
   useEffect(() => {
@@ -93,7 +123,22 @@ export default function MvStudio({
       setApiKeyVal(apiKey);
       setTempKeyInput(apiKey);
     }
-  }, [apiKey]);
+  }, [apiKey, apiKeyVal]);
+
+  useEffect(() => {
+    const ac = new AbortController();
+    fetch("/api/gemini/test-connection", { method: "GET", signal: ac.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && typeof data.hasServerKey === "boolean") {
+          setHasServerKey(data.hasServerKey);
+        }
+      })
+      .catch(() => {
+        // Ignore abort or offline check
+      });
+    return () => ac.abort();
+  }, []);
   // 1. Song Metadata (Directly Editable)
   const [songTitle, setSongTitle] = useState(initialTitle || "กอดพ่อได้เพียง");
   const [credit, setCredit] = useState(initialCredit || "megapoomz");
@@ -172,11 +217,42 @@ export default function MvStudio({
   const videoBgRef = useRef<HTMLVideoElement | null>(null);
   const bgMediaContainerRef = useRef<HTMLDivElement | null>(null);
   const effectCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finishTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tapDraftCuesRef = useRef<SubtitleCue[]>([]);
+  const tapStampedIndicesRef = useRef<Set<number>>(new Set());
+  const exportAbortRef = useRef<AbortController | null>(null);
+  const audioBlobUrlRef = useRef<string | null>(null);
+  const bgBlobUrlRef = useRef<string | null>(null);
+  const exportBlobUrlRef = useRef<string | null>(null);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(""), 3500);
-  };
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage("");
+      toastTimerRef.current = null;
+    }, 3500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      if (finishTapTimerRef.current) clearTimeout(finishTapTimerRef.current);
+      exportAbortRef.current?.abort();
+      if (audioBlobUrlRef.current?.startsWith("blob:")) {
+        URL.revokeObjectURL(audioBlobUrlRef.current);
+      }
+      if (bgBlobUrlRef.current?.startsWith("blob:")) {
+        URL.revokeObjectURL(bgBlobUrlRef.current);
+      }
+      if (exportBlobUrlRef.current?.startsWith("blob:")) {
+        URL.revokeObjectURL(exportBlobUrlRef.current);
+      }
+    };
+  }, []);
 
   const applyGenrePreset = (presetId: string) => {
     setCurrentGenrePreset(presetId);
@@ -319,275 +395,131 @@ export default function MvStudio({
     }
   };
 
-  // Live Canvas Atmospheric Effect Loop & 60 FPS Buttery-Smooth Camera Motion (Universal Suite)
+  // Live Canvas Atmospheric Effect Loop & 60 FPS Camera Motion (Shared @/lib/mvVisuals engine)
   useEffect(() => {
     const canvas = effectCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let animId: number;
+    let animId = 0;
     let width = (canvas.width = canvas.parentElement?.clientWidth || 340);
     let height = (canvas.height = canvas.parentElement?.clientHeight || 604);
 
+    const buildMistGradient = (h: number) => {
+      const grad = ctx.createLinearGradient(0, h * 0.7, 0, h);
+      grad.addColorStop(0, "rgba(200, 225, 255, 0)");
+      grad.addColorStop(1, "rgba(180, 215, 245, 0.18)");
+      return grad;
+    };
+
+    let mistGradient = buildMistGradient(height);
+    const sprites = createMvSprites();
+    let particles = createMvParticles(width, height, 45);
+
     const handleResize = () => {
-      if (canvas && canvas.parentElement) {
-        width = canvas.width = canvas.parentElement.clientWidth;
-        height = canvas.height = canvas.parentElement.clientHeight;
+      if (!canvas.parentElement) return;
+      const nextW = canvas.parentElement.clientWidth || 340;
+      const nextH = canvas.parentElement.clientHeight || 604;
+      if (nextW !== width || nextH !== height) {
+        width = canvas.width = nextW;
+        height = canvas.height = nextH;
+        mistGradient = buildMistGradient(height);
+        particles = createMvParticles(width, height, 45);
       }
     };
-    window.addEventListener("resize", handleResize);
 
-    const particleCount = 45;
-    const particles = Array.from({ length: particleCount }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      radius: Math.random() * 2.8 + 1.2,
-      speedY: -(Math.random() * 0.6 + 0.2),
-      speedX: (Math.random() - 0.5) * 0.4,
-      alpha: Math.random() * 0.7 + 0.3,
-    }));
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(handleResize) : null;
+    if (resizeObserver && canvas.parentElement) {
+      resizeObserver.observe(canvas.parentElement);
+    } else {
+      window.addEventListener("resize", handleResize);
+    }
 
     let t = 0;
+    let lastTime = performance.now();
 
-    const render = () => {
+    const render = (now: number) => {
+      const dtMs = now - lastTime;
+      lastTime = now;
+      const dtScale = Math.min(Math.max(dtMs / 16.6667, 0.25), 2.5);
       ctx.clearRect(0, 0, width, height);
 
-      // 1. Smooth 60 FPS Camera Motion (Zero-stutter, mathematically interpolated at 60Hz!)
+      // 1. Camera Motion synchronized with @/lib/mvVisuals
       if (bgMediaContainerRef.current) {
         if (!enableKenBurns || !isPlaying) {
           bgMediaContainerRef.current.style.transform = "scale(1.0) translate(0px, 0px)";
         } else {
-          const curT = audioRef.current && !audioRef.current.paused ? audioRef.current.currentTime : t;
-          const cycle = (2 * Math.PI) / 3.3;
-          const totalD = duration || 60;
-          const prog = Math.min(Math.max(curT / totalD, 0), 1);
-          const smoothProg = 0.5 - 0.5 * Math.cos(prog * Math.PI);
-
-          let scale = 1.0;
-          let panX = 0;
-          let panY = 0;
-
-          if (cameraMotion === "organic-breath" || (cameraMotion as any) === "zoom-pulse") {
-            // Google Flow 3.3s smooth organic breathing cycle
-            scale = 1.03 + 0.02 * Math.sin(curT * cycle);
-            panY = -3.5 * Math.sin(curT * cycle);
-            panX = 0;
-          } else if (cameraMotion === "slow-zoom-in") {
-            // Smooth monotonic push-in
-            scale = 1.01 + 0.08 * smoothProg;
-            panY = -8 * smoothProg;
-            panX = 0;
-          } else if (cameraMotion === "slow-pan" || (cameraMotion as any) === "pan-drift") {
-            // Smooth horizontal slider dolly
-            scale = 1.04;
-            panX = 12 * Math.sin(curT * 0.22);
-            panY = -4;
-          } else if (cameraMotion === "beat-pulse" || (cameraMotion as any) === "dramatic-pulse") {
-            // Natural beat pulse
-            const pulseWave = Math.pow(Math.max(Math.sin(curT * 2.8), 0), 3);
-            scale = 1.03 + 0.02 * pulseWave;
-            panY = -4 - 2 * pulseWave;
-            panX = 0;
-          } else {
-            scale = 1.0;
-            panX = 0;
-            panY = 0;
-          }
-
+          const curT =
+            audioRef.current && !audioRef.current.paused ? audioRef.current.currentTime : t;
+          const totalD = duration > 0 ? duration : 60;
+          const prog = curT / totalD;
+          const bassEnergy = 0.22 * (0.5 + 0.5 * Math.sin(curT * 3.1));
+          const { scale, panX, panY } = computeCameraTransform(
+            curT,
+            prog,
+            bassEnergy,
+            enableKenBurns,
+            cameraMotion,
+            width,
+            height
+          );
           bgMediaContainerRef.current.style.transform = `scale(${scale.toFixed(4)}) translate(${panX.toFixed(2)}px, ${panY.toFixed(2)}px)`;
         }
       }
 
-      // 2. Universal Atmospheric Visual Effects
+      // 2. Atmospheric Visual Effects using pre-cached radial sprites
       if (visualEffect !== "none") {
-        t += 0.03;
-
-        // 1. Universal Bokeh Glow (Universal for all covers: pop, acoustic, ballads, love, folk)
-        if (visualEffect === "bokeh-glow" || (visualEffect as any) === "lantern-glow") {
-          ctx.save();
-          ctx.globalCompositeOperation = "screen";
-          for (let i = 0; i < particles.length; i++) {
-            const p = particles[i];
-            p.y += p.speedY * (isPlaying ? 1.0 : 0.5);
-            p.x += Math.sin(t * 0.8 + i) * 0.4;
-            if (p.y < -30) p.y = height + 30;
-            if (p.x < 0) p.x = width;
-            if (p.x > width) p.x = 0;
-
-            const alpha = p.alpha * (0.6 + 0.35 * Math.sin(t * 2 + i));
-            const isWarm = i % 2 === 0;
-            const rColor = isWarm ? "255, 215, 120" : "180, 230, 255";
-            const bRad = p.radius * 3.5;
-            const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, bRad);
-            g.addColorStop(0, `rgba(${rColor}, ${alpha * 0.9})`);
-            g.addColorStop(0.4, `rgba(${rColor}, ${alpha * 0.4})`);
-            g.addColorStop(1, `rgba(${rColor}, 0)`);
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, bRad, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.restore();
-        }
-
-        // 2. Warm Sunbeam & Floating Embers (golden-hour / golden-dust / sunbeam)
-        if (visualEffect === "golden-hour" || (visualEffect as any) === "golden-dust" || (visualEffect as any) === "sunbeam") {
-          ctx.save();
-          const pulse = 0.14 + 0.04 * Math.sin(t * 1.8);
-          const topGlow = ctx.createRadialGradient(width * 0.5, 0, 10, width * 0.5, 0, height * 0.75);
-          topGlow.addColorStop(0, `rgba(255, 230, 150, ${pulse * 1.5})`);
-          topGlow.addColorStop(0.4, `rgba(255, 180, 70, ${pulse * 0.7})`);
-          topGlow.addColorStop(1, "rgba(255, 150, 40, 0)");
-          ctx.fillStyle = topGlow;
-          ctx.fillRect(0, 0, width, height);
-
-          for (const p of particles) {
-            p.y += p.speedY * (isPlaying ? 1.0 : 0.5);
-            p.x += Math.sin(t * 1.2 + p.radius) * 0.35;
-            if (p.y < 0) p.y = height + 10;
-            const flicker = p.alpha * (0.7 + 0.25 * Math.sin(t * 3 + p.radius));
-            ctx.fillStyle = `rgba(255, 220, 130, ${Math.min(flicker, 0.95)})`;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius * 1.2, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.restore();
-        }
-
-        // 3. Melancholic Rain & Mist (rain-drops / gentle-rain)
-        if (visualEffect === "rain-drops" || (visualEffect as any) === "gentle-rain") {
-          ctx.save();
-          ctx.strokeStyle = "rgba(210, 235, 255, 0.38)";
-          ctx.lineWidth = 1.8;
-          for (const p of particles) {
-            p.y += p.speedY * 6 + 16;
-            p.x -= 2.8;
-            if (p.y > height) p.y = -20;
-            if (p.x < 0) p.x = width + 20;
-
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p.x - 6, p.y + 26);
-            ctx.stroke();
-          }
-
-          const mist = ctx.createLinearGradient(0, height * 0.7, 0, height);
-          mist.addColorStop(0, "rgba(200, 225, 255, 0)");
-          mist.addColorStop(1, "rgba(180, 215, 245, 0.18)");
-          ctx.fillStyle = mist;
-          ctx.fillRect(0, height * 0.7, width, height * 0.3);
-          ctx.restore();
-        }
-
-        // 4. Concert Stage Spotlight & Sweep (stage-spotlight)
-        if (visualEffect === "stage-spotlight") {
-          ctx.save();
-          ctx.globalCompositeOperation = "screen";
-          const beamX = width * 0.5 + width * 0.35 * Math.sin(t * 0.85);
-          const beamGrad = ctx.createRadialGradient(beamX, 0, 10, beamX, height * 0.5, width * 0.65);
-          beamGrad.addColorStop(0, "rgba(255, 245, 220, 0.35)");
-          beamGrad.addColorStop(0.3, "rgba(140, 210, 255, 0.20)");
-          beamGrad.addColorStop(1, "rgba(80, 150, 255, 0)");
-          ctx.fillStyle = beamGrad;
-          ctx.fillRect(0, 0, width, height);
-
-          for (const p of particles) {
-            p.y += p.speedY * 0.8;
-            if (p.y < 0) p.y = height + 10;
-            ctx.fillStyle = `rgba(220, 240, 255, ${p.alpha * 0.4})`;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius * 2, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.restore();
-        }
-
-        // 5. Cyber Neon Glow & Urban Particles (cyber-neon)
-        if (visualEffect === "cyber-neon") {
-          ctx.save();
-          ctx.globalCompositeOperation = "screen";
-          const neonPulse = 0.16 + 0.06 * Math.sin(t * 2.2);
-
-          const cyanGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, width * 0.65);
-          cyanGrad.addColorStop(0, `rgba(34, 211, 238, ${neonPulse * 1.5})`);
-          cyanGrad.addColorStop(1, "rgba(34, 211, 238, 0)");
-          ctx.fillStyle = cyanGrad;
-          ctx.fillRect(0, 0, width, height);
-
-          const magGrad = ctx.createRadialGradient(width, height, 10, width, height, width * 0.65);
-          magGrad.addColorStop(0, `rgba(236, 72, 153, ${neonPulse * 1.5})`);
-          magGrad.addColorStop(1, "rgba(236, 72, 153, 0)");
-          ctx.fillStyle = magGrad;
-          ctx.fillRect(0, 0, width, height);
-
-          for (let i = 0; i < particles.length; i++) {
-            const p = particles[i];
-            p.y += p.speedY * 1.2;
-            if (p.y < 0) p.y = height + 10;
-            const cColor = i % 2 === 0 ? "34, 211, 238" : "244, 114, 182";
-            ctx.fillStyle = `rgba(${cColor}, ${p.alpha * 0.8})`;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius * 1.4, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.restore();
-        }
-
-        // 6. Vintage 35mm Film Warmth & Grain (vintage-film)
-        if (visualEffect === "vintage-film") {
-          ctx.save();
-          ctx.fillStyle = "rgba(255, 180, 70, 0.06)";
-          ctx.fillRect(0, 0, width, height);
-          ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
-          for (let i = 0; i < 8; i++) {
-            const gx = Math.random() * width;
-            const gy = Math.random() * height;
-            ctx.fillRect(gx, gy, Math.random() * 2 + 1, Math.random() * 2 + 1);
-          }
-          ctx.restore();
-        }
-
-        // 7. Ethereal Snow & Magic Dust (snow-drift)
-        if (visualEffect === "snow-drift") {
-          ctx.save();
-          for (const p of particles) {
-            p.y += Math.abs(p.speedY) * 2 + 1.2;
-            p.x += Math.sin(t * 1.2 + p.radius) * 0.8;
-            if (p.y > height) p.y = -10;
-            if (p.x < 0) p.x = width;
-            if (p.x > width) p.x = 0;
-
-            ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha * 0.85})`;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius * 1.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.restore();
-        }
+        t += (isPlaying ? 0.03 : 0.015) * dtScale;
+        const bassEnergy = isPlaying ? 0.25 : 0;
+        drawMvEffects(ctx, {
+          width,
+          height,
+          currentTime: t,
+          bassEnergy,
+          visualEffect,
+          particles,
+          sprites,
+          mistGradient,
+          dtScale,
+        });
       }
 
       animId = requestAnimationFrame(render);
     };
 
-    render();
+    animId = requestAnimationFrame(render);
 
     return () => {
       cancelAnimationFrame(animId);
-      window.removeEventListener("resize", handleResize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      } else {
+        window.removeEventListener("resize", handleResize);
+      }
     };
-  }, [visualEffect, isPlaying]);
+  }, [visualEffect, isPlaying, enableKenBurns, cameraMotion, duration]);
 
   // Auto-initialize demo acoustic audio on initial mount if audioUrl is empty
   useEffect(() => {
     let active = true;
     if (!audioUrl) {
-      createAcousticDemoAudio().then((demoUrl) => {
-        if (active) {
-          setAudioUrl((prev) => prev || demoUrl);
-          setAudioName((prev) => prev || "เสียงกีตาร์โฟล์กเพื่อชีวิต 78 BPM (เสียงอะคูสติกจริง)");
-        }
-      });
+      createAcousticDemoAudio()
+        .then((demoUrl) => {
+          if (active) {
+            if (demoUrl.startsWith("blob:") && !audioBlobUrlRef.current) {
+              audioBlobUrlRef.current = demoUrl;
+            }
+            setAudioUrl((prev) => prev || demoUrl);
+            setAudioName((prev) => prev || "เสียงกีตาร์โฟล์กเพื่อชีวิต 78 BPM (เสียงอะคูสติกจริง)");
+          } else if (demoUrl.startsWith("blob:")) {
+            URL.revokeObjectURL(demoUrl);
+          }
+        })
+        .catch(() => {
+          // AudioContext may require user interaction in strict browser policies
+        });
     }
     return () => {
       active = false;
@@ -598,12 +530,12 @@ export default function MvStudio({
   useEffect(() => {
     if (initialCoverImage) {
       setBackgroundMediaUrl(initialCoverImage);
-      if (initialIsVideoBg || initialCoverImage.endsWith(".mp4") || initialCoverImage.includes("video")) {
-        setIsVideoBg(true);
-      }
+      setIsVideoBg(
+        Boolean(initialIsVideoBg || /\.(mp4|webm|mov)(\?|$)/i.test(initialCoverImage))
+      );
     }
     if (initialTitle) setSongTitle(initialTitle);
-    if (initialCredit) setCredit(initialCredit);
+    if (initialCredit !== undefined) setCredit(initialCredit);
     if (initialHookHeadline && initialHookHeadline.trim()) {
       setHookHeadline(initialHookHeadline.trim());
       setShowHookHeadline(true);
@@ -659,21 +591,69 @@ export default function MvStudio({
   };
 
   // Live Tap-to-Sync Engine
+  const finishTapSyncMode = useCallback(() => {
+    if (finishTapTimerRef.current) {
+      clearTimeout(finishTapTimerRef.current);
+      finishTapTimerRef.current = null;
+    }
+    setIsTappingMode(false);
+    const draftSnapshot = tapDraftCuesRef.current;
+    const stampedSet = tapStampedIndicesRef.current;
+    if (draftSnapshot.length > 0) {
+      // Preserve every stamped line (including index 0 even if stamped at 0.0s)
+      const finalCues = draftSnapshot
+        .filter((_, idx) => (stampedSet.size > 0 ? stampedSet.has(idx) : idx === 0))
+        .map((c, i, arr) => {
+          const next = arr[i + 1];
+          const endTime =
+            next && next.startTime > c.startTime
+              ? Number((next.startTime - 0.1).toFixed(2))
+              : Number((c.startTime + 3.8).toFixed(2));
+          return {
+            ...c,
+            id: i + 1,
+            endTime,
+          };
+        });
+
+      if (finalCues.length > 0) {
+        setSubtitles(finalCues);
+        setSubtitleFileName("ซับซิงก์สดด้วยมือ 100% (Tap-to-Sync Master)");
+        showToast("🎉 เคาะจังหวะครบทุกท่อนแล้ว! ซับจะขึ้นตรงกับเสียงร้อง 100% เป๊ะ!");
+      }
+    }
+  }, [showToast]);
+
   const startTapSyncMode = async () => {
     const cleanLines = cleanLyricsToLines(lyrics);
     if (cleanLines.length === 0) {
       showToast("⚠️ กรุณาใส่เนื้อเพลงก่อนเริ่มเคาะจังหวะครับ");
       return;
     }
+    if (finishTapTimerRef.current) {
+      clearTimeout(finishTapTimerRef.current);
+      finishTapTimerRef.current = null;
+    }
 
     let currentAudio = audioUrl;
     if (!currentAudio) {
-      showToast("🎵 กำลังโหลดเสียงดนตรี Demo เพื่อเริ่มเคาะจังหวะ...");
-      currentAudio = await createAcousticDemoAudio();
-      setAudioUrl(currentAudio);
-      setAudioName("เสียงกีตาร์โฟล์กเพื่อชีวิต 78 BPM (เสียงอะคูสติกจริง)");
-      if (audioRef.current) {
-        audioRef.current.src = currentAudio;
+      try {
+        showToast("🎵 กำลังโหลดเสียงดนตรี Demo เพื่อเริ่มเคาะจังหวะ...");
+        currentAudio = await createAcousticDemoAudio();
+        if (currentAudio.startsWith("blob:")) {
+          if (audioBlobUrlRef.current?.startsWith("blob:")) {
+            URL.revokeObjectURL(audioBlobUrlRef.current);
+          }
+          audioBlobUrlRef.current = currentAudio;
+        }
+        setAudioUrl(currentAudio);
+        setAudioName("เสียงกีตาร์โฟล์กเพื่อชีวิต 78 BPM (เสียงอะคูสติกจริง)");
+        if (audioRef.current) {
+          audioRef.current.src = currentAudio;
+        }
+      } catch {
+        showToast("⚠️ ไม่สามารถสร้างเสียง Demo ได้ กรุณาอัปโหลดไฟล์เพลง");
+        return;
       }
     }
 
@@ -685,6 +665,8 @@ export default function MvStudio({
       text,
     }));
 
+    tapDraftCuesRef.current = initialDrafts;
+    tapStampedIndicesRef.current = new Set();
     setTapDraftCues(initialDrafts);
     setTapIndex(0);
     setIsTappingMode(true);
@@ -702,65 +684,39 @@ export default function MvStudio({
     if (!isTappingMode || !audioRef.current) return;
 
     const t = Number(audioRef.current.currentTime.toFixed(2));
-    const cleanLines = cleanLyricsToLines(lyrics);
+    const currentDrafts = tapDraftCuesRef.current;
 
-    if (tapIndex >= cleanLines.length) {
-      // Completed!
+    if (tapIndex >= currentDrafts.length) {
       finishTapSyncMode();
       return;
     }
 
-    setTapDraftCues((prev) => {
-      const updated = [...prev];
-
-      // End time of previous line
-      if (tapIndex > 0 && updated[tapIndex - 1]) {
-        updated[tapIndex - 1] = {
-          ...updated[tapIndex - 1],
-          endTime: Math.max(t - 0.1, updated[tapIndex - 1].startTime + 0.8),
-        };
-      }
-
-      // Start time of current line
-      updated[tapIndex] = {
-        ...updated[tapIndex],
-        startTime: t,
-        endTime: t + 4.0, // temporary end time
+    const updated = [...currentDrafts];
+    if (tapIndex > 0 && updated[tapIndex - 1]) {
+      updated[tapIndex - 1] = {
+        ...updated[tapIndex - 1],
+        endTime: Math.max(t - 0.1, updated[tapIndex - 1].startTime + 0.8),
       };
+    }
+    updated[tapIndex] = {
+      ...updated[tapIndex],
+      startTime: t,
+      endTime: t + 4.0,
+    };
 
-      return updated;
-    });
+    tapDraftCuesRef.current = updated;
+    tapStampedIndicesRef.current.add(tapIndex);
+    setTapDraftCues(updated);
 
     const nextIdx = tapIndex + 1;
     setTapIndex(nextIdx);
 
-    if (nextIdx >= cleanLines.length) {
-      setTimeout(() => finishTapSyncMode(), 600);
+    if (nextIdx >= currentDrafts.length) {
+      finishTapTimerRef.current = setTimeout(() => {
+        finishTapSyncMode();
+      }, 600);
     }
-  }, [isTappingMode, tapIndex, lyrics]);
-
-  const finishTapSyncMode = () => {
-    setIsTappingMode(false);
-    if (tapDraftCues.length > 0) {
-      // Filter cues that got stamped
-      const finalCues = tapDraftCues
-        .filter((c) => c.startTime > 0 || c.id === 1)
-        .map((c, i, arr) => {
-          const next = arr[i + 1];
-          const endTime = next && next.startTime > c.startTime ? Number((next.startTime - 0.1).toFixed(2)) : Number((c.startTime + 3.8).toFixed(2));
-          return {
-            ...c,
-            endTime,
-          };
-        });
-
-      if (finalCues.length > 0) {
-        setSubtitles(finalCues);
-        setSubtitleFileName("ซับซิงก์สดด้วยมือ 100% (Tap-to-Sync Master)");
-        showToast("🎉 เคาะจังหวะครบทุกท่อนแล้ว! ซับจะขึ้นตรงกับเสียงร้อง 100% เป๊ะ!");
-      }
-    }
-  };
+  }, [isTappingMode, tapIndex, finishTapSyncMode]);
 
   // Global Time Offset Adjuster
   const handleShiftAllCues = (offsetSeconds: number) => {
@@ -781,25 +737,47 @@ export default function MvStudio({
 
   // Sample Demo Loader with real synthetic acoustic audio
   const loadDemoSample = async () => {
-    const realAudioUrl = await createAcousticDemoAudio();
-    setAudioUrl(realAudioUrl);
-    setAudioName("เสียงกีตาร์โฟล์กเพื่อชีวิต 78 BPM (เสียงอะคูสติกจริง)");
-    handleAutoGenerateCues(lyrics, 1.5);
+    try {
+      const realAudioUrl = await createAcousticDemoAudio();
+      if (realAudioUrl.startsWith("blob:")) {
+        if (audioBlobUrlRef.current?.startsWith("blob:")) {
+          URL.revokeObjectURL(audioBlobUrlRef.current);
+        }
+        audioBlobUrlRef.current = realAudioUrl;
+      }
+      setAudioUrl(realAudioUrl);
+      setAudioName("เสียงกีตาร์โฟล์กเพื่อชีวิต 78 BPM (เสียงอะคูสติกจริง)");
+      setDuration(0);
+      setCurrentTime(0);
+      handleAutoGenerateCues(lyrics, 1.5);
+    } catch {
+      showToast("⚠️ ไม่สามารถโหลดเสียง Demo ได้ในขณะนี้");
+    }
   };
 
   // Playback control
-  const togglePlay = async () => {
-    let effectiveAudio = audioRef.current;
+  const togglePlay = useCallback(async () => {
+    const effectiveAudio = audioRef.current;
     if (!audioUrl) {
-      showToast("🎵 กำลังโหลดเสียงดนตรีเพื่อเริ่มเล่น...");
-      const demoUrl = await createAcousticDemoAudio();
-      setAudioUrl(demoUrl);
-      setAudioName("เสียงกีตาร์โฟล์กเพื่อชีวิต 78 BPM (Demo)");
-      if (audioRef.current) {
-        audioRef.current.src = demoUrl;
-        audioRef.current.play().catch(() => {});
-        if (videoBgRef.current) videoBgRef.current.play().catch(() => {});
-        setIsPlaying(true);
+      try {
+        showToast("🎵 กำลังโหลดเสียงดนตรีเพื่อเริ่มเล่น...");
+        const demoUrl = await createAcousticDemoAudio();
+        if (demoUrl.startsWith("blob:")) {
+          if (audioBlobUrlRef.current?.startsWith("blob:")) {
+            URL.revokeObjectURL(audioBlobUrlRef.current);
+          }
+          audioBlobUrlRef.current = demoUrl;
+        }
+        setAudioUrl(demoUrl);
+        setAudioName("เสียงกีตาร์โฟล์กเพื่อชีวิต 78 BPM (Demo)");
+        if (audioRef.current) {
+          audioRef.current.src = demoUrl;
+          audioRef.current.play().catch(() => {});
+          if (videoBgRef.current) videoBgRef.current.play().catch(() => {});
+          setIsPlaying(true);
+        }
+      } catch {
+        showToast("⚠️ กรุณาอัปโหลดไฟล์เพลงเพื่อเล่นพรีวิว");
       }
       return;
     }
@@ -821,13 +799,34 @@ export default function MvStudio({
       if (videoBgRef.current) videoBgRef.current.play().catch(() => {});
       setIsPlaying(true);
     }
-  };
+  }, [audioUrl, isPlaying, isTrimActive, trimStart, trimEnd, currentTime, showToast]);
 
-  // Keyboard shortcut listener for Spacebar in Tap Mode and Play/Pause
+  // Keyboard shortcut listener for Spacebar & Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showExportModal) {
+          setShowExportModal(false);
+          return;
+        }
+        if (showKeyEditor) {
+          setShowKeyEditor(false);
+          return;
+        }
+      }
+
       const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.tagName === "BUTTON" ||
+          target.tagName === "A" ||
+          target.isContentEditable ||
+          target.getAttribute("role") === "button" ||
+          target.getAttribute("role") === "slider")
+      ) {
         return;
       }
       if (e.code === "Space") {
@@ -841,7 +840,7 @@ export default function MvStudio({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isTappingMode, handleTapCurrentLine, togglePlay]);
+  }, [isTappingMode, handleTapCurrentLine, togglePlay, showExportModal, showKeyEditor]);
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
@@ -910,8 +909,8 @@ export default function MvStudio({
     audioRef.current.currentTime = trimStart;
     setCurrentTime(trimStart);
     if (!isPlaying) {
-      audioRef.current.play();
-      if (videoBgRef.current) videoBgRef.current.play();
+      audioRef.current.play().catch(() => {});
+      if (videoBgRef.current) videoBgRef.current.play().catch(() => {});
       setIsPlaying(true);
     }
     showToast(`▶️ กำลังเล่นพรีวิวท่อนที่ตัด (${formatTime(trimStart)} - ${formatTime(trimEnd || duration)})`);
@@ -946,13 +945,23 @@ export default function MvStudio({
   const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (audioBlobUrlRef.current?.startsWith("blob:")) {
+        URL.revokeObjectURL(audioBlobUrlRef.current);
+      }
       setUploadedAudioFile(file);
       const url = URL.createObjectURL(file);
+      audioBlobUrlRef.current = url;
       setAudioUrl(url);
       setAudioName(file.name);
       setIsPlaying(false);
+      setDuration(0);
+      setCurrentTime(0);
+      setTrimStart(0);
+      setTrimEnd(0);
+      setIsTrimActive(false);
       if (audioRef.current) {
         audioRef.current.src = url;
+        audioRef.current.currentTime = 0;
       }
 
       // Auto-detect and set song title & credit from filename
@@ -986,8 +995,7 @@ export default function MvStudio({
 
         // Auto-generate fresh cues for the newly uploaded song!
         if (lyrics.trim()) {
-          const targetDur = duration > 0 ? duration : 60;
-          const initialCues = autoGenerateCuesFromLyrics(lyrics, targetDur, 2.0, 4.0);
+          const initialCues = autoGenerateCuesFromLyrics(lyrics, 60, 2.0, 4.0);
           setSubtitles(initialCues);
           setSubtitleFileName(`ซับสำหรับ ${detectedTitle || "เพลงใหม่"} (${initialCues.length} ท่อน)`);
         }
@@ -995,6 +1003,7 @@ export default function MvStudio({
         showToast(`โหลดไฟล์เพลง ${file.name} สำเร็จ!`);
       }
     }
+    e.target.value = "";
   };
 
   const handleSubtitleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1010,23 +1019,29 @@ export default function MvStudio({
         showToast("⚠️ ไม่พบรูปแบบเวลาซับไตเติลในไฟล์ กรุณาตรวจสอบไฟล์ .SRT หรือ .LRC ครับ");
       }
     }
+    e.target.value = "";
   };
 
   const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (bgBlobUrlRef.current?.startsWith("blob:")) {
+        URL.revokeObjectURL(bgBlobUrlRef.current);
+      }
       const url = URL.createObjectURL(file);
+      bgBlobUrlRef.current = url;
       const isVid = file.type.startsWith("video/");
       setIsVideoBg(isVid);
       setBackgroundMediaUrl(url);
       showToast("อัปเดตภาพพื้นหลัง MV สำเร็จ");
     }
+    e.target.value = "";
   };
 
   // AI Precision Vocal Sync via Google AI Studio
   const handleAiSyncSubtitles = async () => {
-    const token = apiKeyVal || apiKey || (typeof window !== "undefined" ? localStorage.getItem("gemini_api_key") : "");
-    if (!token) {
+    const token = apiKeyVal || apiKey || safeGetStorageItem("gemini_api_key");
+    if (!token && !hasServerKey) {
       setShowKeyEditor(true);
       showToast("🔑 กรุณากรอก Google AI Studio Key ในช่องด้านบนก่อนครับ");
       return;
@@ -1048,14 +1063,27 @@ export default function MvStudio({
       formData.append("lyrics", lyrics);
       formData.append("songTitle", songTitle);
       formData.append("duration", (duration > 0 ? duration : 60).toString());
-      formData.append("apiKey", token);
+      if (token) {
+        formData.append("apiKey", token);
+      }
 
       const res = await fetch("/api/gemini/sync-subtitles", {
         method: "POST",
         body: formData,
       });
 
-      const resData = await res.json();
+      const rawText = await res.text();
+      let resData: any = {};
+      try {
+        resData = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        throw new Error(
+          res.status === 504 || res.status === 502
+            ? "การเชื่อมต่อกับ AI หมดเวลา กรุณาลองใหม่อีกครั้งหรือใช้ปุ่มคำนวณซับอัตโนมัติ"
+            : `เซิร์ฟเวอร์ตอบกลับไม่ถูกต้อง (HTTP ${res.status})`
+        );
+      }
+
       if (!res.ok) {
         throw new Error(resData.error || "เกิดข้อผิดพลาดในการวิเคราะห์ด้วย AI");
       }
@@ -1064,12 +1092,17 @@ export default function MvStudio({
         const { subtitles: aiCues, recommendedHook, recommendedStyle, vocalInsight } = resData.data;
 
         if (aiCues && aiCues.length > 0) {
-          const cleanedCues = aiCues.map((c: any) => ({
+          const cleanedCues = aiCues.map((c: any, idx: number) => ({
             ...c,
+            id: typeof c.id === "number" ? c.id : idx + 1,
             text: cleanSubtitleText(c.text),
           }));
           setSubtitles(cleanedCues);
-          setSubtitleFileName(`ซับซิงก์เสียงร้องด้วย AI (Google AI Studio • ${cleanedCues.length} ท่อน)`);
+          setSubtitleFileName(
+            resData.mode === "fallback"
+              ? `ซับซิงก์อัตโนมัติ (โหมดสำรอง • ${cleanedCues.length} ท่อน)`
+              : `ซับซิงก์เสียงร้องด้วย AI (Google AI Studio • ${cleanedCues.length} ท่อน)`
+          );
         }
 
         if (recommendedHook) {
@@ -1087,11 +1120,15 @@ export default function MvStudio({
         // Lock to optimal TikTok lower-middle safe zone (64%)
         setSubtitlePosY(0.64);
 
-        showToast("🎉 AI วิเคราะห์เสียงร้องและจัดแบ่งซับตำแหน่ง TikTok Safe Zone ให้เรียบร้อย!");
+        if (resData.mode === "fallback") {
+          showToast("⚠️ AI ตอบกลับช้าหรือโควตาเต็มชั่วคราว — คำนวณจังหวะซับด้วยระบบสำรองอัตโนมัติให้แล้ว");
+        } else {
+          showToast("🎉 AI วิเคราะห์เสียงร้องและจัดแบ่งซับตำแหน่ง TikTok Safe Zone ให้เรียบร้อย!");
+        }
       }
     } catch (err: any) {
       console.error("AI Sync failed:", err);
-      showToast("⚠️ ไม่สามารถวิเคราะห์ด้วย AI ได้: " + err.message);
+      showToast("⚠️ ไม่สามารถวิเคราะห์ด้วย AI ได้: " + (err?.message || "กรุณาลองใหม่"));
     } finally {
       setIsAiSyncing(false);
     }
@@ -1099,8 +1136,8 @@ export default function MvStudio({
 
   // Test API Connection Handler
   const handleTestApiConnection = async () => {
-    const token = apiKeyVal || apiKey || (typeof window !== "undefined" ? localStorage.getItem("gemini_api_key") : "");
-    if (!token) {
+    const token = apiKeyVal || apiKey || safeGetStorageItem("gemini_api_key");
+    if (!token && !hasServerKey) {
       setShowKeyEditor(true);
       setApiTestStatus({
         success: false,
@@ -1118,11 +1155,17 @@ export default function MvStudio({
       const res = await fetch("/api/gemini/test-connection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: token }),
+        body: JSON.stringify(token ? { apiKey: token } : {}),
         signal: controller.signal,
       });
       clearTimeout(timer);
-      const data = await res.json();
+      const rawText = await res.text();
+      let data: any = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        data = {};
+      }
       if (res.ok && data.success) {
         setApiTestStatus({
           success: true,
@@ -1145,7 +1188,7 @@ export default function MvStudio({
       } else {
         setApiTestStatus({
           success: false,
-          message: "เกิดข้อผิดพลาดในการเชื่อมต่อ: " + err.message,
+          message: "เกิดข้อผิดพลาดในการเชื่อมต่อ: " + (err?.message || "Unknown error"),
         });
       }
     } finally {
@@ -1154,21 +1197,57 @@ export default function MvStudio({
   };
 
   // Export Video Handler (Client-side MediaRecorder Rendering)
+  const handleCancelExport = () => {
+    if (exportAbortRef.current) {
+      exportAbortRef.current.abort();
+      exportAbortRef.current = null;
+    }
+  };
+
   const handleExportVideo = async () => {
+    if (isExporting) return;
+
+    // Pause live preview players so export audio/video never compete with preview playback
+    if (audioRef.current && !audioRef.current.paused) {
+      audioRef.current.pause();
+    }
+    if (videoBgRef.current && !videoBgRef.current.paused) {
+      videoBgRef.current.pause();
+    }
+    setIsPlaying(false);
+
     let effectiveAudioUrl = audioUrl;
 
     if (!effectiveAudioUrl) {
-      showToast("🎵 กำลังสร้างเสียงดนตรี Demo เพื่อเรนเดอร์...");
-      effectiveAudioUrl = await createAcousticDemoAudio();
-      setAudioUrl(effectiveAudioUrl);
-      setAudioName("เสียงกีตาร์โฟล์กเพื่อชีวิต 78 BPM (Demo)");
-      if (audioRef.current) {
-        audioRef.current.src = effectiveAudioUrl;
+      try {
+        showToast("🎵 กำลังสร้างเสียงดนตรี Demo เพื่อเรนเดอร์...");
+        effectiveAudioUrl = await createAcousticDemoAudio();
+        if (effectiveAudioUrl.startsWith("blob:")) {
+          if (audioBlobUrlRef.current?.startsWith("blob:")) {
+            URL.revokeObjectURL(audioBlobUrlRef.current);
+          }
+          audioBlobUrlRef.current = effectiveAudioUrl;
+        }
+        setAudioUrl(effectiveAudioUrl);
+        setAudioName("เสียงกีตาร์โฟล์กเพื่อชีวิต 78 BPM (Demo)");
+        if (audioRef.current) {
+          audioRef.current.src = effectiveAudioUrl;
+        }
+      } catch {
+        showToast("⚠️ ไม่สามารถเตรียมไฟล์เสียงสำหรับเรนเดอร์ได้");
+        return;
       }
     }
 
+    const abortController = new AbortController();
+    exportAbortRef.current = abortController;
+
     setIsExporting(true);
     setExportProgress(0);
+    if (exportBlobUrlRef.current?.startsWith("blob:")) {
+      URL.revokeObjectURL(exportBlobUrlRef.current);
+      exportBlobUrlRef.current = null;
+    }
     setExportDoneUrl("");
 
     try {
@@ -1195,10 +1274,15 @@ export default function MvStudio({
         showVinylDisc,
         showWaveform,
         trimStartTime: isTrimActive ? trimStart : 0,
-        trimEndTime: isTrimActive && trimEnd > trimStart ? trimEnd : (duration > 0 ? duration : 25),
+        trimEndTime: isTrimActive && trimEnd > trimStart ? trimEnd : undefined,
+        signal: abortController.signal,
         onProgress: (percent) => setExportProgress(percent),
         onComplete: (downloadUrl, ext) => {
+          exportAbortRef.current = null;
           setIsExporting(false);
+          if (downloadUrl.startsWith("blob:")) {
+            exportBlobUrlRef.current = downloadUrl;
+          }
           setExportDoneUrl(downloadUrl);
           const finalExt = ext || "mp4";
           setExportedFileExt(finalExt);
@@ -1206,13 +1290,23 @@ export default function MvStudio({
           showToast(`🎉 เรนเดอร์วิดีโอ MV สำเร็จ! (.${finalExt.toUpperCase()})`);
         },
         onError: (err) => {
+          exportAbortRef.current = null;
           setIsExporting(false);
-          showToast("⚠️ บันทึกวิดีโอไม่สำเร็จ: " + err.message);
+          if (err?.name === "AbortError" || abortController.signal.aborted) {
+            showToast("⏹️ ยกเลิกการส่งออกวิดีโอแล้ว");
+          } else {
+            showToast("⚠️ บันทึกวิดีโอไม่สำเร็จ: " + (err?.message || "Unknown error"));
+          }
         },
       });
     } catch (e: any) {
+      exportAbortRef.current = null;
       setIsExporting(false);
-      showToast("⚠️ ไม่สามารถเรนเดอร์วิดีโอได้: " + e.message);
+      if (e?.name === "AbortError" || abortController.signal.aborted) {
+        showToast("⏹️ ยกเลิกการส่งออกวิดีโอแล้ว");
+      } else {
+        showToast("⚠️ ไม่สามารถเรนเดอร์วิดีโอได้: " + (e?.message || "Unknown error"));
+      }
     }
   };
 
@@ -1251,6 +1345,44 @@ export default function MvStudio({
   };
 
   const cleanLinesList = cleanLyricsToLines(lyrics);
+
+  const handleDownloadSubtitles = (format: "srt" | "lrc" | "vtt") => {
+    const effectiveCues =
+      isTrimActive && trimEnd > trimStart
+        ? subtitles
+            .filter((c) => c.endTime >= trimStart && c.startTime <= trimEnd)
+            .map((c, i) => ({
+              ...c,
+              id: i + 1,
+              startTime: Math.max(0, Number((c.startTime - trimStart).toFixed(2))),
+              endTime: Math.max(0.1, Number((c.endTime - trimStart).toFixed(2))),
+            }))
+        : subtitles;
+
+    const text =
+      format === "srt"
+        ? exportCuesToSRT(effectiveCues)
+        : format === "lrc"
+          ? exportCuesToLRC(effectiveCues)
+          : exportCuesToVTT(effectiveCues);
+
+    const mimeType = format === "vtt" ? "text/vtt;charset=utf-8" : "text/plain;charset=utf-8";
+    const blob = new Blob([text], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(songTitle || "subtitles").replace(/\s+/g, "_")}${isTrimActive ? "_trimmed" : ""}.${format}`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    if (format === "srt") {
+      showToast("บันทึกไฟล์ .SRT เรียบร้อยแล้ว");
+    } else if (format === "lrc") {
+      showToast("บันทึกไฟล์ .LRC (Suno / คาราโอเกะ) เรียบร้อยแล้ว");
+    } else {
+      showToast("บันทึกไฟล์ .VTT (WebVTT) เรียบร้อยแล้ว");
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -1663,24 +1795,37 @@ export default function MvStudio({
                       <span>{isPlaying ? "หยุดฟัง" : "ทดลองเล่น"}</span>
                     </button>
 
-                    <button
-                      type="button"
-                      disabled={isExporting}
-                      onClick={handleExportVideo}
-                      className="py-2.5 px-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-lg text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-500/20 transition-all"
-                    >
-                      {isExporting ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />
-                          <span>เรนเดอร์...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-3.5 h-3.5 text-slate-950" />
-                          <span>ส่งออก Clean MV</span>
-                        </>
+                    <div className="flex items-center space-x-1.5">
+                      <button
+                        type="button"
+                        disabled={isExporting}
+                        onClick={handleExportVideo}
+                        className="flex-1 py-2.5 px-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-lg text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-500/20 transition-all disabled:opacity-75"
+                      >
+                        {isExporting ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />
+                            <span>เรนเดอร์ ({exportProgress}%)...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-3.5 h-3.5 text-slate-950" />
+                            <span>ส่งออก Clean MV</span>
+                          </>
+                        )}
+                      </button>
+                      {isExporting && (
+                        <button
+                          type="button"
+                          onClick={handleCancelExport}
+                          aria-label="ยกเลิกการส่งออก"
+                          title="ยกเลิกการส่งออกวิดีโอ"
+                          className="py-2.5 px-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg text-xs flex items-center justify-center transition-all"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
                       )}
-                    </button>
+                    </div>
                   </div>
 
                   <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px]">
@@ -1756,17 +1901,21 @@ export default function MvStudio({
               <div className="space-y-2">
                 <div className="p-3 bg-slate-950/90 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div className="flex items-center space-x-2 overflow-hidden">
-                    <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${apiKeyVal ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+                    <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${apiKeyVal || hasServerKey ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
                     <span className="text-xs font-bold text-white shrink-0">AI Studio Key:</span>
                     <span className="text-xs font-mono text-emerald-400 font-semibold truncate">
-                      {apiKeyVal ? `••••••••••••${apiKeyVal.slice(-4)}` : "ยังไม่ได้ใส่คีย์ฟรี"}
+                      {apiKeyVal
+                        ? `••••••••••••${apiKeyVal.slice(-4)}`
+                        : hasServerKey
+                          ? "พร้อมใช้งานจากเซิร์ฟเวอร์"
+                          : "ยังไม่ได้ใส่คีย์ฟรี"}
                     </span>
                   </div>
 
                   <div className="flex items-center space-x-1.5 shrink-0 self-end sm:self-auto">
                     <button
                       type="button"
-                      disabled={isTestingApi || !apiKeyVal}
+                      disabled={isTestingApi || (!apiKeyVal && !hasServerKey)}
                       onClick={handleTestApiConnection}
                       className="px-2.5 py-1 rounded-lg text-xs font-bold bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 transition-all flex items-center space-x-1 disabled:opacity-40"
                     >
@@ -1798,7 +1947,7 @@ export default function MvStudio({
                 </div>
 
                 {/* Collapsible Key Editor */}
-                {(!apiKeyVal || showKeyEditor) && (
+                {((!apiKeyVal && !hasServerKey) || showKeyEditor) && (
                   <div className="p-3.5 bg-slate-950 rounded-xl border border-cyan-500/40 space-y-2.5 animate-fadeIn">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-white flex items-center space-x-1.5">
@@ -1831,7 +1980,7 @@ export default function MvStudio({
                               onClick={() => {
                                 setTempKeyInput("");
                                 setApiKeyVal("");
-                                localStorage.removeItem("gemini_api_key");
+                                safeRemoveStorageItem("gemini_api_key");
                                 onUpdateApiKey?.("");
                                 showToast("🗑️ ล้าง API Key เรียบร้อยแล้ว");
                               }}
@@ -1857,12 +2006,17 @@ export default function MvStudio({
                           onClick={() => {
                             const trimmed = tempKeyInput.trim();
                             if (!trimmed) {
-                              alert("กรุณากรอก API Key ก่อนบันทึกครับ");
+                              setApiTestStatus({
+                                success: false,
+                                message: "กรุณากรอก API Key ก่อนบันทึกครับ",
+                              });
+                              showToast("⚠️ กรุณากรอก API Key ก่อนบันทึกครับ");
                               return;
                             }
                             setApiKeyVal(trimmed);
-                            localStorage.setItem("gemini_api_key", trimmed);
+                            safeSetStorageItem("gemini_api_key", trimmed);
                             onUpdateApiKey?.(trimmed);
+                            setApiTestStatus(null);
                             setShowKeyEditor(false);
                             showToast("✅ บันทึก API Key สำหรับขั้นตอนที่ 3 เรียบร้อยแล้ว!");
                           }}
@@ -2154,10 +2308,12 @@ export default function MvStudio({
                       type="button"
                       onClick={() => {
                         const cur = Number(currentTime.toFixed(2));
+                        const nextId =
+                          subtitles.reduce((maxId, item) => Math.max(maxId, item.id || 0), 0) + 1;
                         const newCue: SubtitleCue = {
-                          id: subtitles.length + 1,
+                          id: nextId,
                           startTime: cur,
-                          endTime: cur + 4.0,
+                          endTime: Number((cur + 4.0).toFixed(2)),
                           text: "ข้อความท่อนใหม่...",
                         };
                         setSubtitles((prev) => [...prev, newCue]);
@@ -2184,7 +2340,8 @@ export default function MvStudio({
                             onClick={() => {
                               if (audioRef.current) {
                                 audioRef.current.currentTime = cue.startTime;
-                                audioRef.current.play();
+                                audioRef.current.play().catch(() => {});
+                                if (videoBgRef.current) videoBgRef.current.play().catch(() => {});
                                 setIsPlaying(true);
                               }
                             }}
@@ -2216,7 +2373,9 @@ export default function MvStudio({
                             onClick={() => {
                               setSubtitles((prev) =>
                                 prev.map((c, i) =>
-                                  i === idx ? { ...c, startTime: Math.max(0, c.startTime - 0.3) } : c
+                                  i === idx
+                                    ? { ...c, startTime: Number(Math.max(0, c.startTime - 0.3).toFixed(2)) }
+                                    : c
                                 )
                               );
                             }}
@@ -2228,7 +2387,15 @@ export default function MvStudio({
                             type="button"
                             onClick={() => {
                               setSubtitles((prev) =>
-                                prev.map((c, i) => (i === idx ? { ...c, startTime: c.startTime + 0.3 } : c))
+                                prev.map((c, i) => {
+                                  if (i !== idx) return c;
+                                  const nextStart = Number((c.startTime + 0.3).toFixed(2));
+                                  return {
+                                    ...c,
+                                    startTime: nextStart,
+                                    endTime: Number(Math.max(c.endTime, nextStart + 0.5).toFixed(2)),
+                                  };
+                                })
                               );
                             }}
                             className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px]"
@@ -2722,6 +2889,7 @@ export default function MvStudio({
               </div>
               <button
                 type="button"
+                aria-label="เปิดหรือปิดคลื่นเสียงนีออน"
                 onClick={() => setShowWaveform(!showWaveform)}
                 className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-0.5 ${
                   showWaveform ? "bg-emerald-500" : "bg-slate-700"
@@ -2730,6 +2898,37 @@ export default function MvStudio({
                 <div
                   className={`w-5 h-5 rounded-full bg-white transition-transform ${
                     showWaveform ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Top Song Title Overlay Toggle */}
+            <div className="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <div className="flex items-center space-x-2">
+                <Music className="w-4 h-4 text-cyan-400" />
+                <div>
+                  <p className="text-xs font-bold text-white">แสดงชื่อเพลงด้านบนภาพ (Top Title)</p>
+                  <p className="text-[10px] text-slate-400">
+                    {showTopTitle ? "เปิดอยู่: แสดงป้ายชื่อเพลงด้านบนของวิดีโอ" : "ปิดอยู่: เน้นพื้นที่ภาพปกและป้าย Hook"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                aria-label="เปิดหรือปิดชื่อเพลงด้านบน"
+                onClick={() => {
+                  const next = !showTopTitle;
+                  setShowTopTitle(next);
+                  showToast(next ? "🎵 เปิดแสดงชื่อเพลงด้านบนวิดีโอ" : "ซ่อนชื่อเพลงด้านบนแล้ว");
+                }}
+                className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-0.5 ${
+                  showTopTitle ? "bg-cyan-500" : "bg-slate-700"
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                    showTopTitle ? "translate-x-5" : "translate-x-0"
                   }`}
                 />
               </button>
@@ -2864,14 +3063,14 @@ export default function MvStudio({
               {/* Floating Spinning Vinyl Disc for 9:16 Vertical Mode */}
               {aspectRatio === "9:16" && showVinylDisc && (
                 <div
-                  className="absolute top-16 right-3.5 z-25 w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-slate-900 bg-slate-950 shadow-[0_6px_25px_rgba(0,0,0,0.85)] flex items-center justify-center pointer-events-none"
+                  className="absolute top-16 right-3.5 z-[25] w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-slate-900 bg-slate-950 shadow-[0_6px_25px_rgba(0,0,0,0.85)] flex items-center justify-center pointer-events-none"
                   style={{
                     backgroundImage:
                       "radial-gradient(circle, #242424 22%, #0f0f0f 42%, #262626 62%, #050505 84%)",
                     animation: isPlaying ? "spin 3.5s linear infinite" : "none",
                   }}
                 >
-                  <div className="w-12 h-12 sm:w-15 sm:h-15 rounded-full border border-white/15 flex items-center justify-center">
+                  <div className="w-12 h-12 sm:w-[60px] sm:h-[60px] rounded-full border border-white/15 flex items-center justify-center">
                     <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 border border-white/40 flex items-center justify-center shadow-inner">
                       <div className="w-1.5 h-1.5 rounded-full bg-black border border-white/30" />
                     </div>
@@ -2886,14 +3085,16 @@ export default function MvStudio({
               />
 
               {/* Subtle Vignette Overlay for lyric readability while keeping artwork vibrant */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none z-15" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none z-[15]" />
 
               {/* Viral Hook Headline Banner (TikTok / YouTube Shorts Retention Booster) */}
-              {showHookHeadline && hookHeadline && (
-                <div className="relative z-25 text-center pt-3 px-3 pointer-events-none">
+              {showHookHeadline && hookHeadline.trim() && (
+                <div className="relative z-[25] text-center pt-3 px-3 pointer-events-none">
                   <div className="inline-flex items-center space-x-1.5 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-gradient-to-r from-amber-500/95 via-rose-500/95 to-purple-600/95 backdrop-blur-md border border-white/40 shadow-xl max-w-[95%]">
                     <span className="text-[11px] sm:text-xs font-black text-white tracking-wide truncate drop-shadow-md">
-                      🔥 {hookHeadline}
+                      {/^[\u{1F300}-\u{1FAFF}🔥]/u.test(hookHeadline.trim())
+                        ? hookHeadline.trim()
+                        : `🔥 ${hookHeadline.trim()}`}
                     </span>
                   </div>
                 </div>
@@ -3243,7 +3444,7 @@ export default function MvStudio({
                 <button
                   type="button"
                   onClick={handleResetTrim}
-                  className="px-2.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-750 text-slate-400 hover:text-slate-200 border border-slate-700 flex items-center justify-center space-x-1.5 transition-all active:scale-95"
+                  className="px-2.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 flex items-center justify-center space-x-1.5 transition-all active:scale-95"
                   title="ล้างการตัด กลับไปใช้เพลงเต็ม"
                 >
                   <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
@@ -3264,7 +3465,9 @@ export default function MvStudio({
                       <button
                         type="button"
                         onClick={() => {
-                          const val = Math.max(0, trimStart - 1);
+                          const maxDur = duration || 180;
+                          if (trimEnd === 0) setTrimEnd(maxDur);
+                          const val = Number(Math.max(0, trimStart - 1).toFixed(2));
                           setTrimStart(val);
                           setIsTrimActive(true);
                         }}
@@ -3278,7 +3481,10 @@ export default function MvStudio({
                       <button
                         type="button"
                         onClick={() => {
-                          const val = Math.min((trimEnd || duration) - 1, trimStart + 1);
+                          const maxDur = duration || 180;
+                          const curEnd = trimEnd > 0 ? trimEnd : maxDur;
+                          if (trimEnd === 0) setTrimEnd(curEnd);
+                          const val = Number(Math.min(Math.max(0, curEnd - 0.5), trimStart + 1).toFixed(2));
                           setTrimStart(val);
                           setIsTrimActive(true);
                         }}
@@ -3291,11 +3497,14 @@ export default function MvStudio({
                   <input
                     type="range"
                     min="0"
-                    max={Math.max((trimEnd || duration) - 1, 1)}
+                    max={Math.max((trimEnd > 0 ? trimEnd : duration || 180) - 0.5, 0.5)}
                     step="0.2"
-                    value={trimStart}
+                    value={Math.min(trimStart, Math.max((trimEnd > 0 ? trimEnd : duration || 180) - 0.5, 0.5))}
                     onChange={(e) => {
-                      const val = parseFloat(e.target.value);
+                      const maxDur = duration || 180;
+                      const curEnd = trimEnd > 0 ? trimEnd : maxDur;
+                      if (trimEnd === 0) setTrimEnd(curEnd);
+                      const val = Math.min(parseFloat(e.target.value), Math.max(0, curEnd - 0.5));
                       setTrimStart(val);
                       setIsTrimActive(true);
                       if (audioRef.current && currentTime < val) {
@@ -3318,7 +3527,9 @@ export default function MvStudio({
                       <button
                         type="button"
                         onClick={() => {
-                          const val = Math.max(trimStart + 1, (trimEnd || duration) - 1);
+                          const maxDur = duration || 180;
+                          const curEnd = trimEnd > 0 ? trimEnd : maxDur;
+                          const val = Number(Math.max(trimStart + 0.5, curEnd - 1).toFixed(2));
                           setTrimEnd(val);
                           setIsTrimActive(true);
                         }}
@@ -3332,7 +3543,9 @@ export default function MvStudio({
                       <button
                         type="button"
                         onClick={() => {
-                          const val = Math.min(duration || 180, (trimEnd || duration) + 1);
+                          const maxDur = duration || 180;
+                          const curEnd = trimEnd > 0 ? trimEnd : maxDur;
+                          const val = Number(Math.min(maxDur, curEnd + 1).toFixed(2));
                           setTrimEnd(val);
                           setIsTrimActive(true);
                         }}
@@ -3344,12 +3557,12 @@ export default function MvStudio({
                   </div>
                   <input
                     type="range"
-                    min={trimStart + 1}
-                    max={duration || 100}
+                    min={Math.min(trimStart + 0.5, duration || 180)}
+                    max={duration || 180}
                     step="0.2"
-                    value={trimEnd || duration}
+                    value={Math.max(trimEnd || duration || 180, trimStart + 0.5)}
                     onChange={(e) => {
-                      const val = parseFloat(e.target.value);
+                      const val = Math.max(parseFloat(e.target.value), trimStart + 0.5);
                       setTrimEnd(val);
                       setIsTrimActive(true);
                       if (audioRef.current && currentTime > val) {
@@ -3422,31 +3635,13 @@ export default function MvStudio({
                 </p>
               </div>
 
-              <div className="flex space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {/* Subtitle Export Multi-Format Group (.SRT, .LRC, .VTT) */}
                 <div className="flex items-center space-x-1 bg-slate-900 border border-slate-700/80 rounded-xl p-1">
                   <span className="text-[10px] text-slate-400 px-2 font-medium hidden sm:inline">บันทึกซับ:</span>
                   <button
                     type="button"
-                    onClick={() => {
-                      const effectiveCues = isTrimActive && trimEnd > trimStart
-                        ? subtitles
-                            .filter((c) => c.endTime >= trimStart && c.startTime <= trimEnd)
-                            .map((c, i) => ({
-                              ...c,
-                              id: i + 1,
-                              startTime: Math.max(0, Number((c.startTime - trimStart).toFixed(2))),
-                              endTime: Math.max(0.1, Number((c.endTime - trimStart).toFixed(2))),
-                            }))
-                        : subtitles;
-                      const srtText = exportCuesToSRT(effectiveCues);
-                      const blob = new Blob([srtText], { type: "text/plain;charset=utf-8" });
-                      const a = document.createElement("a");
-                      a.href = URL.createObjectURL(blob);
-                      a.download = `${(songTitle || "subtitles").replace(/\s+/g, "_")}${isTrimActive ? "_trimmed" : ""}.srt`;
-                      a.click();
-                      showToast("บันทึกไฟล์ .SRT เรียบร้อยแล้ว");
-                    }}
+                    onClick={() => handleDownloadSubtitles("srt")}
                     className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all"
                     title="ไฟล์ SubRip สำหรับโปรแกรมตัดต่อ (CapCut, Premiere, DaVinci)"
                   >
@@ -3454,25 +3649,7 @@ export default function MvStudio({
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      const effectiveCues = isTrimActive && trimEnd > trimStart
-                        ? subtitles
-                            .filter((c) => c.endTime >= trimStart && c.startTime <= trimEnd)
-                            .map((c, i) => ({
-                              ...c,
-                              id: i + 1,
-                              startTime: Math.max(0, Number((c.startTime - trimStart).toFixed(2))),
-                              endTime: Math.max(0.1, Number((c.endTime - trimStart).toFixed(2))),
-                            }))
-                        : subtitles;
-                      const lrcText = exportCuesToLRC(effectiveCues);
-                      const blob = new Blob([lrcText], { type: "text/plain;charset=utf-8" });
-                      const a = document.createElement("a");
-                      a.href = URL.createObjectURL(blob);
-                      a.download = `${(songTitle || "subtitles").replace(/\s+/g, "_")}${isTrimActive ? "_trimmed" : ""}.lrc`;
-                      a.click();
-                      showToast("บันทึกไฟล์ .LRC (Suno / คาราโอเกะ) เรียบร้อยแล้ว");
-                    }}
+                    onClick={() => handleDownloadSubtitles("lrc")}
                     className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all"
                     title="ไฟล์คาราโอเกะสำหรับ Suno, Spotify, และ Music Player"
                   >
@@ -3480,25 +3657,7 @@ export default function MvStudio({
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      const effectiveCues = isTrimActive && trimEnd > trimStart
-                        ? subtitles
-                            .filter((c) => c.endTime >= trimStart && c.startTime <= trimEnd)
-                            .map((c, i) => ({
-                              ...c,
-                              id: i + 1,
-                              startTime: Math.max(0, Number((c.startTime - trimStart).toFixed(2))),
-                              endTime: Math.max(0.1, Number((c.endTime - trimStart).toFixed(2))),
-                            }))
-                        : subtitles;
-                      const vttText = exportCuesToVTT(effectiveCues);
-                      const blob = new Blob([vttText], { type: "text/vtt;charset=utf-8" });
-                      const a = document.createElement("a");
-                      a.href = URL.createObjectURL(blob);
-                      a.download = `${(songTitle || "subtitles").replace(/\s+/g, "_")}${isTrimActive ? "_trimmed" : ""}.vtt`;
-                      a.click();
-                      showToast("บันทึกไฟล์ .VTT (WebVTT) เรียบร้อยแล้ว");
-                    }}
+                    onClick={() => handleDownloadSubtitles("vtt")}
                     className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all"
                     title="ไฟล์ WebVTT สำหรับเว็บและ TikTok"
                   >
@@ -3512,7 +3671,7 @@ export default function MvStudio({
                   onClick={handleExportVideo}
                   className={`flex items-center space-x-1.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                     isExporting
-                      ? "bg-slate-700 text-slate-400 cursor-not-allowed"
+                      ? "bg-slate-700 text-slate-300 cursor-not-allowed"
                       : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-600/25 hover:scale-105 active:scale-95"
                   }`}
                 >
@@ -3532,6 +3691,16 @@ export default function MvStudio({
                     </>
                   )}
                 </button>
+                {isExporting && (
+                  <button
+                    type="button"
+                    onClick={handleCancelExport}
+                    className="flex items-center space-x-1 px-3 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg transition-all"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>ยกเลิก</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -3540,17 +3709,29 @@ export default function MvStudio({
 
       {/* Video Export Completed Modal with In-Browser Player (No external player hang!) */}
       {showExportModal && exportDoneUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn">
-          <div className="bg-slate-900 border border-emerald-500/40 rounded-3xl p-6 max-w-sm sm:max-w-md w-full shadow-2xl relative space-y-4 flex flex-col items-center">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mv-export-modal-title"
+        >
+          <div
+            className={`bg-slate-900 border border-emerald-500/40 rounded-3xl p-6 w-full shadow-2xl relative space-y-4 flex flex-col items-center ${
+              aspectRatio === "16:9" ? "max-w-lg" : "max-w-sm sm:max-w-md"
+            }`}
+          >
             <div className="w-full flex items-center justify-between pb-2 border-b border-slate-800">
               <div className="flex items-center space-x-2">
                 <div className="p-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg">
                   <Check className="w-4 h-4" />
                 </div>
-                <h3 className="text-sm font-bold text-white">สร้างวิดีโอ MV {aspectRatio} สำเร็จ!</h3>
+                <h3 id="mv-export-modal-title" className="text-sm font-bold text-white">
+                  สร้างวิดีโอ MV {aspectRatio} สำเร็จ!
+                </h3>
               </div>
               <button
                 type="button"
+                aria-label="ปิดหน้าต่างพรีวิววิดีโอ"
                 onClick={() => setShowExportModal(false)}
                 className="text-slate-400 hover:text-white p-1 rounded-lg text-lg font-bold"
               >
@@ -3559,7 +3740,11 @@ export default function MvStudio({
             </div>
 
             {/* Embedded HTML5 Video Player */}
-            <div className="relative rounded-2xl overflow-hidden border-2 border-slate-700 bg-black w-[240px] h-[426px] shadow-2xl">
+            <div
+              className={`relative rounded-2xl overflow-hidden border-2 border-slate-700 bg-black shadow-2xl ${
+                aspectRatio === "16:9" ? "w-full max-w-[440px] aspect-video" : "w-[240px] h-[426px]"
+              }`}
+            >
               <video
                 src={exportDoneUrl}
                 controls

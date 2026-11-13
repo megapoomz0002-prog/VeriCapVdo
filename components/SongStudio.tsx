@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Music,
   Copy,
@@ -18,9 +18,9 @@ import {
   ExternalLink,
   Zap,
   Wand2,
+  AlertTriangle,
 } from "lucide-react";
 import {
-  buildSunoSongPrompt,
   buildFullSunoMegaPrompt,
   buildSunoAuditRefinePrompt,
   buildSunoFinalMasterAuditPrompt,
@@ -30,25 +30,31 @@ import {
   isLineBeatAligned,
   detectWeirdOrForcedThaiPhrases,
 } from "@/lib/prompts";
+import { copyTextToClipboard } from "@/lib/clipboard";
 
 interface SongStudioProps {
-  apiKey?: string;
   onSendToMv: (songData: {
     title: string;
     lyrics: string;
     mood: string;
+    tempo?: string;
+    key?: string;
+    flowStyle?: "auto" | "trinity" | "sdpmr-folk" | "p9d-boombap";
+    rhymeIntensity?: "auto" | "supreme" | "sharp" | "melodic";
     credit?: string;
     hookHeadline?: string;
   }) => void;
 }
 
-export default function SongStudio({ apiKey, onSendToMv }: SongStudioProps) {
-  const [story, setStory] = useState(
-    "เรื่องราวของคนสู้ชีวิตที่ผ่านความยากลำบาก เปรียบดั่งรวงข้าวที่ยิ่งมีค่ายิ่งโน้มตัวลงหาดิน ไม่โอ้อวดตน ยืนหยัดด้วยความจริงใจและความดีจนประสบความสำเร็จ"
-  );
-  const [vocalStyle, setVocalStyle] = useState(
-    "AUTO — ให้ AI วิเคราะห์เลือกแนวเพลง เพศเสียงร้อง คีย์ และ BPM ที่เข้ากับเรื่องราวนี้ที่สุดโดยอัตโนมัติ (แนะนำ 100%)"
-  );
+const DEFAULT_STORY =
+  "เรื่องราวของคนสู้ชีวิตที่ผ่านความยากลำบาก เปรียบดั่งรวงข้าวที่ยิ่งมีค่ายิ่งโน้มตัวลงหาดิน ไม่โอ้อวดตน ยืนหยัดด้วยความจริงใจและความดีจนประสบความสำเร็จ";
+const DEFAULT_VOCAL_STYLE =
+  "AUTO — ให้ AI วิเคราะห์เลือกแนวเพลง เพศเสียงร้อง คีย์ และ BPM ที่เข้ากับเรื่องราวนี้ที่สุดโดยอัตโนมัติ (แนะนำ 100%)";
+const SONG_STORAGE_KEY = "vericap_song_studio_state";
+
+export default function SongStudio({ onSendToMv }: SongStudioProps) {
+  const [story, setStory] = useState(DEFAULT_STORY);
+  const [vocalStyle, setVocalStyle] = useState(DEFAULT_VOCAL_STYLE);
   const [mood, setMood] = useState("AUTO");
   const [tempo, setTempo] = useState("AUTO");
   const [key, setKey] = useState("AUTO");
@@ -57,23 +63,97 @@ export default function SongStudio({ apiKey, onSendToMv }: SongStudioProps) {
   const [rhymeIntensity, setRhymeIntensity] = useState<'auto' | 'supreme' | 'sharp' | 'melodic'>('auto');
 
   const [outputResult, setOutputResult] = useState<string>("");
-  const [copiedFullPrompt, setCopiedFullPrompt] = useState(false);
-  const [copiedAll, setCopiedAll] = useState(false);
-  const [copiedLyricsOnly, setCopiedLyricsOnly] = useState(false);
-  const [copiedStyleOnly, setCopiedStyleOnly] = useState(false);
-  const [copiedExcludeOnly, setCopiedExcludeOnly] = useState(false);
-  const [copiedHookOnly, setCopiedHookOnly] = useState(false);
-  const [copiedTitleOnly, setCopiedTitleOnly] = useState(false);
-  const [copiedSkill, setCopiedSkill] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [copyError, setCopyError] = useState<string>("");
 
   // Stage 2 (1st Audit) & Stage 3 (Final Master Audit) State (v115.0 3-Stage Pipeline)
-  const [auditFocus, setAuditFocus] = useState<AuditFocusMode>('all');
-  const [copiedAuditPrompt, setCopiedAuditPrompt] = useState(false);
-  const [copiedAuditWithLyrics, setCopiedAuditWithLyrics] = useState(false);
-  const [copiedFinalAuditPrompt, setCopiedFinalAuditPrompt] = useState(false);
-  const [copiedFinalAuditWithLyrics, setCopiedFinalAuditWithLyrics] = useState(false);
+  const [auditFocus, setAuditFocus] = useState<AuditFocusMode>("all");
   const [showAuditPreview, setShowAuditPreview] = useState(false);
-  const [auditPreviewStage, setAuditPreviewStage] = useState<'stage2' | 'stage3'>('stage2');
+  const [auditPreviewStage, setAuditPreviewStage] = useState<"stage2" | "stage3">("stage2");
+
+  const hasHydratedRef = useRef(false);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerBadge = (id: string, duration = 2200) => {
+    setCopiedKey(id);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => {
+      setCopiedKey((current) => (current === id ? null : current));
+    }, duration);
+  };
+
+  const handleCopyText = async (id: string, text: string, duration = 2200) => {
+    setCopyError("");
+    const ok = await copyTextToClipboard(text);
+    if (ok) {
+      triggerBadge(id, duration);
+    } else {
+      setCopyError("เบราว์เซอร์จำกัดสิทธิ์คัดลอกอัตโนมัติ — กรุณากด Ctrl+C เพื่อคัดลอกข้อความในกล่องได้ทันที");
+    }
+  };
+
+  // Restore saved Step 1 state on mount & clean timers on unmount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SONG_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          if (typeof parsed.story === "string") setStory(parsed.story);
+          if (typeof parsed.vocalStyle === "string") setVocalStyle(parsed.vocalStyle);
+          if (typeof parsed.mood === "string") setMood(parsed.mood);
+          if (typeof parsed.tempo === "string") setTempo(parsed.tempo);
+          if (typeof parsed.key === "string") setKey(parsed.key);
+          if (typeof parsed.isAutoMusical === "boolean") {
+            setIsAutoMusical(parsed.isAutoMusical);
+          } else if (
+            (typeof parsed.tempo === "string" && parsed.tempo !== "AUTO") ||
+            (typeof parsed.key === "string" && parsed.key !== "AUTO")
+          ) {
+            setIsAutoMusical(false);
+          }
+          if (parsed.flowStyle) setFlowStyle(parsed.flowStyle);
+          if (parsed.rhymeIntensity) setRhymeIntensity(parsed.rhymeIntensity);
+          if (typeof parsed.outputResult === "string") setOutputResult(parsed.outputResult);
+          if (parsed.auditFocus) setAuditFocus(parsed.auditFocus);
+        }
+      }
+    } catch {
+      // Ignore invalid JSON or storage restrictions
+    } finally {
+      hasHydratedRef.current = true;
+    }
+
+    return () => {
+      if (copyTimerRef.current) {
+        clearTimeout(copyTimerRef.current);
+        copyTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydratedRef.current) return;
+    try {
+      localStorage.setItem(
+        SONG_STORAGE_KEY,
+        JSON.stringify({
+          story,
+          vocalStyle,
+          mood,
+          tempo,
+          key,
+          isAutoMusical,
+          flowStyle,
+          rhymeIntensity,
+          outputResult,
+          auditFocus,
+        })
+      );
+    } catch {
+      // Ignore quota exceeded
+    }
+  }, [story, vocalStyle, mood, tempo, key, isAutoMusical, flowStyle, rhymeIntensity, outputResult, auditFocus]);
 
   // Live Generated Master Prompt (Tailored directly to the user's story with ZERO SPOKEN WORD for Suno Mini)
   const fullMasterPrompt = useMemo(() => {
@@ -90,9 +170,7 @@ export default function SongStudio({ apiKey, onSendToMv }: SongStudioProps) {
 
   // Copy Masterpiece Prompt
   const handleCopyPrompt = () => {
-    navigator.clipboard.writeText(fullMasterPrompt);
-    setCopiedFullPrompt(true);
-    setTimeout(() => setCopiedFullPrompt(false), 2500);
+    void handleCopyText("fullPrompt", fullMasterPrompt, 2500);
   };
 
   // Copy Audit & Polish Prompt (Follow-up for Same Chat - includes auto-detected flaws if lyrics are pasted)
@@ -104,9 +182,7 @@ export default function SongStudio({ apiKey, onSendToMv }: SongStudioProps) {
       storyContext: story.trim(),
       vocalStyle: vocalStyle.trim(),
     });
-    navigator.clipboard.writeText(prompt);
-    setCopiedAuditPrompt(true);
-    setTimeout(() => setCopiedAuditPrompt(false), 2500);
+    void handleCopyText("auditPrompt", prompt, 2500);
   };
 
   // Copy Audit & Polish Prompt (With Embedded 1st-Round Lyrics + Auto-Detected Flaws)
@@ -118,9 +194,7 @@ export default function SongStudio({ apiKey, onSendToMv }: SongStudioProps) {
       storyContext: story.trim(),
       vocalStyle: vocalStyle.trim(),
     });
-    navigator.clipboard.writeText(prompt);
-    setCopiedAuditWithLyrics(true);
-    setTimeout(() => setCopiedAuditWithLyrics(false), 2500);
+    void handleCopyText("auditWithLyrics", prompt, 2500);
   };
 
   // Stage 3: Copy Final Master Audit Prompt (Follow-up in Same Chat after Stage 2)
@@ -131,9 +205,7 @@ export default function SongStudio({ apiKey, onSendToMv }: SongStudioProps) {
       storyContext: story.trim(),
       vocalStyle: vocalStyle.trim(),
     });
-    navigator.clipboard.writeText(prompt);
-    setCopiedFinalAuditPrompt(true);
-    setTimeout(() => setCopiedFinalAuditPrompt(false), 2500);
+    void handleCopyText("finalAuditPrompt", prompt, 2500);
   };
 
   // Stage 3: Copy Final Master Audit Prompt (With Embedded Lyrics for New Chat)
@@ -144,37 +216,53 @@ export default function SongStudio({ apiKey, onSendToMv }: SongStudioProps) {
       storyContext: story.trim(),
       vocalStyle: vocalStyle.trim(),
     });
-    navigator.clipboard.writeText(prompt);
-    setCopiedFinalAuditWithLyrics(true);
-    setTimeout(() => setCopiedFinalAuditWithLyrics(false), 2500);
+    void handleCopyText("finalAuditWithLyrics", prompt, 2500);
   };
 
   // Helper functions to parse parts of the output (stops cleanly at [End], never leaks trailing AI chat questions)
+  const stripMd = (s: string): string =>
+    s
+      .replace(/[*_`#]/g, "")
+      .replace(/^["'“”‘’]+|["'“”‘’]+$/g, "")
+      .trim();
+
   const extractLyrics = (raw: string): string => {
     return extractCleanLyricBody(raw);
   };
 
   const extractTitle = (raw: string): string => {
-    const m = raw.match(/ชื่อเพลง[:\s*]+([^\n\r]+)/i);
-    if (m && m[1]) return m[1].replace(/[*_#]/g, "").trim();
+    const m = raw.match(/ชื่อเพลง[*_`]*\s*[:：]\s*([^\n\r]+)/i);
+    if (m && m[1]) {
+      const cleaned = stripMd(m[1]);
+      if (cleaned) return cleaned;
+    }
     return "บทเพลงระดับตำนาน";
   };
 
   const extractStyle = (raw: string): string => {
-    const m = raw.match(/Style of Music\)?[:\s*]+([^\n\r]+)/i);
-    if (m && m[1]) return m[1].replace(/[*_]/g, "").trim();
+    const m = raw.match(/Style of Music\)?[*_`]*\s*[:：]\s*([^\n\r]+)/i);
+    if (m && m[1]) {
+      const cleaned = stripMd(m[1]);
+      if (cleaned) return cleaned;
+    }
     return "Thai folk-soul meets boom-bap, guitar, warm piano, melodic male vocal, tight groove, catchy hook, 84 bpm";
   };
 
   const extractExclude = (raw: string): string => {
-    const m = raw.match(/Exclude Styles\)?[:\s*]+([^\n\r]+)/i);
-    if (m && m[1]) return m[1].replace(/[*_]/g, "").trim();
+    const m = raw.match(/Exclude Styles\)?[*_`]*\s*[:：]\s*([^\n\r]+)/i);
+    if (m && m[1]) {
+      const cleaned = stripMd(m[1]);
+      if (cleaned) return cleaned;
+    }
     return "spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out";
   };
 
   const extractHook = (raw: string): string => {
-    const m = raw.match(/คำพาดหัวสะกิดใจ[:\s*]+([^\n\r]+)/i);
-    if (m && m[1]) return m[1].replace(/[*_]/g, "").trim();
+    const m = raw.match(/คำพาดหัวสะกิดใจ[*_`]*\s*[:：]\s*([^\n\r]+)/i);
+    if (m && m[1]) {
+      const cleaned = stripMd(m[1]);
+      if (cleaned) return cleaned;
+    }
     return "คนจริงเขาไม่พูดเยอะ... สองมือสร้างอนาคต ไม่ก้มหัวให้ใครประทาน! 🔥";
   };
 
@@ -466,6 +554,7 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 [Bridge: Stripped-Back Confession Rising to Octave Climax]
 ไม่เคยรู้เลยว่าความสุขแท้จริง, หน้าตาอบอุ่นเป็นเช่นไร,
 จนวันที่เธอเอียงร่มบังลมฝน, ยอมให้ไหล่ตัวเองเปียกแทนฉันไป,
+ไม่ต้องมองหาใครให้เสียเวลา, แค่มีเธอตรงหน้าก็อุ่นในใจ,
 วินาทีนั้นหัวใจก็ตอบชัด, ว่านี่แหละคือคนที่รอคอยมานาน!
 
 [Final Chorus: Full Band Goosebumps Anthem, Stacked Harmonies & Golden Punchline]
@@ -494,11 +583,12 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 [Verse 1: Intimate Sparse Entry -> Beat Drop Line 3, No Spoken]
 ตีสองห้องเช่าเปิดไฟนีออน, แก้วกาแฟขมเย็นชืดบนโต๊ะนอน,
 ซองบะหมี่เปล่าวางข้างริมหน้าต่าง, เสียงฝนเคาะกระจกในความอ้างว้าง,
-เคยเบียดไหล่ใต้ร่มเล็กคันเดียวกัน, หารค่ารถเมล์ตอนเงินหมดปลายเดือนกัน,
+เคยเบียดไหล่ใต้ร่มคันเล็กด้วยกัน, หารค่ารถเมล์ตอนสิ้นเดือนทุกวัน,
 หัวเราะท่ามกลางทางเท้าเปียกปอน, ไม่เคยคิดว่าจะมีวันที่ต้องซ่อน,
 แต่วันนี้เดินลำพังใต้แสงไฟ, ไหล่ข้างซ้ายเปียกชื้นถึงข้างใน,
 ไม่มีข้อความทักมาถามกินข้าว, เหลือแค่รูปเก่าในหน้าจอสีเทา,
-ไม่คิดโทษชะตาหรือกล่าวหาใคร, แค่ยอมรับความจริงอย่างเข้าใจ
+ไม่คิดโทษชะตาหรือกล่าวหาใคร, แค่ยอมรับความจริงอย่างเข้าใจ,
+เก็บคำอวยพรไว้ในมุมเงียบงัน, หวังเพียงเธอพบวันใหม่ที่สดใส
 
 [Pre-Chorus 1: Rising Note Lift, Sustained Open Vowels]
 วันเวลาพัดเราห่างกันสุดสายตา,
@@ -517,13 +607,14 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 ฝนซาเมื่อไร, ขอให้เธอยิ้มได้!
 
 [Verse 2: Gear-Shift Rhythmic Sing-Rap, Tight Internal Rhymes - No Spoken]
-เลื่อนดูรูปถ่ายเก่าร้านข้างทางเดิม, เพิ่มเพลงโปรดเก่าเปิดกล่อมใจให้เคลิ้ม,
-เมืองใหญ่ยามค่ำผู้คนต่างรีบเดิน, ต่างซ่อนแผลไว้ข้างในไม่ให้ใครประเมิน,
+เลื่อนดูรูปถ่ายเก่าริมทางเดิม, เปิดเพลงโปรดเก่ากล่อมใจให้เคลิ้ม,
+เมืองใหญ่ยามค่ำคนต่างรีบเดิน, ต่างซ่อนแผลไว้ข้างในไม่ให้ประเมิน,
 จดหมายไม่เคยส่งเก็บไว้ในลิ้นชัก, ปลอบใจตัวเองว่าคนเราย่อมรู้จัก,
 รู้จักพบเจอเพื่อเรียนรู้การปล่อยวาง, ไม่ขวางความสุขคนที่เคยร่วมทาง,
 น้ำขังริมฟุตบาทสะท้อนแสงนีออน, สอนให้ยืนแกร่งไม่หวนคืนคำงอน,
 หากวันไหนเธอเหนื่อยจากโลกภายนอก, จำไว้ตรงนี้เคยมีคนคอยปลอบ,
-ส่งแรงใจผ่านสายฝนแสนไกล, ให้เธอเจอคนรักษาใจกว่าฉัน
+ส่งแรงใจผ่านสายฝนแสนไกล, ให้เธอเจอคนคอยห่วงใยทุกวัน,
+ส่วนคนตรงนี้ขอเดินต่อไป, เก่งขึ้นกว่าเดิมและไม่เสียใจกับมัน
 
 [Pre-Chorus 2: Higher Tension Swell, Brand-New Lyrics]
 หยดน้ำบนกระจกช่วยชะล้างน้ำตา,
@@ -558,7 +649,7 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 ฉันยังหวังดีเสมอ, แม้ฝนหยุดตกแล้ว!
 
 [Outro: Strip Beat, Bare Acoustic Echo & Fade Out - No Spoken]
-ไฟนีออนหน้าต่างค่อยหรี่ลงช้าลง, แสงแดดแรกสาดส่องผ่านม่านฝนซา,
+ไฟนีออนหน้าต่างค่อยหรี่แสงลง, แสงแดดเช้าสาดส่องผ่านม่านฝนบาง,
 โชคดีนะคนไกล... จากคนที่ยังยิ้มให้เธอในความทรงจำ...
 
 [End]`,
@@ -655,12 +746,15 @@ description: บรมครูนักแต่งเพลงฮิต Suno v
 ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
 
     const blob = new Blob([skillContent], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    a.href = url;
     a.download = "SKILL.md";
+    document.body.appendChild(a);
     a.click();
-    setCopiedSkill(true);
-    setTimeout(() => setCopiedSkill(false), 2500);
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    triggerBadge("skill", 2500);
   };
 
   // Live Forensic Audit Prompt (Stage 2 - 1st Audit)
@@ -716,7 +810,9 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
 
     const chorusCount = (rawLyrics.match(/\[(Final\s+)?Chorus/gi) || []).length;
     const hasIntroTag = /^\[Intro\b[^\]]*\]/im.test(rawLyrics);
-    const hasSoloTag = /^\[[^\]]*\b(?:solo|interlude|instrumental\s+break)\b[^\]]*\]/im.test(rawLyrics);
+    const hasSoloTag = /^\[(?!.*\b(?:no|without|zero)\s+(?:solo|interlude|instrumental\s+break))[^\]]*\b(?:solo|interlude|instrumental\s+break)\b[^\]]*\]/im.test(
+      rawLyrics
+    );
     const beatAlignedLines = lines.filter(isLineBeatAligned).length;
     const breathRatio = lines.length > 0 ? Math.round((beatAlignedLines / lines.length) * 100) : 100;
 
@@ -784,7 +880,10 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
       .replace(/\((?:สัมผัส|เสียง|หมายเหตุ|ไรม์)[^)]*\)/gi, "")
       .replace(/\[(เสียง|สัมผัส):[^\]]*\]/gi, "")
       .replace(/\[(Spoken|Narration|Monologue|Talking|Speech|Dialogue)[^\]]*\]/gi, "[Verse: 100% Sung Melodic Vocal - No Spoken]")
-      .replace(/^[ \t]*\[[^\]]*\b(?:solo|interlude|instrumental\s+break)\b[^\]]*\][ \t]*\r?\n?/gim, "")
+      .replace(
+        /^[ \t]*\[(?!.*\b(?:no|without|zero)\s+(?:solo|interlude|instrumental\s+break))[^\]]*\b(?:solo|interlude|instrumental\s+break)\b[^\]]*\][ \t]*\r?\n?/gim,
+        ""
+      )
       .replace(/Soft Instrumental Fade(?:\s*Out)?/gi, "Soft Fade Out");
 
     if (/\[Verse\s*1\b/i.test(cleaned)) {
@@ -797,10 +896,10 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
     }
 
     cleaned = cleaned
-      .replace(/จิตตั้ง/g, "ตั้งใจมั่น")
+      .replace(/จิตตั้ง(?:มั่น)?/g, "ตั้งใจมั่น")
       .replace(/ใจหมาย/g, "มุ่งหวังในใจ")
       .replace(/หมายใจ/g, "ตั้งใจไว้")
-      .replace(/ทอนกำลัง/g, "บั่นทอนกำลังใจ")
+      .replace(/(?<!บั่น)ทอนกำลัง(?!ใจ)/g, "บั่นทอนกำลังใจ")
       .replace(/คนหลอกมา/g, "คนที่เข้ามาหลอก")
       .replace(/คำจา|วจีจา/g, "คำพูดจา")
       .replace(/ลูกยา/g, "ลูกรัก")
@@ -819,7 +918,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
       .replace(/น้ำค้างเปรมปรีดิ์/g, "น้ำค้างใสพราว")
       .replace(/ชื่อมูลนิ,\s*บังตาผู้คน/g, "ป้ายการกุศล, บังตาผู้คน")
       .replace(/มูลนิ(?!ธิ)/g, "การกุศล")
-      .replace(/เล็กเล็ก/g, "หลังน้อย")
+      .replace(/เล็กเล็ก/g, "เล็กน้อย")
       .replace(/เบาเบา/g, "แผ่วเบา")
       .replace(/ซ้ำซ้ำ/g, "ตอกย้ำ")
       .replace(/ไกลไกล/g, "แสนไกล")
@@ -836,14 +935,13 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
 
   // Extract lyrics and forward to next tab
   const handlePassToMv = () => {
-    let extractedLyrics = extractLyrics(outputResult);
+    const extractedLyrics = extractLyrics(outputResult);
     let extractedTitle = "บทเพลงระดับตำนาน";
 
-    const titleMatch = outputResult.match(/ชื่อเพลง[:\s*]+([^\n\r]+)/i);
-    if (titleMatch && titleMatch[1]) {
-      extractedTitle = titleMatch[1].replace(/[*#]/g, "").trim();
+    if (/ชื่อเพลง[*_`]*\s*[:：]/i.test(outputResult)) {
+      extractedTitle = extractTitle(outputResult);
     } else if (story.trim()) {
-      const firstLine = story.trim().split("\n")[0].replace(/[*#]/g, "").trim();
+      const firstLine = stripMd(story.trim().split("\n")[0]);
       if (firstLine.length > 2) {
         extractedTitle = firstLine.slice(0, 24);
       }
@@ -853,8 +951,12 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
       title: extractedTitle,
       lyrics: extractedLyrics || story,
       mood: mood,
+      tempo: isAutoMusical ? "AUTO" : tempo,
+      key: isAutoMusical ? "AUTO" : key,
+      flowStyle,
+      rhymeIntensity,
       credit: "megapoomz",
-      hookHeadline: outputResult ? extractHook(outputResult) : undefined,
+      hookHeadline: /คำพาดหัวสะกิดใจ[*_`]*\s*[:：]/i.test(outputResult) ? extractHook(outputResult) : undefined,
     });
   };
 
@@ -912,12 +1014,13 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
 
           {/* Export as SKILL.md */}
           <button
+            type="button"
             onClick={handleExportSkill}
             className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800/90 hover:bg-slate-700 text-fuchsia-300 border border-fuchsia-500/30 transition-all whitespace-nowrap"
             title="ดาวน์โหลดไฟล์ SKILL.md เพื่อนำไปติดตั้งในระบบ Agent ได้ทันที"
           >
-            {copiedSkill ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Download className="w-3.5 h-3.5" />}
-            <span>{copiedSkill ? "บันทึก SKILL.md แล้ว" : "บันทึกเป็นทักษะ (SKILL.md)"}</span>
+            {copiedKey === "skill" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Download className="w-3.5 h-3.5" />}
+            <span>{copiedKey === "skill" ? "บันทึก SKILL.md แล้ว" : "บันทึกเป็นทักษะ (SKILL.md)"}</span>
           </button>
         </div>
       </div>
@@ -1175,7 +1278,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                     <span>คลังสัมผัสพวง & สะพานไรม์ลื่นหู (คลิกเพื่อเติมลงเรื่องราว):</span>
                   </span>
-                  <span className="text-[10px] text-amber-300/80 font-mono">v125.0 Hit Vault</span>
+                  <span className="text-[10px] text-amber-300/80 font-mono">v129.0 Hit Vault</span>
                 </div>
 
                 {/* Multi-Syllable Rhyme Chains */}
@@ -1348,13 +1451,13 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
             </div>
 
             {/* Big Action Copy Button on Left (Prompt Only for Web Chat) */}
-            <div className="pt-2">
+            <div className="pt-2 space-y-2">
               <button
                 type="button"
                 onClick={handleCopyPrompt}
                 className="w-full flex items-center justify-center space-x-2 py-4 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-fuchsia-600 via-purple-600 to-indigo-600 hover:from-fuchsia-500 hover:to-indigo-500 text-white shadow-xl shadow-fuchsia-600/30 transition-all hover:scale-[1.01] active:scale-95"
               >
-                {copiedFullPrompt ? (
+                {copiedKey === "fullPrompt" ? (
                   <>
                     <Check className="w-5 h-5 text-emerald-300" />
                     <span className="text-emerald-200">คัดลอกแม่แบบพรอพฉบับสมบูรณ์แล้ว!</span>
@@ -1366,6 +1469,15 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                   </>
                 )}
               </button>
+              {copyError && (
+                <div
+                  role="alert"
+                  className="p-2.5 rounded-xl bg-amber-950/70 border border-amber-500/40 text-[11px] text-amber-200 flex items-center space-x-1.5"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>{copyError}</span>
+                </div>
+              )}
 
               {/* Quick AI Tool Links */}
               <div className="space-y-1.5 pt-3">
@@ -1435,28 +1547,31 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               </div>
               <div className="flex flex-wrap items-center gap-1.5">
                 <button
+                  type="button"
                   onClick={handleCopyPrompt}
                   className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs bg-fuchsia-600/30 hover:bg-fuchsia-600 text-fuchsia-200 hover:text-white border border-fuchsia-500/40 transition-all font-semibold"
                   title="ขั้นที่ 1: คัดลอกพรอมต์แต่งเพลงฮิต (เข้าทำนอง จังหวะเป๊ะ ไม่มี Intro/Solo, <= 4,500 ตัวอักษร, สัมผัสสละสลวย, ฮุคติดหู)"
                 >
-                  {copiedFullPrompt ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedFullPrompt ? "คัดลอกขั้นที่ 1 แล้ว!" : "1. พรอมต์แต่งเพลง"}</span>
+                  {copiedKey === "fullPrompt" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedKey === "fullPrompt" ? "คัดลอกขั้นที่ 1 แล้ว!" : "1. พรอมต์แต่งเพลง"}</span>
                 </button>
                 <button
+                  type="button"
                   onClick={handleCopyAuditPrompt}
                   className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs bg-amber-600/30 hover:bg-amber-600 text-amber-200 hover:text-white border border-amber-500/40 transition-all font-semibold"
                   title="ขั้นที่ 2: คัดลอกพรอมต์ผ่าตัดรอบแรก (ปรับร้องเข้าทำนอง & จังหวะ 4/4, เอา Intro/Solo ออก, เกลาสัมผัสสละสลวย & ฮุคติดหู)"
                 >
-                  {copiedAuditPrompt ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Wand2 className="w-3.5 h-3.5 text-amber-300" />}
-                  <span>{copiedAuditPrompt ? "คัดลอกรอบแรกแล้ว!" : "2. พรอมต์ตรวจสอบรอบแรก"}</span>
+                  {copiedKey === "auditPrompt" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Wand2 className="w-3.5 h-3.5 text-amber-300" />}
+                  <span>{copiedKey === "auditPrompt" ? "คัดลอกรอบแรกแล้ว!" : "2. พรอมต์ตรวจสอบรอบแรก"}</span>
                 </button>
                 <button
+                  type="button"
                   onClick={handleCopyFinalAuditPrompt}
                   className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 hover:text-white border border-emerald-500/40 transition-all font-semibold"
                   title="ขั้นที่ 3: คัดลอกพรอมต์ขัดเกลารอบสุดท้าย (จำลองร้องคู่บีท 4/4 และเมโลดี้, คุม <= 4,500/5,000 ตัวอักษร & Gold Master)"
                 >
-                  {copiedFinalAuditPrompt ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />}
-                  <span>{copiedFinalAuditPrompt ? "คัดลอกรอบสุดท้ายแล้ว!" : "3. พรอมต์ตรวจสอบรอบสุดท้าย"}</span>
+                  {copiedKey === "finalAuditPrompt" ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />}
+                  <span>{copiedKey === "finalAuditPrompt" ? "คัดลอกรอบสุดท้ายแล้ว!" : "3. พรอมต์ตรวจสอบรอบสุดท้าย"}</span>
                 </button>
               </div>
             </div>
@@ -1483,15 +1598,12 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
 
               {outputResult && (
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(outputResult);
-                    setCopiedAll(true);
-                    setTimeout(() => setCopiedAll(false), 2000);
-                  }}
+                  type="button"
+                  onClick={() => void handleCopyText("all", outputResult, 2000)}
                   className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs bg-slate-800 text-slate-300 hover:text-white"
                 >
-                  {copiedAll ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedAll ? "คัดลอกทั้งหมดแล้ว" : "คัดลอกทั้งหมด"}</span>
+                  {copiedKey === "all" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedKey === "all" ? "คัดลอกทั้งหมดแล้ว" : "คัดลอกทั้งหมด"}</span>
                 </button>
               )}
             </div>
@@ -1579,7 +1691,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     onClick={handleCopyAuditPrompt}
                     className="flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl font-bold text-xs bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-500 hover:to-orange-500 text-white shadow-md shadow-amber-600/25 transition-all hover:scale-[1.01] active:scale-95"
                   >
-                    {copiedAuditPrompt ? (
+                    {copiedKey === "auditPrompt" ? (
                       <>
                         <Check className="w-4 h-4 text-emerald-300" />
                         <span className="text-emerald-100 font-bold">คัดลอกพรอมต์ตรวจสอบรอบแรกแล้ว! (วางต่อในแชทเดิม)</span>
@@ -1597,7 +1709,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     onClick={handleCopyAuditWithLyrics}
                     className="flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl font-bold text-xs bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 hover:border-amber-400 transition-all hover:scale-[1.01] active:scale-95"
                   >
-                    {copiedAuditWithLyrics ? (
+                    {copiedKey === "auditWithLyrics" ? (
                       <>
                         <Check className="w-4 h-4 text-emerald-400" />
                         <span className="text-emerald-300 font-bold">คัดลอกพรอมต์รอบแรก + เนื้อเพลงแล้ว!</span>
@@ -1628,7 +1740,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     onClick={handleCopyFinalAuditPrompt}
                     className="flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl font-bold text-xs bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 hover:from-emerald-500 hover:to-cyan-600 text-white shadow-md shadow-emerald-600/25 transition-all hover:scale-[1.01] active:scale-95"
                   >
-                    {copiedFinalAuditPrompt ? (
+                    {copiedKey === "finalAuditPrompt" ? (
                       <>
                         <Check className="w-4 h-4 text-amber-200" />
                         <span className="text-white font-bold">คัดลอกพรอมต์ตรวจสอบรอบสุดท้ายแล้ว! (วางต่อในแชทเดิม)</span>
@@ -1646,7 +1758,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     onClick={handleCopyFinalAuditWithLyrics}
                     className="flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl font-bold text-xs bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/40 hover:border-emerald-400 transition-all hover:scale-[1.01] active:scale-95"
                   >
-                    {copiedFinalAuditWithLyrics ? (
+                    {copiedKey === "finalAuditWithLyrics" ? (
                       <>
                         <Check className="w-4 h-4 text-emerald-400" />
                         <span className="text-emerald-300 font-bold">คัดลอกพรอมต์รอบสุดท้าย + เนื้อเพลงแล้ว!</span>
@@ -1793,105 +1905,90 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {/* Copy Lyrics */}
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(extractLyrics(outputResult));
-                      setCopiedLyricsOnly(true);
-                      setTimeout(() => setCopiedLyricsOnly(false), 2000);
-                    }}
+                    type="button"
+                    onClick={() => void handleCopyText("lyricsOnly", extractLyrics(outputResult), 2000)}
                     className="p-2.5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-fuchsia-500/50 rounded-xl text-left transition-all group"
                   >
                     <span
                       className={`text-[10px] block uppercase font-mono ${
-                        lyricAuditSummary && !lyricAuditSummary.isWithinSunoLimit ? 'text-rose-400 font-bold' : 'text-slate-400'
+                        lyricAuditSummary && !lyricAuditSummary.isWithinSunoLimit ? "text-rose-400 font-bold" : "text-slate-400"
                       }`}
                     >
-                      1. เนื้อเพลง Suno ({lyricAuditSummary ? `${lyricAuditSummary.charCount.toLocaleString()}/5,000` : '0/5,000'})
+                      1. เนื้อเพลง Suno ({lyricAuditSummary ? `${lyricAuditSummary.charCount.toLocaleString()}/5,000` : "0/5,000"})
                     </span>
                     <span className="text-xs font-bold text-white flex items-center space-x-1 mt-0.5">
-                      {copiedLyricsOnly ? (
+                      {copiedKey === "lyricsOnly" ? (
                         <Check className="w-3.5 h-3.5 text-emerald-400" />
                       ) : (
                         <FileCode className="w-3.5 h-3.5 text-fuchsia-400 group-hover:scale-110 transition-transform" />
                       )}
-                      <span>{copiedLyricsOnly ? "คัดลอกแล้ว!" : "ก๊อป Lyrics (พร้อมวางใน Suno)"}</span>
+                      <span>{copiedKey === "lyricsOnly" ? "คัดลอกแล้ว!" : "ก๊อป Lyrics (พร้อมวางใน Suno)"}</span>
                     </span>
                   </button>
 
                   {/* Copy Style */}
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(extractStyle(outputResult));
-                      setCopiedStyleOnly(true);
-                      setTimeout(() => setCopiedStyleOnly(false), 2000);
-                    }}
+                    type="button"
+                    onClick={() => void handleCopyText("styleOnly", extractStyle(outputResult), 2000)}
                     className="p-2.5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-cyan-500/50 rounded-xl text-left transition-all group"
                   >
                     <span className="text-[10px] text-slate-400 block uppercase font-mono">2. สไตล์ดนตรี Mini (&lt;120ตัว)</span>
                     <span className="text-xs font-bold text-white flex items-center space-x-1 mt-0.5">
-                      {copiedStyleOnly ? (
+                      {copiedKey === "styleOnly" ? (
                         <Check className="w-3.5 h-3.5 text-emerald-400" />
                       ) : (
                         <Sliders className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
                       )}
-                      <span>{copiedStyleOnly ? "คัดลอกแล้ว!" : "ก๊อป Style of Music"}</span>
+                      <span>{copiedKey === "styleOnly" ? "คัดลอกแล้ว!" : "ก๊อป Style of Music"}</span>
                     </span>
                   </button>
 
                   {/* Copy Song Title */}
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(extractTitle(outputResult));
-                      setCopiedTitleOnly(true);
-                      setTimeout(() => setCopiedTitleOnly(false), 2000);
-                    }}
+                    type="button"
+                    onClick={() => void handleCopyText("titleOnly", extractTitle(outputResult), 2000)}
                     className="p-2.5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-left transition-all group"
                   >
                     <span className="text-[10px] text-slate-400 block uppercase font-mono">3. ชื่อเพลง Suno Mini</span>
                     <span className="text-xs font-bold text-white flex items-center space-x-1 mt-0.5">
-                      {copiedTitleOnly ? (
+                      {copiedKey === "titleOnly" ? (
                         <Check className="w-3.5 h-3.5 text-emerald-400" />
                       ) : (
                         <Music className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
                       )}
-                      <span>{copiedTitleOnly ? "คัดลอกแล้ว!" : "ก๊อปชื่อเพลง"}</span>
+                      <span>{copiedKey === "titleOnly" ? "คัดลอกแล้ว!" : "ก๊อปชื่อเพลง"}</span>
                     </span>
                   </button>
 
                   {/* Copy Viral Hook */}
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(extractHook(outputResult));
-                      setCopiedHookOnly(true);
-                      setTimeout(() => setCopiedHookOnly(false), 2000);
-                    }}
+                    type="button"
+                    onClick={() => void handleCopyText("hookOnly", extractHook(outputResult), 2000)}
                     className="p-2.5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-amber-500/50 rounded-xl text-left transition-all group"
                   >
                     <span className="text-[10px] text-slate-400 block uppercase font-mono">4. คำพาดหัว TikTok</span>
                     <span className="text-xs font-bold text-white flex items-center space-x-1 mt-0.5">
-                      {copiedHookOnly ? (
+                      {copiedKey === "hookOnly" ? (
                         <Check className="w-3.5 h-3.5 text-emerald-400" />
                       ) : (
                         <Flame className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
                       )}
-                      <span>{copiedHookOnly ? "คัดลอกแล้ว!" : "ก๊อป 3s Hook"}</span>
+                      <span>{copiedKey === "hookOnly" ? "คัดลอกแล้ว!" : "ก๊อป 3s Hook"}</span>
                     </span>
                   </button>
                 </div>
 
                 {/* Optional Exclude for Suno Web Full */}
-                <div className="flex items-center justify-between text-[11px] text-slate-500 px-1 pt-0.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400 px-1 pt-0.5">
                   <span>💡 สำหรับ <strong>Suno v6 Mini</strong> ใช้แค่ปุ่ม 1 (Lyrics) และ 2 (Style) ได้เลย ไม่ต้องใส่ Exclude</span>
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(extractExclude(outputResult));
-                      setCopiedExcludeOnly(true);
-                      setTimeout(() => setCopiedExcludeOnly(false), 2000);
-                    }}
-                    className="text-slate-400 hover:text-slate-200 underline flex items-center space-x-1"
+                    type="button"
+                    onClick={() => void handleCopyText("excludeOnly", extractExclude(outputResult), 2000)}
+                    className="text-slate-300 hover:text-white underline flex items-center space-x-1"
                     title="สำหรับผู้ใช้ Suno Pro/Custom เวอร์ชันเต็มบนเว็บ"
                   >
                     <ShieldCheck className="w-3 h-3 text-rose-400" />
-                    <span>{copiedExcludeOnly ? "คัดลอก Exclude แล้ว" : "ก๊อป Exclude (ถ้าใช้ Suno บนเว็บ)"}</span>
+                    <span>{copiedKey === "excludeOnly" ? "คัดลอก Exclude แล้ว" : "ก๊อป Exclude (ถ้าใช้ Suno บนเว็บ)"}</span>
                   </button>
                 </div>
 

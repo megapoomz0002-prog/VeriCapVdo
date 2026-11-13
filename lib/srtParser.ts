@@ -1,30 +1,34 @@
 export interface SubtitleCue {
   id: number;
   startTime: number; // in seconds
-  endTime: number;   // in seconds
+  endTime: number; // in seconds
   text: string;
   words?: string[];
+}
+
+function stripBom(content: string): string {
+  return content ? content.replace(/^\uFEFF/, "") : "";
 }
 
 /**
  * Converts timestamp string (e.g., "00:01:23,456" or "01:23.45") into seconds
  */
 export function parseTimestamp(timeStr: string): number {
-  const clean = timeStr.trim().replace(',', '.');
-  const parts = clean.split(':');
+  const clean = timeStr.trim().replace(",", ".");
+  const parts = clean.split(":");
 
   if (parts.length === 3) {
     const hours = parseFloat(parts[0]) || 0;
     const minutes = parseFloat(parts[1]) || 0;
     const seconds = parseFloat(parts[2]) || 0;
     return hours * 3600 + minutes * 60 + seconds;
-  } else if (parts.length === 2) {
+  }
+  if (parts.length === 2) {
     const minutes = parseFloat(parts[0]) || 0;
     const seconds = parseFloat(parts[1]) || 0;
     return minutes * 60 + seconds;
-  } else {
-    return parseFloat(clean) || 0;
   }
+  return parseFloat(clean) || 0;
 }
 
 export function cleanSubtitleText(raw: string): string {
@@ -37,63 +41,48 @@ export function cleanSubtitleText(raw: string): string {
     .trim();
 }
 
-/**
- * Intelligently balances and formats a Thai lyric line into 1 or 2 clean, natural lines.
- * Guarantees that compound words are never split, and orphan words are never left stranded.
- */
-export function balanceThaiLyric(rawText: string): string[] {
-  let clean = cleanSubtitleText(rawText);
-  if (!clean) return [];
-
-  // Fix accidentally split Thai compound words / syllables
-  clean = clean
-    .replace(/ไร้\s+คำ\s*ร่ำลา/g, "ไร้คำร่ำลา")
-    .replace(/คำ\s+ร่ำลา/g, "คำร่ำลา")
-    .replace(/ความ\s+ทรงจำ/g, "ความทรงจำ")
-    .replace(/กอด\s+พ่อ/g, "กอดพ่อ")
-    .replace(/หลับ\s+ตา/g, "หลับตา")
-    .replace(/จาก\s+ลา/g, "จากลา")
-    .replace(/สาย\s+ใย/g, "สายใย")
-    .replace(/ขี้\s+เลื่อย/g, "ขี้เลื่อย")
-    .replace(/ตลับ\s+เมตร/g, "ตลับเมตร");
-
-  // If text already has explicit newline, respect it
-  if (clean.includes("\n")) {
-    return clean.split("\n").map((l) => l.trim()).filter(Boolean);
-  }
-
-  // If text has spaces (natural caesuras), split by spaces
-  const rawParts = clean.split(" ").filter(Boolean);
-
-  // Re-join orphan prepositions or short prefixes (e.g. single-letter/1-syllable stranded words)
-  const parts: string[] = [];
-  for (let i = 0; i < rawParts.length; i++) {
-    const cur = rawParts[i];
-    if (i > 0 && (cur === "คำ" || cur === "ที่" || cur === "ใน" || cur === "และ" || cur === "กับ" || cur === "ให้" || cur === "ไร้") && i + 1 < rawParts.length) {
-      // Connect to the next word instead of being stranded
-      rawParts[i + 1] = cur + rawParts[i + 1];
-    } else if (i > 0 && cur.length <= 2 && (cur === "ลา" || cur === "ตา" || cur === "ใจ")) {
-      // Re-attach trailing syllable to previous word
-      parts[parts.length - 1] = parts[parts.length - 1] + cur;
-    } else {
-      parts.push(cur);
+function segmentThaiWordsIntl(text: string): string[] {
+  if (typeof Intl !== "undefined" && typeof Intl.Segmenter === "function") {
+    try {
+      const segmenter = new Intl.Segmenter("th", { granularity: "word" });
+      return Array.from(segmenter.segment(text), (seg) => seg.segment).filter(Boolean);
+    } catch {
+      // Fallback below
     }
   }
+  return text.split(/\s+/).filter(Boolean);
+}
+
+/**
+ * Intelligently balances a Thai/English lyric line into 1 or 2 natural lines
+ * using Intl.Segmenter("th") word boundaries so compound words are never torn apart.
+ */
+export function balanceThaiLyric(rawText: string): string[] {
+  if (!rawText) return [];
+
+  if (rawText.includes("\n")) {
+    const explicit = rawText
+      .split(/\r?\n/)
+      .map((line) => cleanSubtitleText(line))
+      .filter(Boolean);
+    if (explicit.length > 0) return explicit.slice(0, 2);
+  }
+
+  const clean = cleanSubtitleText(rawText);
+  if (!clean) return [];
+
+  const parts = clean.split(" ").filter(Boolean);
 
   if (parts.length === 2) {
-    // 2 natural phrases (e.g. "แต่วันนี้ลูกกลับไร้" and "คำร่ำลา", or "กอดพ่อได้เพียง" and "แค่ในความทรงจำ")
     return [parts[0], parts[1]];
   }
 
   if (parts.length === 3) {
-    // 3 phrases (e.g. "ภาพวัยเยาว์", "นั่งข้างแคร่", "ในม่านตา")
     const len01 = (parts[0] + " " + parts[1]).length;
     const len12 = (parts[1] + " " + parts[2]).length;
-    if (Math.abs(len01 - parts[2].length) <= Math.abs(parts[0].length - len12)) {
-      return [parts[0] + " " + parts[1], parts[2]];
-    } else {
-      return [parts[0], parts[1] + " " + parts[2]];
-    }
+    return Math.abs(len01 - parts[2].length) <= Math.abs(parts[0].length - len12)
+      ? [parts[0] + " " + parts[1], parts[2]]
+      : [parts[0], parts[1] + " " + parts[2]];
   }
 
   if (parts.length > 3) {
@@ -101,48 +90,34 @@ export function balanceThaiLyric(rawText: string): string[] {
     return [parts.slice(0, mid).join(" "), parts.slice(mid).join(" ")];
   }
 
-  // Single chunk with no spaces: if short (<= 22 chars), keep on 1 line
   if (clean.length <= 22) {
     return [clean];
   }
 
-  // Long single chunk with no spaces: look for natural semantic Thai connectors
-  const connectors = [
-    "แค่ในความทรงจำ",
-    "ในความทรงจำ",
-    "ไม่หวนกลับ",
-    "จนหลับใหล",
-    "แทบขาดใจ",
-    "ด้วยศรัทธา",
-    "อยู่ในใจ",
-    "ที่คุ้นตา",
-    "พรากพ่อไป",
-    "เครื่องมือลง",
-    "บนปลายฟ้า",
-    "คืนความหวัง",
-    "ไม่เคยบ่น",
-    "แม้แต่",
-    "จากห้องนอน",
-    "ชั่วนิรันดร์",
-  ];
+  // Spaceless Thai string > 22 chars: pick the word boundary nearest to midpoint
+  const tokens = segmentThaiWordsIntl(clean);
+  if (tokens.length >= 2) {
+    const totalLen = clean.length;
+    let bestIdx = -1;
+    let bestDiff = Infinity;
+    let runningLen = 0;
 
-  for (const conn of connectors) {
-    if (clean.includes(conn) && clean !== conn) {
-      const idx = clean.indexOf(conn);
-      const p1 = clean.substring(0, idx).trim();
-      const p2 = clean.substring(idx).trim();
-      if (p1.length >= 6 && p2.length >= 6) {
-        return [p1, p2];
+    for (let i = 0; i < tokens.length - 1; i++) {
+      runningLen += tokens[i].length;
+      const rightLen = totalLen - runningLen;
+      if (runningLen >= 6 && rightLen >= 6) {
+        const diff = Math.abs(runningLen - totalLen / 2);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          bestIdx = i + 1;
+        }
       }
     }
-  }
 
-  // Generic Thai phrase splitters
-  const phraseSplitters = ["เพราะ", "แต่", "และ", "เมื่อ", "เพื่อ", "ก่อน", "หลัง", "ให้", "ได้", "ก็", "จึง"];
-  for (const sp of phraseSplitters) {
-    const idx = clean.lastIndexOf(sp);
-    if (idx >= 8 && idx <= clean.length - 6) {
-      return [clean.substring(0, idx).trim(), clean.substring(idx).trim()];
+    if (bestIdx > 0) {
+      const p1 = tokens.slice(0, bestIdx).join("").trim();
+      const p2 = tokens.slice(bestIdx).join("").trim();
+      if (p1 && p2) return [p1, p2];
     }
   }
 
@@ -153,9 +128,10 @@ export function balanceThaiLyric(rawText: string): string[] {
  * Format seconds into mm:ss
  */
 export function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  const safe = Math.max(0, Number.isFinite(seconds) ? seconds : 0);
+  const mins = Math.floor(safe / 60);
+  const secs = Math.floor(safe % 60);
+  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
 /**
@@ -163,31 +139,30 @@ export function formatTime(seconds: number): string {
  */
 export function parseSRT(content: string): SubtitleCue[] {
   const cues: SubtitleCue[] = [];
-  const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const normalized = stripBom(content).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
   const blocks = normalized.trim().split(/\n\s*\n/);
 
   let idCounter = 1;
 
   for (const block of blocks) {
-    const lines = block.trim().split('\n');
+    const lines = block.trim().split("\n");
     if (lines.length < 2) continue;
 
-    // Check if line 0 is ID number or time string
     let timeLineIndex = 0;
     if (/^\d+$/.test(lines[0].trim()) && lines.length >= 3) {
       timeLineIndex = 1;
     }
 
     const timeLine = lines[timeLineIndex];
-    const match = timeLine.match(/(\d{1,2}:\d{2}:\d{2}[,.]\d{1,3})\s*-->\s*(\d{1,2}:\d{2}:\d{2}[,.]\d{1,3})/);
+    const match = timeLine.match(
+      /(\d{1,2}:\d{2}:\d{2}[,.]\d{1,3}|\d{1,2}:\d{2}[,.]\d{1,3})\s*-->\s*(\d{1,2}:\d{2}:\d{2}[,.]\d{1,3}|\d{1,2}:\d{2}[,.]\d{1,3})/
+    );
 
     if (match) {
       const startTime = parseTimestamp(match[1]);
-      const endTime = parseTimestamp(match[2]);
-      const textLines = lines.slice(timeLineIndex + 1).join(' ').trim();
-
-      // Clean HTML tags and ellipses
-      const cleanText = cleanSubtitleText(textLines.replace(/<[^>]+>/g, ''));
+      const endTime = Math.max(parseTimestamp(match[2]), startTime + 0.3);
+      const textLines = lines.slice(timeLineIndex + 1).join(" ").trim();
+      const cleanText = cleanSubtitleText(textLines.replace(/<[^>]+>/g, ""));
 
       if (cleanText) {
         cues.push({
@@ -195,7 +170,7 @@ export function parseSRT(content: string): SubtitleCue[] {
           startTime,
           endTime,
           text: cleanText,
-          words: splitThaiWords(cleanText)
+          words: splitThaiWords(cleanText),
         });
       }
     }
@@ -205,22 +180,67 @@ export function parseSRT(content: string): SubtitleCue[] {
 }
 
 /**
- * Parse an LRC (Lyric) content string
+ * Parse a WebVTT subtitle content string
+ */
+export function parseVTT(content: string): SubtitleCue[] {
+  const cleaned = stripBom(content)
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/^WEBVTT[^\n]*\n?/i, "");
+  const blocks = cleaned.trim().split(/\n\s*\n/);
+  const cues: SubtitleCue[] = [];
+  let idCounter = 1;
+
+  for (const block of blocks) {
+    const lines = block.trim().split("\n");
+    if (lines.length === 0) continue;
+    const first = lines[0].trim().toUpperCase();
+    if (first.startsWith("NOTE") || first.startsWith("STYLE") || first.startsWith("REGION")) {
+      continue;
+    }
+
+    const timeIdx = lines.findIndex((line) => line.includes("-->"));
+    if (timeIdx === -1 || timeIdx >= lines.length - 1) continue;
+
+    const match = lines[timeIdx].match(
+      /((?:\d{1,2}:)?\d{2}:\d{2}[.,]\d{1,3})\s*-->\s*((?:\d{1,2}:)?\d{2}:\d{2}[.,]\d{1,3})/
+    );
+    if (!match) continue;
+
+    const startTime = parseTimestamp(match[1]);
+    const endTime = Math.max(parseTimestamp(match[2]), startTime + 0.3);
+    const textLines = lines.slice(timeIdx + 1).join(" ").trim();
+    const cleanText = cleanSubtitleText(textLines.replace(/<[^>]+>/g, ""));
+
+    if (cleanText) {
+      cues.push({
+        id: idCounter++,
+        startTime,
+        endTime,
+        text: cleanText,
+        words: splitThaiWords(cleanText),
+      });
+    }
+  }
+
+  return cues;
+}
+
+/**
+ * Parse an LRC (Lyric) content string without forced overlaps
  */
 export function parseLRC(content: string): SubtitleCue[] {
   const cues: SubtitleCue[] = [];
-  const lines = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-
+  const lines = stripBom(content).replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
   const rawEntries: { time: number; text: string }[] = [];
 
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
 
-    // Matches [00:15.30] or [01:23.456]
     const matches = [...trimmed.matchAll(/\[(\d{1,2}:\d{2}(?:\.\d{1,3})?)\]/g)];
     if (matches.length > 0) {
-      const text = cleanSubtitleText(trimmed.replace(/\[\d{1,2}:\d{2}(?:\.\d{1,3})?\]/g, ''));
+      const text = cleanSubtitleText(trimmed.replace(/\[\d{1,2}:\d{2}(?:\.\d{1,3})?\]/g, ""));
       if (!text) continue;
 
       for (const m of matches) {
@@ -230,21 +250,23 @@ export function parseLRC(content: string): SubtitleCue[] {
     }
   }
 
-  // Sort by time
   rawEntries.sort((a, b) => a.time - b.time);
 
-  // Derive end times: each cue ends when the next cue starts (or default +4s)
   for (let i = 0; i < rawEntries.length; i++) {
     const current = rawEntries[i];
     const nextTime = i + 1 < rawEntries.length ? rawEntries[i + 1].time : current.time + 4.0;
-    const duration = Math.min(Math.max(nextTime - current.time, 1.0), 6.0);
+    const gap = nextTime - current.time;
+    const boundedEnd =
+      gap > 0.1
+        ? Math.min(current.time + Math.min(Math.max(gap - 0.03, 0.1), 6.0), nextTime)
+        : current.time + 0.5;
 
     cues.push({
       id: i + 1,
-      startTime: current.time,
-      endTime: current.time + duration,
+      startTime: Number(current.time.toFixed(2)),
+      endTime: Number(boundedEnd.toFixed(2)),
       text: current.text,
-      words: splitThaiWords(current.text)
+      words: splitThaiWords(current.text),
     });
   }
 
@@ -252,22 +274,30 @@ export function parseLRC(content: string): SubtitleCue[] {
 }
 
 /**
- * Universal Subtitle/LRC parser
+ * Universal Subtitle/LRC/VTT parser
  */
 export function parseSubtitleFile(content: string, fileName?: string): SubtitleCue[] {
-  const isLrc = fileName?.toLowerCase().endsWith('.lrc') || content.includes('[00:');
-  if (isLrc) {
-    const parsed = parseLRC(content);
-    if (parsed.length > 0) return parsed;
+  const cleanContent = stripBom(content);
+  const lowerName = fileName?.toLowerCase() || "";
+
+  if (lowerName.endsWith(".vtt") || /^\s*WEBVTT\b/i.test(cleanContent)) {
+    const parsedVtt = parseVTT(cleanContent);
+    if (parsedVtt.length > 0) return parsedVtt;
   }
-  return parseSRT(content);
+
+  const isLrc = lowerName.endsWith(".lrc") || /\[\d{1,2}:\d{2}(?:\.\d{1,3})?\]/.test(cleanContent);
+  if (isLrc) {
+    const parsedLrc = parseLRC(cleanContent);
+    if (parsedLrc.length > 0) return parsedLrc;
+  }
+
+  return parseSRT(cleanContent);
 }
 
 /**
  * Simple Thai/English word segmenter for bouncy karaoke animation
  */
 export function splitThaiWords(text: string): string[] {
-  // If text contains ellipses, spaces, or punctuation, split by them first
   const chunks = text.split(/(\s+|\.{2,}|…|-)/).filter(Boolean);
   const result: string[] = [];
 
@@ -282,7 +312,6 @@ export function splitThaiWords(text: string): string[] {
 
 /**
  * Automatically generate timed SubtitleCue list from raw lyrics text
- * Uses natural musical phrasing (3.5s - 4.5s per line) rather than blindly dividing 5-minute songs into huge gaps.
  */
 export function autoGenerateCuesFromLyrics(
   lyrics: string,
@@ -292,7 +321,6 @@ export function autoGenerateCuesFromLyrics(
 ): SubtitleCue[] {
   if (!lyrics) return [];
 
-  // 1. Split raw text into lines and clean out tags like [Verse], [Chorus], etc.
   const rawLines = lyrics
     .split(/\r?\n/)
     .map((l) => l.trim())
@@ -311,9 +339,6 @@ export function autoGenerateCuesFromLyrics(
   const cues: SubtitleCue[] = [];
   const startOffset = Math.max(0, introOffset);
 
-  // Natural singing pace: usually 3.2s to 4.8s per line.
-  // If the audio is short (e.g. 30s preview), we fit within duration.
-  // If the audio is a full song (e.g. 3-5 mins), we pace lines naturally (3.5 - 4.5s) instead of stranding them 60s apart!
   let timePerLine = pacePerLine;
   if (totalDuration > 0 && totalDuration < 45) {
     const usable = Math.max(totalDuration - startOffset - 1.0, cleanLines.length * 2.0);
@@ -381,58 +406,60 @@ export function cleanLyricsToLines(rawLyrics: string): string[] {
   return result;
 }
 
-/**
- * Export SubtitleCues to standard SRT string
- */
-export function exportCuesToSRT(cues: SubtitleCue[]): string {
-  const formatSrtTime = (seconds: number): string => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    const millis = Math.floor((seconds % 1) * 1000);
-    return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")},${millis.toString().padStart(3, "0")}`;
-  };
-
-  return cues
-    .map((cue, idx) => {
-      return `${idx + 1}\n${formatSrtTime(cue.startTime)} --> ${formatSrtTime(cue.endTime)}\n${cue.text}\n`;
-    })
-    .join("\n");
+function formatHmsMillis(seconds: number, separator: "," | "."): string {
+  const safe = Math.max(0, Number.isFinite(seconds) ? seconds : 0);
+  const totalMillis = Math.round(safe * 1000);
+  const hrs = Math.floor(totalMillis / 3_600_000);
+  const mins = Math.floor((totalMillis % 3_600_000) / 60_000);
+  const secs = Math.floor((totalMillis % 60_000) / 1000);
+  const millis = totalMillis % 1000;
+  return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}${separator}${millis.toString().padStart(3, "0")}`;
 }
 
 /**
- * Exports cues to LRC (Karaoke Synced Lyrics format for Suno, Spotify, Apple Music, and mobile players)
+ * Export SubtitleCues to standard UTF-8 SRT (with BOM for Windows/CapCut Thai support)
+ */
+export function exportCuesToSRT(cues: SubtitleCue[]): string {
+  const sorted = [...cues].sort((a, b) => a.startTime - b.startTime);
+  const body = sorted
+    .map(
+      (cue, idx) =>
+        `${idx + 1}\n${formatHmsMillis(cue.startTime, ",")} --> ${formatHmsMillis(cue.endTime, ",")}\n${cue.text}\n`
+    )
+    .join("\n");
+  return `\uFEFF${body}`;
+}
+
+/**
+ * Exports cues to LRC without [00:60.00] rounding overflow
  */
 export function exportCuesToLRC(cues: SubtitleCue[]): string {
   const formatLrcTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `[${mins.toString().padStart(2, "0")}:${secs.toFixed(2).padStart(5, "0")}]`;
+    const safe = Math.max(0, Number.isFinite(seconds) ? seconds : 0);
+    const totalCentis = Math.round(safe * 100);
+    const mins = Math.floor(totalCentis / 6000);
+    const remCentis = totalCentis % 6000;
+    const secs = Math.floor(remCentis / 100);
+    const cs = remCentis % 100;
+    return `[${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${cs.toString().padStart(2, "0")}]`;
   };
 
-  return cues
-    .map((cue) => `${formatLrcTime(cue.startTime)}${cue.text}`)
-    .join("\n");
+  const sorted = [...cues].sort((a, b) => a.startTime - b.startTime);
+  return sorted.map((cue) => `${formatLrcTime(cue.startTime)}${cue.text}`).join("\n");
 }
 
 /**
- * Exports cues to WebVTT (Universal format for HTML5 video, TikTok, CapCut, and modern web players)
+ * Exports cues to WebVTT
  */
 export function exportCuesToVTT(cues: SubtitleCue[]): string {
-  const formatVttTime = (seconds: number): string => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    const millis = Math.floor((seconds % 1) * 1000);
-    return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${millis.toString().padStart(3, "0")}`;
-  };
-
+  const sorted = [...cues].sort((a, b) => a.startTime - b.startTime);
   return (
     `WEBVTT\n\n` +
-    cues
-      .map((cue, idx) => {
-        return `${idx + 1}\n${formatVttTime(cue.startTime)} --> ${formatVttTime(cue.endTime)}\n${cue.text}\n`;
-      })
+    sorted
+      .map(
+        (cue, idx) =>
+          `${idx + 1}\n${formatHmsMillis(cue.startTime, ".")} --> ${formatHmsMillis(cue.endTime, ".")}\n${cue.text}\n`
+      )
       .join("\n")
   );
 }
@@ -477,4 +504,3 @@ export const DEFAULT_KOD_PHOR_LRC = `[00:19.37]กอดพ่อได้เพ
 export function getDefaultKodPhorCues(): SubtitleCue[] {
   return parseLRC(DEFAULT_KOD_PHOR_LRC);
 }
-

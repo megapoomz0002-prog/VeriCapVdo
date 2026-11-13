@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Sparkles,
   Key,
@@ -27,6 +27,9 @@ interface HeaderProps {
   setApiKey: (key: string) => void;
   licenseSession?: LicenseSession | null;
   setLicenseSession?: (session: LicenseSession | null) => void;
+  isLicenseModalOpen?: boolean;
+  onOpenLicenseModal?: () => void;
+  onCloseLicenseModal?: () => void;
 }
 
 export default function Header({
@@ -36,14 +39,25 @@ export default function Header({
   setApiKey,
   licenseSession = null,
   setLicenseSession = () => {},
+  isLicenseModalOpen,
+  onOpenLicenseModal,
+  onCloseLicenseModal,
 }: HeaderProps) {
   const [showKeyModal, setShowKeyModal] = useState(false);
-  const [showLicenseModal, setShowLicenseModal] = useState(false);
+  const [internalShowLicenseModal, setInternalShowLicenseModal] = useState(false);
   const [tempGeminiKey, setTempGeminiKey] = useState(apiKey);
   const [showPassword, setShowPassword] = useState(false);
   const [isTestingKey, setIsTestingKey] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [hasServerKey, setHasServerKey] = useState(false);
+  const testTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showLicenseModal =
+    isLicenseModalOpen !== undefined ? isLicenseModalOpen : internalShowLicenseModal;
+  const openLicenseModal = () =>
+    onOpenLicenseModal ? onOpenLicenseModal() : setInternalShowLicenseModal(true);
+  const closeLicenseModal = () =>
+    onCloseLicenseModal ? onCloseLicenseModal() : setInternalShowLicenseModal(false);
 
   useEffect(() => {
     setTempGeminiKey(apiKey);
@@ -51,7 +65,8 @@ export default function Header({
 
   // Check if server environment variable has GEMINI_API_KEY
   useEffect(() => {
-    fetch("/api/gemini/test-connection")
+    const controller = new AbortController();
+    fetch("/api/gemini/test-connection", { signal: controller.signal })
       .then((res) => res.json())
       .then((data) => {
         if (data?.hasServerKey) {
@@ -59,15 +74,38 @@ export default function Header({
         }
       })
       .catch(() => {});
+
+    return () => {
+      controller.abort();
+      if (testTimerRef.current) {
+        clearTimeout(testTimerRef.current);
+        testTimerRef.current = null;
+      }
+    };
   }, []);
+
+  useEffect(() => {
+    if (!showKeyModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowKeyModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showKeyModal]);
 
   const saveKeys = () => {
     const trimmed = tempGeminiKey.trim();
     setApiKey(trimmed);
-    if (trimmed) {
-      localStorage.setItem("gemini_api_key", trimmed);
-    } else {
-      localStorage.removeItem("gemini_api_key");
+    try {
+      if (trimmed) {
+        localStorage.setItem("gemini_api_key", trimmed);
+      } else {
+        localStorage.removeItem("gemini_api_key");
+      }
+    } catch {
+      // Non-fatal if storage unavailable
     }
     setShowKeyModal(false);
   };
@@ -75,7 +113,11 @@ export default function Header({
   const clearKey = () => {
     setTempGeminiKey("");
     setApiKey("");
-    localStorage.removeItem("gemini_api_key");
+    try {
+      localStorage.removeItem("gemini_api_key");
+    } catch {
+      // Non-fatal
+    }
     setTestResult(null);
   };
 
@@ -88,7 +130,8 @@ export default function Header({
     setTestResult(null);
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6000);
+    if (testTimerRef.current) clearTimeout(testTimerRef.current);
+    testTimerRef.current = setTimeout(() => controller.abort(), 8000);
 
     try {
       const res = await fetch("/api/gemini/test-connection", {
@@ -97,7 +140,7 @@ export default function Header({
         body: JSON.stringify({ apiKey: tempGeminiKey.trim() }),
         signal: controller.signal,
       });
-      clearTimeout(timer);
+      if (testTimerRef.current) clearTimeout(testTimerRef.current);
       const data = await res.json();
       if (res.ok && data.success) {
         setTestResult({ success: true, message: data.message });
@@ -105,11 +148,11 @@ export default function Header({
         setTestResult({ success: false, message: data.error || "เชื่อมต่อไม่สำเร็จ" });
       }
     } catch (e: any) {
-      clearTimeout(timer);
-      if (e.name === "AbortError") {
-        setTestResult({ success: false, message: "การเชื่อมต่อหมดเวลา (เกิน 6 วินาที) กรุณาลองใหม่อีกครั้ง" });
+      if (testTimerRef.current) clearTimeout(testTimerRef.current);
+      if (e?.name === "AbortError") {
+        setTestResult({ success: false, message: "การเชื่อมต่อหมดเวลา (เกิน 8 วินาที) กรุณาลองใหม่อีกครั้ง" });
       } else {
-        setTestResult({ success: false, message: "เกิดข้อผิดพลาดในการเชื่อมต่อ: " + e.message });
+        setTestResult({ success: false, message: "เกิดข้อผิดพลาดในการเชื่อมต่อ: " + (e?.message || "ไม่ทราบสาเหตุ") });
       }
     } finally {
       setIsTestingKey(false);
@@ -117,19 +160,20 @@ export default function Header({
   };
 
   const isConfigured = Boolean(apiKey || hasServerKey);
+  const isLocked = !licenseSession;
 
   return (
-    <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+    <header className="border-b border-slate-800 bg-slate-950/85 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex flex-wrap items-center justify-between gap-2 py-2.5 lg:py-0 lg:min-h-[4rem]">
           {/* Logo & Title */}
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-fuchsia-600 via-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-fuchsia-500/25">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-fuchsia-600 via-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-fuchsia-500/25 shrink-0">
               <Sparkles className="w-5 h-5 text-white animate-pulse" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                <span className="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
                   VeriCapVdo Studio
                 </span>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
@@ -143,49 +187,68 @@ export default function Header({
           </div>
 
           {/* Nav Tabs */}
-          <nav className="flex space-x-1 sm:space-x-2 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+          <nav
+            aria-label="ขั้นตอนการทำงานสตูดิโอ"
+            className="flex flex-wrap sm:flex-nowrap justify-center gap-1 sm:space-x-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 order-3 lg:order-2 w-full lg:w-auto"
+          >
             <button
-              onClick={() => setActiveTab("song")}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                activeTab === "song"
+              type="button"
+              disabled={isLocked}
+              title={isLocked ? "กรุณายืนยัน License Key เพื่อปลดล็อคขั้นตอนที่ 1" : undefined}
+              onClick={() => !isLocked && setActiveTab("song")}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                isLocked
+                  ? "text-slate-500 opacity-50 cursor-not-allowed"
+                  : activeTab === "song"
                   ? "bg-gradient-to-r from-fuchsia-600 to-pink-600 text-white shadow-md shadow-fuchsia-600/30"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  : "text-slate-300 hover:text-white hover:bg-slate-800"
               }`}
             >
-              <Music className="w-4 h-4" />
+              <Music className="w-4 h-4 shrink-0" />
               <span>1. แต่งเพลง (Suno)</span>
             </button>
 
             <button
-              onClick={() => setActiveTab("cover")}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                activeTab === "cover"
+              type="button"
+              disabled={isLocked}
+              title={isLocked ? "กรุณายืนยัน License Key เพื่อปลดล็อคขั้นตอนที่ 2" : undefined}
+              onClick={() => !isLocked && setActiveTab("cover")}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                isLocked
+                  ? "text-slate-500 opacity-50 cursor-not-allowed"
+                  : activeTab === "cover"
                   ? "bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-md shadow-cyan-600/30"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  : "text-slate-300 hover:text-white hover:bg-slate-800"
               }`}
             >
-              <Palette className="w-4 h-4" />
+              <Palette className="w-4 h-4 shrink-0" />
               <span>2. สร้างปก AI (ฟรี)</span>
             </button>
 
             <button
-              onClick={() => setActiveTab("mv")}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                activeTab === "mv"
+              type="button"
+              disabled={isLocked}
+              title={isLocked ? "กรุณายืนยัน License Key เพื่อปลดล็อคขั้นตอนที่ 3" : undefined}
+              onClick={() => !isLocked && setActiveTab("mv")}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                isLocked
+                  ? "text-slate-500 opacity-50 cursor-not-allowed"
+                  : activeTab === "mv"
                   ? "bg-gradient-to-r from-cyan-600 to-emerald-600 text-white shadow-md shadow-emerald-600/30"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  : "text-slate-300 hover:text-white hover:bg-slate-800"
               }`}
             >
-              <Video className="w-4 h-4" />
+              <Video className="w-4 h-4 shrink-0" />
               <span>3. สร้าง MV วิดีโอ (ซิงก์ซับ AI)</span>
             </button>
           </nav>
 
           {/* License & API Key Actions */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 order-2 lg:order-3">
             {/* Google Sheets License Key Button */}
             <button
-              onClick={() => setShowLicenseModal(true)}
+              type="button"
+              onClick={openLicenseModal}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                 licenseSession
                   ? "bg-amber-500/15 text-amber-300 border-amber-500/40 hover:bg-amber-500/25 shadow-sm shadow-amber-500/20"
@@ -204,6 +267,7 @@ export default function Header({
 
             {/* Gemini API Key Button */}
             <button
+              type="button"
               onClick={() => setShowKeyModal(true)}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                 apiKey
@@ -232,7 +296,15 @@ export default function Header({
 
       {/* Modal for 100% Free Info & Google Gemini Key Entry */}
       {showKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="gemini-key-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowKeyModal(false);
+          }}
+        >
           <div className="bg-slate-900 border border-slate-700/80 rounded-2xl p-6 max-w-lg w-full shadow-2xl relative space-y-4 animate-fadeIn">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center space-x-2.5">
@@ -240,12 +312,16 @@ export default function Header({
                   <Key className="w-4 h-4 text-emerald-400" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">ตั้งค่า Google Gemini API Key</h3>
+                  <h3 id="gemini-key-modal-title" className="text-base font-bold text-white">
+                    ตั้งค่า Google Gemini API Key
+                  </h3>
                   <p className="text-[11px] text-slate-400">ฟรี 100% ไม่ต้องผูกบัตรเครดิต</p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowKeyModal(false)}
+                aria-label="ปิดหน้าต่างตั้งค่า API Key"
                 className="w-7 h-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center font-bold text-base transition-colors"
               >
                 ✕
@@ -277,7 +353,10 @@ export default function Header({
             {/* Gemini Key Input Field */}
             <div className="space-y-2 pt-1">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-slate-200 flex items-center space-x-1.5">
+                <label
+                  htmlFor="gemini-api-key-input"
+                  className="text-xs font-semibold text-slate-200 flex items-center space-x-1.5"
+                >
                   <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
                   <span>Google AI Studio Key</span>
                 </label>
@@ -294,6 +373,7 @@ export default function Header({
 
               <div className="relative">
                 <input
+                  id="gemini-api-key-input"
                   type={showPassword ? "text" : "password"}
                   placeholder="AIzaSy... (วางคีย์ที่ได้จาก Google AI Studio ที่นี่)"
                   value={tempGeminiKey}
@@ -308,6 +388,7 @@ export default function Header({
                     <button
                       type="button"
                       onClick={clearKey}
+                      aria-label="ล้างคีย์ Gemini API"
                       className="p-1 rounded text-slate-400 hover:text-rose-400"
                       title="ล้างคีย์"
                     >
@@ -317,6 +398,7 @@ export default function Header({
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "ซ่อนคีย์ Gemini API" : "แสดงคีย์ Gemini API"}
                     className="p-1 rounded text-slate-400 hover:text-slate-200"
                     title={showPassword ? "ซ่อนคีย์" : "ดูคีย์"}
                   >
@@ -325,7 +407,7 @@ export default function Header({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center justify-between pt-1 gap-2 flex-wrap">
                 <button
                   type="button"
                   disabled={isTestingKey || !tempGeminiKey.trim()}
@@ -344,11 +426,12 @@ export default function Header({
                     </>
                   )}
                 </button>
-                <span className="text-[10px] text-slate-400 font-mono">โมเดล: Gemini 2.5 Flash</span>
+                <span className="text-[10px] text-slate-400 font-mono">โมเดล: Gemini 3.8 Flash (สำรอง 3.5 / 2.5)</span>
               </div>
 
               {testResult && (
                 <div
+                  role={testResult.success ? "status" : "alert"}
                   className={`p-3 rounded-xl border text-xs flex items-center space-x-2 animate-fadeIn ${
                     testResult.success
                       ? "bg-emerald-950/70 border-emerald-500/50 text-emerald-200"
@@ -371,12 +454,14 @@ export default function Header({
 
             <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-800">
               <button
+                type="button"
                 onClick={() => setShowKeyModal(false)}
                 className="px-3.5 py-2 rounded-xl text-xs text-slate-400 hover:text-white hover:bg-slate-800 font-medium"
               >
                 ปิดหน้าต่าง
               </button>
               <button
+                type="button"
                 onClick={saveKeys}
                 className="px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-600/30"
               >
@@ -389,7 +474,7 @@ export default function Header({
       {/* Modal for Google Sheets License Activation */}
       <LicenseModal
         isOpen={showLicenseModal}
-        onClose={() => setShowLicenseModal(false)}
+        onClose={closeLicenseModal}
         session={licenseSession}
         onSessionChange={setLicenseSession}
       />

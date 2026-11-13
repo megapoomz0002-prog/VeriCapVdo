@@ -24,19 +24,32 @@ export type AuditFocusMode = 'all' | 'rhyme' | 'flow' | 'antirepeat' | 'natural'
 /** Check whether an input option is left in Auto-AI mode (empty or starting with AUTO). */
 export function isAutoOption(val?: string): boolean {
   const trimmed = (val || '').trim();
-  return !trimmed || /^AUTO\b/i.test(trimmed);
+  return !trimmed || /^AUTO(?:\b|\s*[—–\-:(]|$)/i.test(trimmed);
+}
+
+function extractBpmHint(tempo?: string): string {
+  const match = (tempo || '').match(/\d{2,3}/);
+  return match ? `${match[0]} bpm` : '84 bpm';
 }
 
 /**
  * Helper to resolve Vocal & Musical Spec (v129.0: True 3-Artist Trinity Fusion DNA,
  * Story-First AI Auto-Adaptation, Dynamic Contrast, Zero Intro/Solo, <= 4,500 Chars)
  */
-function resolveVocalAndStyleSpec(vocalStyleText: string, flowStyle?: string) {
+function resolveVocalAndStyleSpec(
+  vocalStyleText: string,
+  flowStyle?: string,
+  tempo?: string,
+  key?: string
+) {
   const defaultExclude =
     'spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out';
 
   const autoVocal = isAutoOption(vocalStyleText);
   const autoFlow = !flowStyle || flowStyle === 'auto';
+  const bpmTag = !isAutoOption(tempo) ? extractBpmHint(tempo) : null;
+  const keyTag = !isAutoOption(key) ? key!.trim() : null;
+  const customMusicHint = [bpmTag, keyTag].filter(Boolean).join(', ');
 
   // Full Auto-AI Mode: Do NOT lock genre, vocal gender, or fixed BPM — fuse all 3 artist techniques tailored 100% to the user's story!
   if (autoVocal && autoFlow) {
@@ -44,8 +57,9 @@ function resolveVocalAndStyleSpec(vocalStyleText: string, flowStyle?: string) {
       isAuto: true,
       voiceTag:
         '[AUTO: ให้ AI ออกแบบ [Voice: ...] ตรงเรื่องจริง + Dynamic Vocal Contrast (Intimate Entry -> Sing-Rap Switch -> Soaring Chorus), No Spoken]',
-      styleOfMusic:
-        'AUTO (< 120 chars: AI picks genre/BPM/vocal matching story + dynamic build, melodic rap switch, catchy hook)',
+      styleOfMusic: customMusicHint
+        ? `AUTO (< 120 chars: AI picks genre/vocal matching story + ${customMusicHint}, clear melody, tight groove, catchy hook)`
+        : 'AUTO (< 120 chars: AI picks genre/BPM/vocal matching story + dynamic build, clear melody, tight groove, catchy hook)',
       excludeStyles: defaultExclude,
       vocalPersonaDesc:
         'AUTO (Trinity Auto-Adaptation) — วิเคราะห์เรื่องราวผู้ใช้ 100% แล้วออกแบบแนวเพลง เพศ/โทนเสียง คีย์ และ BPM ที่เข้ากับเรื่องที่สุด โดยผสานจุดเด่น 3 ศิลปินอย่างลงตัว: เปิดอารมณ์ชิดไมค์ + ภาพจำพลิกคม (SD PMR) × เล่าเรื่องภาษาพูดจริงคล้องพวง 2-4 พยางค์ (P9D) × เปลี่ยนเกียร์ Verse 2 แร็ปเมโลดี้สัมผัสในเด้งลงสแนร์ (NS-A755) แล้วพุ่งไต่โน้ตฮุคคอรัสติดหู (ไร้ Intro/Solo และไร้ท่อนพูด)',
@@ -53,83 +67,118 @@ function resolveVocalAndStyleSpec(vocalStyleText: string, flowStyle?: string) {
   }
 
   const v = (vocalStyleText || '').toLowerCase();
+  const negatesFemale = /ไม่(?:เอา|ใช้|ใช่)?(?:ผู้)?หญิง|ชายล้วน|male\s+only/i.test(v);
+  const negatesRock = /ไม่(?:เอา|ใช้|ใช่)?ร็อก|no\s+rock/i.test(v);
+  const negatesRap = /ไม่(?:เอา|ใช้|ใช่)?(?:แร็ป|บูมแบ็ป)|no\s+rap/i.test(v);
 
-  // Explicit Female Vocal Mode (< 120 chars Style of Music)
-  if (!autoVocal && (v.includes('หญิง') || v.includes('female') || v.includes('alto') || v.includes('soprano'))) {
+  // 1. Explicit Full Trinity Preset (`🔒 [ไตรภาคี 3 ศิลปิน]...`) — MUST match BEFORE "บูมแบ็ป" substring check!
+  if (!autoVocal && (v.includes('[ไตรภาคี') || v.includes('ไตรภาคี 3 ศิลปิน'))) {
+    const resolvedBpm = bpmTag || '84 bpm';
+    return {
+      isAuto: false,
+      voiceTag: '[Voice: Expressive Male Storyteller, Conversational Pocket -> Melodic Rap -> Soaring Chorus, No Spoken]',
+      styleOfMusic: `Thai acoustic R&B meets 90s boom-bap, clear melody, tight groove, dynamic lift, catchy hook, ${resolvedBpm}`,
+      excludeStyles: defaultExclude,
+      vocalPersonaDesc:
+        'สูตรไตรภาคีแท้ (SD PMR × P9D × NS-A755): เปิด Verse 1 ชิดไมค์คลอกีตาร์ 2 บรรทัดแล้วทิ้งบีท R&B/808 ในบรรทัด 3 × เล่าเรื่องภาษาพูดคล้องพวง 2–4 พยางค์ (P9D) × เปลี่ยนเกียร์ Verse 2 เด้งลงสแนร์ด้วยสัมผัสใน (NS-A755) × ฮุคประสานเสียงพลิกคมติดหู 100% (ไร้ Intro/Solo/ท่อนพูด)',
+    };
+  }
+
+  // 2. Explicit Female Vocal Mode (< 120 chars Style of Music)
+  if (
+    !autoVocal &&
+    !negatesFemale &&
+    (v.includes('หญิง') || v.includes('female') || v.includes('alto') || v.includes('soprano'))
+  ) {
+    const resolvedBpm = bpmTag || '84 bpm';
     return {
       isAuto: autoFlow,
       voiceTag: '[Voice: Crystal Emotive Female, Soft Entry to High Head-Mix & Melodic Rap Switch, No Spoken]',
       styleOfMusic: autoFlow
-        ? 'AUTO (< 120 chars female vocal matching story genre/BPM + dynamic vocal build, melodic rap switch, catchy chorus)'
-        : 'Modern Thai Pop-R&B acoustic-groove, crystal emotive female vocal, tight sing-rap switch, soaring catchy chorus, 84 bpm',
+        ? `AUTO (< 120 chars female vocal matching story genre/BPM${bpmTag ? ` near ${bpmTag}` : ''}, clear melody, tight groove, catchy chorus)`
+        : `Modern Thai Pop-R&B acoustic-groove, emotive female vocal, clear melody, tight groove, catchy chorus, ${resolvedBpm}`,
       excludeStyles: defaultExclude,
       vocalPersonaDesc:
         'เสียงร้องหญิงใสกังวานอารมณ์ชัด (แบบ เส้นทางของเฮา / เลือกที่จะมีค่า Female Ver.): Verse 1 นุ่มลึกชัดเจนชิดไมค์ Pre-Chorus ไต่โทนพุ่งสู่อก-ศีรษะ Chorus กังวานลากสระสวย และ Verse 2 พลิกเกียร์โฟลว์แร็ป-ร้องจังหวะสแนร์คมชัด ไร้ท่อนพูด/Intro/Solo',
     };
   }
 
-  // Explicit Hard Rock / Power Rock Mode (< 120 chars Style of Music)
-  if (!autoVocal && (v.includes('ร็อก') || v.includes('rock') || v.includes('ดุดัน') || v.includes('ทรงพลัง'))) {
+  // 3. Explicit Hard Rock / Power Rock Mode (< 120 chars Style of Music)
+  if (
+    !autoVocal &&
+    !negatesRock &&
+    (v.includes('ร็อก') || v.includes('rock') || v.includes('ดุดัน') || v.includes('ทรงพลัง'))
+  ) {
+    const resolvedBpm = bpmTag || '82 bpm';
     return {
       isAuto: false,
       voiceTag: '[Voice: Raspy Thai Rock Tenor, Quiet Clean Entry to Grit-Belt & Semi-Rap Switch, No Spoken]',
-      styleOfMusic:
-        'Modern Thai pop-rock anthem, clean-to-overdriven guitar, tight rhythm-rap verse, raspy belted catchy chorus, 82 bpm',
+      styleOfMusic: `Modern Thai pop-rock anthem, clean-to-overdriven guitar, tight groove, belted catchy chorus, ${resolvedBpm}`,
       excludeStyles: defaultExclude,
       vocalPersonaDesc:
         'เสียงร้องชายร็อกแหบเสน่ห์พุ่งทะยาน (แบบ อยากเจ็บจากปากเธอ / เหยียบมือผู้มีคุณ): Verse 1 คุมเสียงคลีนอั้นอารมณ์ Pre-Chorus ไต่ความเดือดแล้วระเบิดโน้ตสูงเต็มปอดใน Chorus สลับ Verse 2 กึ่งแร็ปกระชับจังหวะกลอง ไร้ท่อน Intro/Solo/พูด',
     };
   }
 
-  // Explicit P9D x NS-A755 Boom Bap / Street Groove Mode (< 120 chars Style of Music)
-  if (flowStyle === 'p9d-boombap' || (!autoVocal && (v.includes('สตรีท') || v.includes('แร็ป') || v.includes('บูมแบ็ป')))) {
-    return {
-      isAuto: false,
-      voiceTag: '[Voice: Dry Conversational Male Rap-Vocal + Soulful Melodic Hook Contrast, No Spoken]',
-      styleOfMusic:
-        'Soulful 90s jazz boom-bap meets R&B, warm Rhodes, crisp snare, candid melodic rap, soaring catchy chorus, 86 bpm',
-      excludeStyles: defaultExclude,
-      vocalPersonaDesc:
-        'เสียงชายชิดไมค์เล่าเรื่องจริงสไตล์สตรีท-บูมแบ็ป (แบบ P9D × NS-A755): Verse 1 เล่าผ่อนคลายภาษาพูดจริงคล้องพวง 2-4 พยางค์ + Verse 2 สาดสัมผัสใน 2 จุดเคาะสแนร์คมชัด ตัดสลับ Chorus ร้องเมโลดี้โซลกังวานติดหูสุดขีด ไร้ Intro/Solo/สกิตพูด',
-    };
-  }
-
-  // Explicit SD PMR Contemporary Folk-Soul Mode (< 120 chars Style of Music)
-  if (flowStyle === 'sdpmr-folk') {
+  // 4. Explicit SD PMR Hybrid / Folk-Soul Mode (< 120 chars Style of Music)
+  if (
+    flowStyle === 'sdpmr-folk' ||
+    (!autoVocal && (v.includes('[สไตล์ sd pmr') || (v.includes('sd pmr') && !v.includes('p9d'))))
+  ) {
+    const resolvedBpm = bpmTag || '82 bpm';
     return {
       isAuto: false,
       voiceTag: '[Voice: Husky Emotional Male Baritone, Intimate Rubato-Entry to Soaring Harmonies, No Spoken]',
-      styleOfMusic:
-        'Modern Thai acoustic-R&B folk, fingerpicked guitar, deep sub-bass, dynamic vocal lift, soaring catchy chorus, 82 bpm',
+      styleOfMusic: `Modern Thai acoustic-R&B folk, fingerpicked guitar, deep 808 sub, clear melody, catchy chorus, ${resolvedBpm}`,
       excludeStyles: defaultExclude,
       vocalPersonaDesc:
         'เสียงร้องชายทุ้มอุ่นกึ่งแหบลึกซึ้ง (แบบ SD PMR): เปิด 2 บรรทัดแรกเสียงเปลือยคลอกีตาร์เกาแล้วทิ้งบีท R&B/ซับเบสในบรรทัดที่ 3 สลับ Verse 2 เป็นแร็ปเล่าเรื่องเห็นภาพจริง Pre-Chorus ดึงจังหวะไต่โน้ตพุ่งสู่ฮุคประสานเสียงพลิกคม ไร้ Intro/Solo/พูด',
     };
   }
 
-  // User picked Auto Vocal with Trinity formula
+  // 5. Explicit P9D x NS-A755 Boom Bap / Street Groove Mode (< 120 chars Style of Music)
+  if (
+    flowStyle === 'p9d-boombap' ||
+    (!autoVocal &&
+      !negatesRap &&
+      (v.includes('[สไตล์ p9d') || v.includes('สตรีท') || v.includes('แร็ป') || v.includes('บูมแบ็ป')))
+  ) {
+    const resolvedBpm = bpmTag || '86 bpm';
+    return {
+      isAuto: false,
+      voiceTag: '[Voice: Dry Conversational Male Rap-Vocal + Soulful Melodic Hook Contrast, No Spoken]',
+      styleOfMusic: `Soulful 90s jazz boom-bap meets R&B, warm Rhodes, crisp snare, tight groove, catchy chorus, ${resolvedBpm}`,
+      excludeStyles: defaultExclude,
+      vocalPersonaDesc:
+        'เสียงชายชิดไมค์เล่าเรื่องจริงสไตล์สตรีท-บูมแบ็ป (แบบ P9D × NS-A755): Verse 1 เล่าผ่อนคลายภาษาพูดจริงคล้องพวง 2-4 พยางค์ + Verse 2 สาดสัมผัสใน 2 จุดเคาะสแนร์คมชัด ตัดสลับ Chorus ร้องเมโลดี้โซลกังวานติดหูสุดขีด ไร้ Intro/Solo/สกิตพูด',
+    };
+  }
+
+  // 6. User picked Auto Vocal with Trinity formula
   if (autoVocal && flowStyle === 'trinity') {
     return {
       isAuto: true,
       voiceTag:
         '[AUTO: เลือกเพศและโทนเสียงตรงเรื่องจริง + Intimate Opening -> Melodic Rap Shift -> Soaring Stacked Chorus, No Spoken]',
-      styleOfMusic:
-        'AUTO (< 120 chars: Thai acoustic folk-R&B meets boom-bap adapted to story mood/BPM, dynamic lift, catchy hook)',
+      styleOfMusic: customMusicHint
+        ? `AUTO (< 120 chars: Thai acoustic R&B meets boom-bap adapted to story, ${customMusicHint}, clear melody, catchy hook)`
+        : 'AUTO (< 120 chars: Thai acoustic folk-R&B meets boom-bap adapted to story mood/BPM, clear melody, catchy hook)',
       excludeStyles: defaultExclude,
       vocalPersonaDesc:
         'สูตรไตรภาคีแท้ (SD PMR × P9D × NS-A755): คัดจุดแข็งจริงของทั้ง 3 ศิลปินตามอารมณ์เรื่อง — โครงสร้างไล่ไดนามิก + ภาพจำคู่ขัดแย้งพลิกคม (SD PMR) × เล่าเรื่องภาษาพูดคล้องพวง 2-4 พยางค์ (P9D) × เปลี่ยนเกียร์ Verse 2 สัมผัสในเด้งลงบีท (NS-A755) ปั้นฮุคติดหูขนลุกตั้งแต่รอบแรก',
     };
   }
 
-  // Custom user-typed vocalStyle or explicit Trinity preset (< 120 chars)
+  // 7. Custom user-typed vocalStyle or explicit Trinity flowStyle (< 120 chars)
+  const resolvedBpm = bpmTag || '84 bpm';
   return {
     isAuto: autoFlow,
     voiceTag: autoFlow
       ? '[AUTO: สร้าง [Voice: ...] ตรงแนวเสียงที่ระบุ + Intimate Entry -> Tight Rap Shift -> Soaring Chorus, No Spoken]'
       : '[Voice: Expressive Male Storyteller, Conversational Pocket -> Melodic Rap -> Soaring Chorus, No Spoken]',
     styleOfMusic: autoFlow
-      ? 'AUTO (< 120 chars: match user vocal direction + story mood/BPM, dynamic vocal build, melodic rap switch, catchy hook)'
-      : 'Thai acoustic folk-R&B meets boom-bap, warm guitar, 808 sub, crisp snare, dynamic vocal, soaring catchy hook, 84 bpm',
+      ? `AUTO (< 120 chars: match user vocal direction + story mood${bpmTag ? ` near ${bpmTag}` : ''}, clear melody, tight groove, catchy hook)`
+      : `Thai acoustic folk-R&B meets boom-bap, clear melody, tight groove, soaring catchy hook, ${resolvedBpm}`,
     excludeStyles: defaultExclude,
     vocalPersonaDesc: !autoVocal
       ? `ยึดตามแนวทางเสียงที่ผู้ใช้ระบุ ("${vocalStyleText.trim()}") แล้วเสริมไดนามิกไล่ระดับอารมณ์: เปิดชิดไมค์ -> Verse 2 เปลี่ยนเกียร์เด้งลงสแนร์ -> ฮุคพุ่งไต่โน้ตติดหู 100% (ไร้ Intro/Solo/ท่อนพูด)`
@@ -224,6 +273,7 @@ export const SUNO_GRANDMASTER_SYSTEM_PROMPT = `# บทบาทและตั�
 ### 1. พิมพ์เขียวเพลงฮิตและแผนผัง 3 ศิลปิน (Trinity Story-Driven Hit Blueprint)
 - **การวิเคราะห์เรื่อง แนวเพลง & เสียงร้องที่ AI เลือก:** สรุปแก่นเรื่อง ตัวละคร มุมมองผู้เล่า และเหตุผลในการเลือกซาวด์/คีย์/BPM พร้อมระบุการหลอมรวม 3 ศิลปิน (จุดเปิดชิดไมค์ + คู่ขัดแย้ง SD PMR / สัมผัสพวง P9D / เกียร์ Verse 2 ของ NS-A755)
 - **ชื่อเพลง:** (ภาษาไทยที่จำง่ายคมคาย + ภาษาอังกฤษ)
+- **คำพาดหัวสะกิดใจ:** (ประโยคสั้นแทงใจสำหรับพาดหน้าปก/คลิป TikTok <= 60 ตัวอักษร พร้อมอีโมจิ 1 ตัว)
 - **แก่นอารมณ์และภาพจำจริง (Visual Scenes from User Story):** Verse 1 ➔ Verse 2 ➔ Bridge
 - **ประโยคฮุคจำหลัก & คู่พลิกคม (Signature Earworm Hook & Antithesis Flip):** 2–4 บรรทัดที่ติดหูที่สุด
 - **คีย์เพลง, ความเร็ว (BPM), ความยาวเป้าหมาย (~3:00 – 3:50 นาที) และขนาดความยาวรวม (< 4,500 / 5,000 ตัวอักษร)**
@@ -247,7 +297,7 @@ export const SUNO_GRANDMASTER_SYSTEM_PROMPT = `# บทบาทและตั�
  * Build the exact user message to send to the Suno Gem or AI Chat
  */
 export function buildSunoSongPrompt(input: SongPromptInput): string {
-  const spec = resolveVocalAndStyleSpec(input.vocalStyle, input.flowStyle);
+  const spec = resolveVocalAndStyleSpec(input.vocalStyle, input.flowStyle, input.tempo, input.key);
   const autoVocal = isAutoOption(input.vocalStyle);
   const autoMood = isAutoOption(input.mood);
   const autoTempo = isAutoOption(input.tempo);
@@ -307,14 +357,17 @@ export function buildSunoSongPrompt(input: SongPromptInput): string {
 
   if (!autoTempo) {
     parts.push(`ความเร็ว (BPM): ${input.tempo!.trim()}`);
-  }
-  if (!autoKey) {
-    parts.push(`คีย์เพลง (Musical Key): ${input.key!.trim()}`);
+  } else {
+    parts.push(
+      `ความเร็ว (BPM): AUTO (ให้ AI เลือก BPM ที่ขับอารมณ์เรื่องราวได้ลึกซึ้งและติดหูที่สุด: 72–78 BPM ช้าซึ้ง-เจ็บลึก, 80–90 BPM เล่าเรื่องติดหู-กรูฟกำลังดี, 96–118 BPM สนุก/ปลุกพลัง)`
+    );
   }
 
-  if (autoTempo || autoKey) {
+  if (!autoKey) {
+    parts.push(`คีย์เพลง (Musical Key): ${input.key!.trim()}`);
+  } else {
     parts.push(
-      `คีย์เพลงและความเร็ว: AUTO (ให้ AI เลือกคีย์ Major/Minor และ BPM ที่ขับอารมณ์เรื่องราวของผู้ใช้ได้ลึกซึ้งและติดหูที่สุด: 72–78 BPM ช้าซึ้ง-เจ็บลึกแบบ R&B/Rock-Ballad, 80–90 BPM โฟล์ค R&B-บูมแบ็ปเล่าเรื่องติดหู, 96–118 BPM สนุกกรูฟ-ร็อกปลุกพลัง)`
+      `คีย์เพลง (Musical Key): AUTO (ให้ AI เลือกคีย์ Major/Minor ที่ส่งเสียงร้องและอารมณ์ของเรื่องได้ถึงขีดสุด)`
     );
   }
 
@@ -326,7 +379,7 @@ export function buildSunoSongPrompt(input: SongPromptInput): string {
  */
 export function buildFullSunoMegaPrompt(input: SongPromptInput): string {
   const userTask = buildSunoSongPrompt(input);
-  const spec = resolveVocalAndStyleSpec(input.vocalStyle, input.flowStyle);
+  const spec = resolveVocalAndStyleSpec(input.vocalStyle, input.flowStyle, input.tempo, input.key);
 
   return `${SUNO_GRANDMASTER_SYSTEM_PROMPT}
 
@@ -445,7 +498,8 @@ export const SUNO_AUDIT_REFINE_SYSTEM_PROMPT = `# บทบาทและตั
   4. **การปรับความลื่นหู สัมผัสพวง 2–4 พยางค์, วรรณยุกต์, ช่องไฟ ',' และภาพจำกินใจ:**
 
 ### 2. พิมพ์เขียวเพลงฮิตฉบับขัดเกลา (Refined Story-Driven Blueprint)
-- ชื่อเพลง (ไทย/อังกฤษ), แก่นอารมณ์ & ภาพจำหลักจากเรื่องผู้ใช้, ประโยคฮุคจำหลัก (Antithesis Flip Hook) & ประโยคหมุดทองคำ, แผนเปลี่ยนเกียร์ 4 ช่วง, BPM & Key (ที่เข้ากับเรื่องที่สุด)
+- **ชื่อเพลง (ไทย/อังกฤษ) & คำพาดหัวสะกิดใจ:** (ประโยคสั้นแทงใจสำหรับปก/TikTok <= 60 ตัวอักษร + อีโมจิ)
+- แก่นอารมณ์ & ภาพจำหลักจากเรื่องผู้ใช้, ประโยคฮุคจำหลัก (Antithesis Flip Hook) & ประโยคหมุดทองคำ, แผนเปลี่ยนเกียร์ 4 ช่วง, BPM & Key (ที่เข้ากับเรื่องที่สุด)
 
 ### 3. กล่องตั้งค่า Suno v6 - Mini (Style & Exclude Box)
 - **Style of Music:** (ภาษาอังกฤษกระชับ **< 120 ตัวอักษร** ปรับให้เข้ากับแนวเพลง เครื่องดนตรี เสียงร้อง อารมณ์ และ BPM ของเรื่องนี้จริง + \`clear melody, tight groove, catchy hook\`)
@@ -461,36 +515,42 @@ export const SUNO_AUDIT_REFINE_SYSTEM_PROMPT = `# บทบาทและตั
 export function extractCleanLyricBody(rawText: string): string {
   if (!rawText) return '';
   let body = '';
-  const codeBlocks = Array.from(rawText.matchAll(/```(?:[a-zA-Z0-9_-]*)\r?\n([\s\S]*?)```/g));
+  const codeBlocks = Array.from(rawText.matchAll(/```[^\n]*\r?\n([\s\S]*?)```/g));
+  let bestScore = -1;
   for (const match of codeBlocks) {
     const content = match[1].trim();
     if (/\[(Voice|Verse|Pre-Chorus|Chorus|Intro)/i.test(content)) {
-      body = content;
-      break;
+      const sectionCount = (content.match(/^\[(?:Voice|Verse|Pre-Chorus|Chorus|Bridge|Outro)/gim) || []).length;
+      if (sectionCount >= bestScore) {
+        bestScore = sectionCount;
+        body = content;
+      }
     }
   }
   if (!body) {
-    const startMatch = rawText.match(/\[(Voice|Verse|Pre-Chorus|Chorus|Intro)[^\]]*\]/i);
+    const startMatch = rawText.match(/(?:^|\r?\n)\s*(\[(?:Voice|Verse|Pre-Chorus|Chorus|Intro)[^\]]*\])/i);
     if (startMatch && startMatch.index !== undefined) {
-      body = rawText.slice(startMatch.index).trim();
+      const tagStart = rawText.indexOf(startMatch[1], startMatch.index);
+      body = rawText.slice(tagStart >= 0 ? tagStart : startMatch.index).trim();
     } else {
       body = rawText.trim();
     }
   }
-  // Strictly cut off any trailing AI conversational text after [End] so Suno never speaks it!
-  const endTagMatch = body.match(/\[End\]/i);
+  // Strictly cut off trailing AI commentary after standalone [End] so Suno never speaks it
+  const endTagMatch = body.match(/(?:^|\r?\n)\s*\[End\]\s*(?:\r?\n|$)/i);
   if (endTagMatch && endTagMatch.index !== undefined) {
-    body = body.slice(0, endTagMatch.index + endTagMatch[0].length).trim();
+    body = body.slice(0, endTagMatch.index + endTagMatch[0].trimEnd().length).trim();
   }
   return body;
 }
 
 /**
  * Measure character length per breath-pause segment (splitting by internal ',', '...', '…')
- * after stripping trailing line-end punctuation so trailing commas don't mask run-on lines.
+ * after stripping inline parenthetical ad-libs and trailing punctuation.
  */
 export function getLineBreathStats(line: string): { bareLen: number; maxSegLen: number; segCount: number } {
-  const trimmedBody = line.trim().replace(/[,.\s!?…]+$/g, '');
+  const withoutAdLibs = line.replace(/\([^)]*\)/g, ' ');
+  const trimmedBody = withoutAdLibs.trim().replace(/[,.\s!?…]+$/g, '');
   const segs = trimmedBody.split(/[,…]+|\.{3}/).map((s) => s.replace(/[,.\s!?…]/g, '').length);
   const bareLen = trimmedBody.replace(/[,.\s!?…]/g, '').length;
   const maxSegLen = segs.length > 0 ? Math.max(...segs) : 0;
@@ -510,10 +570,10 @@ export function isLineBeatAligned(line: string): boolean {
 /**
  * Client-side automated scanner to detect:
  * 1) Spoken-word tags / instructions
- * 2) Unwanted [Intro] section tag (v125.0 rule: start directly at [Verse 1])
+ * 2) Unwanted [Intro] / [Solo] section tags
  * 3) Forced/unnatural/archaic Thai phrases & inline bracket cues
  * 4) Duplicate lines inside non-chorus sections (Verses/Pre-Chorus/Bridge/Outro stay fresh, while Chorus hook repetition is preserved!)
- * 5) Incomplete short drafts (< 40 lines) or overly choppy non-chorus phrasing
+ * 5) Incomplete short drafts (< 40 lines) or breathless/crammed phrasing
  */
 export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?: string): string[] {
   if (!rawLyrics || !rawLyrics.trim()) return [];
@@ -530,14 +590,14 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
   // 2. Check for unwanted [Intro] section tag
   if (/^\[Intro\b[^\]]*\]/im.test(cleanLyrics)) {
     warnings.push(
-      `❌ ตรวจพบท่อน "[Intro]" ในเนื้อเพลง ➔ 💡 ตามแม่แบบฮิตติดหู (v126.0) ให้เอาท่อน [Intro] ออก 100% แล้วเปิดเข้า [Verse 1] ทันทีหลัง [Voice: ...] เพื่อให้เพลงเข้าเรื่องเร็วและไม่เสี่ยงท่อนพูดหรือดนตรียืดเยื้อ!`
+      `❌ ตรวจพบท่อน "[Intro]" ในเนื้อเพลง ➔ 💡 ตามแม่แบบฮิตติดหู (v129.0) ให้เอาท่อน [Intro] ออก 100% แล้วเปิดเข้า [Verse 1] ทันทีหลัง [Voice: ...] เพื่อให้เพลงเข้าเรื่องเร็วและไม่เสี่ยงท่อนพูดหรือดนตรียืดเยื้อ!`
     );
   }
 
-  // 2b. Check for unwanted [Solo] / [Instrumental Solo] / [Interlude] section tags
-  if (/^\[[^\]]*\b(?:solo|interlude|instrumental\s+break)\b[^\]]*\]/im.test(cleanLyrics)) {
+  // 2b. Check for unwanted [Solo] / [Instrumental Solo] / [Interlude] section tags (ignoring "No Solo")
+  if (/^\[[^\]]*(?<!\bno\s)\b(?:solo|interlude|instrumental\s+break)\b[^\]]*\]/im.test(cleanLyrics)) {
     warnings.push(
-      `❌ ตรวจพบท่อน "[Solo / Interlude]" ในเนื้อเพลง ➔ 💡 ตามกฎเหล็กใหม่ (v126.0) ให้ตัดท่อน Solo / Interlude ออก 100% แล้วส่งต่อจาก [Chorus 1] เข้า [Verse 2] ทันที เพื่อให้เพลงกระชับต่อเนื่องและประหยัดโควต้าตัวอักษร Suno!`
+      `❌ ตรวจพบท่อน "[Solo / Interlude]" ในเนื้อเพลง ➔ 💡 ตามกฎเหล็ก (v129.0) ให้ตัดท่อน Solo / Interlude ออก 100% แล้วส่งต่อจาก [Chorus 1] เข้า [Verse 2] ทันที เพื่อให้เพลงกระชับต่อเนื่องและประหยัดโควต้าตัวอักษร Suno!`
     );
   }
 
@@ -554,9 +614,9 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
 
   const weirdPatterns: Array<{ pattern: RegExp; reason: string; suggestion: string }> = [
     {
-      pattern: /จิตตั้ง/g,
-      reason: 'พบคำประดิษฐ์กลับหัว "จิตตั้ง" (คำผสมเทียมเพื่อฝืนสัมผัส คนไทยไม่พูดคำนี้)',
-      suggestion: 'แก้เป็นภาษาพูดธรรมชาติ เช่น "ตั้งใจเอาไว้", "ตั้งมั่นอยู่ในใจ"',
+      pattern: /จิตตั้ง(?:มั่น)?|ใจตั้งมั่น/g,
+      reason: 'พบคำประดิษฐ์กลับหัว "จิตตั้ง / จิตตั้งมั่น / ใจตั้งมั่น" (คำผสมเทียมเพื่อฝืนสัมผัส คนไทยไม่พูดคำนี้)',
+      suggestion: 'แก้เป็นภาษาพูดธรรมชาติ เช่น "ตั้งใจเอาไว้", "หัวใจที่มั่นคง", "ตั้งมั่นอยู่ในใจ"',
     },
     {
       pattern: /ใจหมาย/g,
@@ -569,7 +629,7 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
       suggestion: 'แก้เป็น "ตั้งใจ", "หวังอยู่ในใจ"',
     },
     {
-      pattern: /ทอนกำลัง/g,
+      pattern: /(?<!บั่น)ทอนกำลัง(?!ใจ)/g,
       reason: 'พบคำตัดแหว่ง "ทอนกำลัง" (ตัดคำว่า "บั่นทอนกำลังใจ" จนห้วนแปลก)',
       suggestion: 'แก้เป็น "บั่นทอนกำลังใจ", "ทำให้หมดแรง"',
     },
@@ -577,11 +637,6 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
       pattern: /คนหลอกมา/g,
       reason: 'พบไวยากรณ์วิบัติเพื่อฝืนสัมผัส "คนหลอกมา"',
       suggestion: 'แก้เป็น "คนที่เข้ามาหลอกลวง", "คำโกหกที่ผ่านมา"',
-    },
-    {
-      pattern: /ใจตั้งมั่น|จิตตั้งมั่น/g,
-      reason: 'พบคำเรียงสลับ "ใจตั้งมั่น / จิตตั้งมั่น" ที่แข็งทื่อ',
-      suggestion: 'แก้เป็น "หัวใจที่มั่นคง", "ตั้งมั่นอยู่ในใจ"',
     },
     {
       pattern: /คำจา|วจีจา/g,
@@ -604,7 +659,8 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
       suggestion: 'เล่าผ่านภาพชีวิตจริงที่จับต้องได้ (Show, Don’t Tell) ด้วยภาษาพูดร่วมสมัย',
     },
     {
-      pattern: /(ไปไป|มามา|ดีดี|ช้าช้า|เร็วเร็ว|ค่อยค่อย|เดินเดิน|มองมอง|คิดคิด|ทำทำ|วันวัน|ใครใคร)/g,
+      pattern:
+        /(เล็กเล็ก|เบาเบา|ซ้ำซ้ำ|ไกลไกล|นานนาน|ช้าช้า|เร็วเร็ว|ไปไป|มามา(?![กงดตนบปมยรลว])|ดีดี|ค่อยค่อย|เดินเดิน|มองมอง|คิดคิด|ทำทำ(?!ไม)|วันวัน(?!นี้)|ใครใคร(?![่้๊๋])|บางบาง|เงียบเงียบ|เปล่าเปล่า)/g,
       reason: 'พบคำเบิ้ลพยางค์ติดกัน (ทำให้ Suno ร้องสะดุดหรือลิ้นพัน)',
       suggestion: 'เปลี่ยนเป็นคำเดี่ยวหรือคำซ้อนที่มีความหมายต่างพยางค์กัน',
     },
@@ -622,7 +678,7 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
     }
   }
 
-  // Parse lines with section context so Chorus Earworm Hooks are allowed to repeat cleanly
+  // Parse lines with section context so Chorus/Hook Earworm Hooks are allowed to repeat cleanly
   const rawLines = cleanLyrics.split(/\r?\n/).map((l) => l.trim());
   const nonChorusLines: string[] = [];
   const chorusLines: string[] = [];
@@ -632,9 +688,13 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
   for (const line of rawLines) {
     if (!line || line.startsWith('#') || line.startsWith('*') || line.startsWith('-')) continue;
     if (line.startsWith('[')) {
-      if (/^\[(Final\s+)?Chorus\b/i.test(line) && !/Pre-Chorus/i.test(line)) {
+      if (/^\[(?:Final|Last)?\s*(?:Chorus|Hook|Drop)\b/i.test(line) && !/Pre[- ]?Chorus/i.test(line)) {
         inChorus = true;
-      } else if (/^\[(Verse|Pre-Chorus|Bridge|Outro|Intro|Instrumental|Solo|Interlude|Beat\s+Switch|Transition|End)/i.test(line)) {
+      } else if (
+        /^\[(?:Verse|Pre[- ]?Chorus|Post[- ]?Chorus|Bridge|Outro|Intro|Instrumental|Solo|Interlude|Beat\s+Switch|Transition|End)/i.test(
+          line
+        )
+      ) {
         inChorus = false;
       }
       continue;
@@ -647,7 +707,7 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
     }
   }
 
-  // 3. Check for duplicate lines in non-chorus sections (Verse / Pre-Chorus / Bridge / Outro must stay fresh)
+  // 3. Check for duplicate lines in non-chorus sections
   if (nonChorusLines.length >= 4) {
     const seen = new Map<string, number>();
     const duplicates: string[] = [];
@@ -668,14 +728,14 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
     }
   }
 
-  // 4. Check if song is too short/incomplete for the 8-section continuous hit structure (< 40 lines)
+  // 4. Check if song is too short/incomplete for the continuous hit structure (< 40 lines)
   if (allLyricLines.length >= 8 && allLyricLines.length < 40) {
     warnings.push(
       `❌ ความยาวเนื้อเพลงปัจจุบันมีเพียง ${allLyricLines.length} บรรทัด (สั้นเกินไปสำหรับโครงสร้างเพลงฮิต 8 ท่อนต่อเนื่อง) ➔ 💡 แนะนำให้มีครบ 8 ท่อนต่อเนื่องแบบไร้ Intro/Solo (Verse 1-2 ท่อนละ 8 + Pre-Chorus 1-2 ท่อนละ 4 + Chorus 1-2 และ Final Chorus ท่อนละ 8 + Bridge 4 + Outro 2-4 = ~52–56 บรรทัด, คุมรวม <= 4,500 / 5,000 ตัวอักษร) เพื่อความยาวสมบูรณ์ ~3:00–3:50 นาที`
     );
   }
 
-  // 5. Check if non-chorus verse lines are overly short/choppy (4-5 syllables or less)
+  // 5. Check if non-chorus verse lines are overly short/choppy (<= 16 bare chars)
   if (nonChorusLines.length >= 8) {
     const shortChoppyLines = nonChorusLines.filter((l) => l.replace(/[,.\s]/g, '').length <= 16);
     if (shortChoppyLines.length >= Math.floor(nonChorusLines.length * 0.65)) {
@@ -685,9 +745,9 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
     }
   }
 
-  // 6. Check Vocal-to-Beat Alignment (breathless run-on lines without internal pause & crammed Chorus lines)
+  // 6. Check Vocal-to-Beat Alignment aligned consistently with isLineBeatAligned (maxSegLen > 38)
   if (allLyricLines.length >= 8) {
-    const breathlessLines = allLyricLines.filter((l) => getLineBreathStats(l).maxSegLen >= 42);
+    const breathlessLines = allLyricLines.filter((l) => !isLineBeatAligned(l) && getLineBreathStats(l).maxSegLen > 38);
     if (breathlessLines.length >= 3) {
       warnings.push(
         `⚠️ ตรวจพบบรรทัดที่ยาวรวดเดียวโดยไม่มี ',' แบ่งจังหวะหายใจ (${breathlessLines.length} บรรทัด) ➔ 💡 เสี่ยงทำให้ Suno ร้องเร่งคำและตกจังหวะ ควรแบ่งครึ่งบรรทัดด้วย ',' (4–6 พยางค์ , 4–6 พยางค์) เพื่อให้ร้องเข้าบีท 4/4 ลงตัวเป๊ะ!`
@@ -696,7 +756,7 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
   }
 
   if (chorusLines.length >= 6) {
-    const crammedChorusLines = chorusLines.filter((l) => l.replace(/[,.\s!?…]/g, '').length >= 44);
+    const crammedChorusLines = chorusLines.filter((l) => l.replace(/\([^)]*\)|[,.\s!?…]/g, '').length >= 44);
     if (crammedChorusLines.length >= 2) {
       warnings.push(
         `⚠️ ตรวจพบท่อนฮุคที่มีคำแน่นยาวเกินจังหวะทำนอง (${crammedChorusLines.length} บรรทัด) ➔ 💡 ควรเกลาท่อนฮุคให้กระชับสมมาตร 7–9 พยางค์ต่อบรรทัด เพื่อให้นักร้องปล่อยเสียงเข้าจังหวะและฮิตติดหูที่สุด`
@@ -885,14 +945,15 @@ export const SUNO_FINAL_MASTER_AUDIT_SYSTEM_PROMPT = `# บทบาทและ
 - ยืนยันผลตรวจความสมบูรณ์ครบ 7 ด้าน:
   1. **เอาท่อน \`[Intro]\` และ \`[Solo]\` ออก 100% & ไร้ท่อนพูด 100%**
   2. **ขนาดความยาวรวมอยู่ในโควต้าปลอดภัย (<= 4,500 / 5,000 ตัวอักษร Suno)**
-  3. **ไดนามิกเปลี่ยนเกียร์ 4 ช่วงชัดเจน & ฮุค Antithesis Flip ติดหู (7–10 พยางค์)**
+  3. **ไดนามิกเปลี่ยนเกียร์ 4 ช่วงชัดเจน & ฮุค Antithesis Flip ติดหู (7–9 พยางค์)**
   4. **ฟังลื่นหู ร้องเข้าปาก วรรณยุกต์ลงตัว & จุดหายใจพอดี**
   5. **สัมผัสพวง 2–4 พยางค์ & สัมผัสเชื่อม 3 ศิลปินอย่างเป็นธรรมชาติ (ไม่ฝืนคำ)**
   6. **ความหมายดี เห็นภาพจริง กินใจเข้าถึงอารมณ์ 100%**
   7. **ความสะอาดของแท็ก & กล่องตั้งค่า Suno v6 (< 120 ตัวอักษร)**
 
 ### 2. พิมพ์เขียวเพลงฮิตฉบับสมบูรณ์สูงสุด (Final Gold Master Blueprint)
-- ชื่อเพลง (ไทย/อังกฤษ), ภาพจำหลัก & เส้นเรื่องอารมณ์, แผนเปลี่ยนเกียร์ 4 ช่วง, ประโยคฮุคจำหลัก & หมุดทองคำ, BPM & Key
+- **ชื่อเพลง (ไทย/อังกฤษ) & คำพาดหัวสะกิดใจ:** (ประโยคสั้นแทงใจสำหรับปก/TikTok <= 60 ตัวอักษร + อีโมจิ)
+- ภาพจำหลัก & เส้นเรื่องอารมณ์, แผนเปลี่ยนเกียร์ 4 ช่วง, ประโยคฮุคจำหลัก & หมุดทองคำ, BPM & Key
 
 ### 3. กล่องตั้งค่า Suno v6 - Mini (Style & Exclude Box)
 - **Style of Music:** (< 120 ตัวอักษร)
@@ -981,7 +1042,7 @@ ${storyContextBlock}${autoDiagnosisBlock}
 
 ตอบกลับฉบับ **Final Gold Master** ครบ 4 ส่วนทันที:
 1. **รายงานผลการขัดเกลารอบสุดท้าย** (แบบ \`🔧 ก่อนเกลา ➔ ✨ หลังเกลา (Gold Master)\` + ยืนยันผลตรวจ 7 ด้านพร้อมไดนามิก 4 เกียร์และนับตัวอักษรรวม)
-2. **พิมพ์เขียวเพลงฮิตฉบับสมบูรณ์สูงสุด** (ชื่อเพลง, การวิเคราะห์เรื่องและแนวดนตรี, แผนเปลี่ยนเกียร์ 4 ช่วง, ภาพจำหลัก, ประโยคฮุคจำหลัก & หมุดทองคำ, BPM & Key)
+2. **พิมพ์เขียวเพลงฮิตฉบับสมบูรณ์สูงสุด** (ชื่อเพลง & คำพาดหัวสะกิดใจ, การวิเคราะห์เรื่องและแนวดนตรี, แผนเปลี่ยนเกียร์ 4 ช่วง, ภาพจำหลัก, ประโยคฮุคจำหลัก & หมุดทองคำ, BPM & Key)
 3. **กล่องตั้งค่า Suno v6 - Mini** (\`Style of Music\` < 120 ตัวอักษร & \`Exclude Styles\`)
 4. **เนื้อเพลงฮิตฉบับ Gold Master (ไม่มี \`[Intro]\`, ไม่มี \`[Solo]\`, <= 4,500 ตัวอักษร)** ใน Code Block เดียว!`;
 }
@@ -1012,30 +1073,14 @@ export const TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT = `# THAI TIKTOK SONG COVER
 
 ════════════════════════════════════════════════════
 
-# 1. USER INPUT (แบบฟอร์มข้อมูล)
-
-ชื่อเพลง:
-[ใส่ชื่อเพลง]
-
-คำพาดหัวสะกิดใจ (Viral Hook Headline - ถ้ามี):
-[ใส่คำพาดหัวสั้นๆ หรือเว้นว่าง]
-
-เนื้อร้อง / แก่นเรื่อง / ท่อนฮุก:
-[วางเนื้อเพลงทั้งหมด หรือเฉพาะท่อนสำคัญ]
-
-ชื่อคนแต่ง / เครดิต:
-[ใส่ชื่อ เช่น FRANKYTEAM หรือระบุว่า "ไม่ใส่"]
-
-ประเภทงานที่ต้องการ (Select Mode):
-[เลือก 1 ข้อ]
-- [1] สร้างปกเพลงปกติ (สร้างภาพ 9:16 จบงานทันที)
-- [2] สร้างปกเพลงสำหรับทำ MV วนลูปตลอดเพลง (สร้างภาพ + คำสั่ง 10s Infinite Seamless Loop ใน Google Flow)
-
-แนวภาพ / Mood & Tone (ถ้ามี):
-AUTO (ให้ AI วิเคราะห์จากเนื้อเพลงโดยตรง)
-
-ตัวละครหลัก / สัญลักษณ์เฉพาะ (ถ้ามี):
-AUTO (ให้ AI วิเคราะห์จากเนื้อเพลงโดยตรง)
+# 1. SCHEMA SPECIFICATION (สเปกข้อมูลเข้าที่ระบบส่งให้ด้านล่าง)
+หมายเหตุ: ให้ดึงข้อมูลจริงจากหัวข้อ **USER INPUT ด้านล่างสุด** (ไม่ต้องใช้ตัวอย่างในส่วนสเปกนี้)
+- **ชื่อเพลง:** ชื่อบทเพลงหลักสำหรับวางใน Title Safe Zone
+- **คำพาดหัวสะกิดใจ (ถ้ามี):** Sub-Headline ใต้ชื่อเพลง
+- **เนื้อร้อง / แก่นเรื่อง / ท่อนฮุก:** เนื้อหาหลักสำหรับถอดภาพตัวละคร ฉาก และสัญลักษณ์
+- **ชื่อคนแต่ง / เครดิต:** หากระบุว่า "ไม่ใส่" ให้เว้นว่าง ไม่ต้องเขียนข้อความเครดิตบนปก
+- **โหมด [1] สร้างปกเพลงปกติ:** สร้างภาพปก 9:16 พร้อมชื่อเพลงใน Title Safe Zone (จบงานในภาพเดียว)
+- **โหมด [2] สร้างปกเพลงสำหรับทำ MV วนลูป:** สร้างภาพปก 9:16 + คำสั่ง Motion Prompt 10 วินาที Infinite Seamless Loop สำหรับ Google Flow / Omni Flash
 
 ════════════════════════════════════════════════════
 
@@ -1106,6 +1151,14 @@ AUTO (ให้ AI วิเคราะห์จากเนื้อเพล�
 - Subtle organic breathing cycle (3.3s loop), soft atmospheric micro-movements matching the scene
 - Perfect seamless 10-second infinite loop, 0s matches 10s seamlessly`;
 
+function resolveCreditText(credit?: string, artistCredit?: string): string | null {
+  const candidate = (credit ?? artistCredit ?? '').trim();
+  if (!candidate || /^(?:ไม่ใส่|none|null|-)$/i.test(candidate)) {
+    return null;
+  }
+  return candidate;
+}
+
 /**
  * Helper to dynamically extract story context for cover & motion prompts without rigid theme traps
  */
@@ -1115,19 +1168,16 @@ function buildDynamicVisualContext(
   customChar?: string,
   customMood?: string
 ) {
-  const hasCustomChar = Boolean(
-    customChar && customChar !== 'AUTO' && customChar.trim().length > 0 && !customChar.includes('AUTO')
-  );
-  const hasCustomMood = Boolean(
-    customMood && customMood !== 'AUTO' && customMood.trim().length > 0 && !customMood.includes('AUTO')
-  );
+  const hasCustomChar = !isAutoOption(customChar);
+  const hasCustomMood = !isAutoOption(customMood);
 
-  const allCleanLines = (lyrics || '')
+  const lyricBody = extractCleanLyricBody(lyrics || '');
+  const allCleanLines = lyricBody
     .split(/\r?\n/)
     .map((l) => l.replace(/\[[^\]]*\]/g, '').replace(/\([^\)]*\)/g, '').trim())
     .filter((l) => l.length > 4 && !l.startsWith('#') && !l.startsWith('*'));
 
-  // Sample across the entire 4-act epic song (Beginning + Mid-Song + Climax Finale) so 76-line songs are represented completely
+  // Sample across the beginning, middle, and climax sections
   let sampledLines: string[] = [];
   if (allCleanLines.length <= 8) {
     sampledLines = allCleanLines;
@@ -1159,46 +1209,53 @@ function buildDynamicVisualContext(
   const colorPalette =
     'rich 35mm film color grading harmonized with the emotional mood and lyrical theme of the song';
 
-  return { character, setting, lighting, mood, colorPalette, cleanLyrics };
+  return { character, setting, lighting, mood, colorPalette, cleanLyrics, lyricBody };
 }
 
 /**
  * Build the full cover art Mega Prompt for external AI chatbots (ChatGPT, Gemini, Claude)
  */
 export function buildFullCoverArtMegaPrompt(input: CoverPromptInput): string {
-  const credit = input.credit || input.artistCredit || 'FRANKYTEAM';
-  const modeText =
-    input.mode === 'cover-only'
-      ? '- [1] สร้างปกเพลงปกติ (สร้างภาพ 9:16 จบงานทันที)'
-      : '- [2] สร้างปกเพลงสำหรับทำ MV วนลูปตลอดเพลง (สร้างภาพ + คำสั่ง 10s Infinite Seamless Loop ใน Google Flow)';
+  const resolvedCredit = resolveCreditText(input.credit, input.artistCredit);
+  const isCoverOnly = input.mode === 'cover-only';
+  const modeText = isCoverOnly
+    ? '- [1] สร้างปกเพลงปกติ (สร้างภาพ 9:16 จบงานทันที)'
+    : '- [2] สร้างปกเพลงสำหรับทำ MV วนลูปตลอดเพลง (สร้างภาพ + คำสั่ง 10s Infinite Seamless Loop ใน Google Flow)';
 
-  const charDisplay =
-    input.characterSymbol && input.characterSymbol !== 'AUTO' && !input.characterSymbol.includes('AUTO')
-      ? input.characterSymbol
-      : 'AUTO (ให้ AI วิเคราะห์แก่นเรื่อง ตัวละคร ฉาก และสัญลักษณ์เด่นจากเนื้อเพลงจริงโดยตรง 100% โดยไม่ใช้กรอบสำเร็จรูป)';
+  const charDisplay = !isAutoOption(input.characterSymbol)
+    ? input.characterSymbol!.trim()
+    : 'AUTO (ให้ AI วิเคราะห์แก่นเรื่อง ตัวละคร ฉาก และสัญลักษณ์เด่นจากเนื้อเพลงจริงโดยตรง 100% โดยไม่ใช้กรอบสำเร็จรูป)';
 
-  const moodDisplay =
-    input.moodTone && input.moodTone !== 'AUTO' && !input.moodTone.includes('AUTO')
-      ? input.moodTone
-      : 'AUTO (ให้ AI วิเคราะห์โทนอารมณ์ ความรู้สึก แสง และพาเลตต์สีจากเนื้อเพลงทั้งหมดโดยตรงอย่างอิสระ)';
+  const moodDisplay = !isAutoOption(input.moodTone)
+    ? input.moodTone!.trim()
+    : 'AUTO (ให้ AI วิเคราะห์โทนอารมณ์ ความรู้สึก แสง และพาเลตต์สีจากเนื้อเพลงทั้งหมดโดยตรงอย่างอิสระ)';
 
   const hookLineText = input.hookHeadline?.trim()
     ? `\nคำพาดหัวสะกิดใจ (Sub-Headline ใต้ชื่อเพลง):\n${input.hookHeadline.trim()}\n`
     : '';
 
+  const lyricBody = extractCleanLyricBody(input.lyrics || '') || input.lyrics?.trim() || 'ไม่ระบุเนื้อเพลง';
+  const creditDisplay = resolvedCredit
+    ? resolvedCredit
+    : 'ไม่ใส่ (Do NOT render any creator credit text on the cover image)';
+
+  const deliverableStep2 = isCoverOnly
+    ? '2. ส่งมอบข้อความ 2 ส่วนหลัก (ไม่จำเป็นต้องใส่ Motion Prompt เนื่องจากเลือกโหมด [1] สร้างปกเพลงปกติ): พิมพ์เขียวงานภาพ (Visual Concept Blueprint) และ Master Image Prompt (EN)'
+    : '2. ส่งมอบข้อความครบ 3 ส่วนตาม OUTPUT FORMAT: พิมพ์เขียวงานภาพ, Master Image Prompt (EN), และ Motion Prompt (EN) สำหรับนำไปทำคลิปวนลูป';
+
   return `${TIKTOK_COVER_MV_MASTER_V8_SYSTEM_PROMPT}
 
 ════════════════════════════════════════════════════
-# 1. USER INPUT (แบบฟอร์มข้อมูลบทเพลง)
+# 1. USER INPUT (ข้อมูลบทเพลงจริงจากผู้ใช้)
 
 ชื่อเพลง:
-${input.songTitle || 'ไม่ระบุชื่อเพลง'}
+${input.songTitle?.trim() || 'ไม่ระบุชื่อเพลง'}
 ${hookLineText}
 เนื้อร้อง / แก่นเรื่อง / ท่อนฮุก (Full Lyrics & Narrative):
-${input.lyrics || 'ไม่ระบุเนื้อเพลง'}
+${lyricBody}
 
 ชื่อคนแต่ง / เครดิต:
-${credit}
+${creditDisplay}
 
 ประเภทงานที่ต้องการ (Select Mode):
 ${modeText}
@@ -1216,31 +1273,21 @@ ${charDisplay}
 - ห้ามใช้แม่แบบสำเร็จรูปตายตัว และห้ามสุ่มตัวละครหรือสถานที่ที่ไม่เกี่ยวข้องกับเนื้อเพลงเด็ดขาด
 - แล้วออกแบบและสร้างสรรค์ผลงานระดับ Masterpiece โดย:
 1. หากคุณเป็น AI ที่เจนภาพได้ในแชท (เช่น ChatGPT Plus หรือ Gemini): จงเจนเฉพาะ "ภาพปกเพลง 9:16 ตามเรื่องราวเพลงเพียง 1 ภาพเท่านั้น" (ห้ามเจนรูปโปรแกรม Google Flow, ห้ามวาดหน้าจอคอมพิวเตอร์, ห้ามวาดผังงาน/ไดอะแกรมใดๆ เด็ดขาด 100%)
-2. ส่งมอบข้อความครบ 3 ส่วนตาม OUTPUT FORMAT: พิมพ์เขียวงานภาพ, Master Image Prompt (EN), และ Motion Prompt (EN) สำหรับนำไปทำคลิปวนลูป`;
+${deliverableStep2}`;
 }
 
 /**
  * Build direct 9:16 album cover generation prompt for Imagen 3 / Midjourney / DALL-E 3 / Ideogram / ChatGPT / Gemini
  */
 export function buildDirectImageGenPrompt(input: CoverPromptInput): string {
-  const credit = input.credit || input.artistCredit || 'FRANKYTEAM';
+  const resolvedCredit = resolveCreditText(input.credit, input.artistCredit);
   const title = input.songTitle ? input.songTitle.trim() : 'บทเพลงมาสเตอร์พีซ';
-  const lyricsText = input.lyrics ? input.lyrics.trim() : 'บทเพลงถ่ายทอดเรื่องราวความรู้สึกอันลึกซึ้ง...';
+  const extractedLyrics = extractCleanLyricBody(input.lyrics || '');
+  const lyricsText = extractedLyrics || (input.lyrics ? input.lyrics.trim() : 'บทเพลงถ่ายทอดเรื่องราวความรู้สึกอันลึกซึ้ง...');
   const hookHeadline = input.hookHeadline ? input.hookHeadline.trim() : '';
 
-  const hasCustomChar = Boolean(
-    input.characterSymbol &&
-    input.characterSymbol !== 'AUTO' &&
-    input.characterSymbol.trim().length > 0 &&
-    !input.characterSymbol.includes('AUTO')
-  );
-
-  const hasCustomMood = Boolean(
-    input.moodTone &&
-    input.moodTone !== 'AUTO' &&
-    input.moodTone.trim().length > 0 &&
-    !input.moodTone.includes('AUTO')
-  );
+  const hasCustomChar = !isAutoOption(input.characterSymbol);
+  const hasCustomMood = !isAutoOption(input.moodTone);
 
   const charInstruction = hasCustomChar
     ? input.characterSymbol!.trim()
@@ -1256,12 +1303,23 @@ export function buildDirectImageGenPrompt(input: CoverPromptInput): string {
     ? `\n   - ใต้ชื่อเพลง ให้จัดวางคำพาดหัวสะกิดใจ (Sub-Headline) ขนาดรองลงมาว่า: "${hookHeadline}" ด้วยฟอนต์ที่อ่านง่ายและกลมกลืน`
     : '';
 
+  const creditHeaderLine = resolvedCredit
+    ? `\n✒️ เครดิตผู้แต่ง (วางตัวเล็กเรียบหรูใต้ชื่อเพลง ระดับ 28%-30%): "CREATED BY ${resolvedCredit}"`
+    : `\n✒️ เครดิตผู้แต่ง: ไม่ใส่ (ห้ามวางข้อความเครดิตใดๆ บนภาพ)`;
+
+  const creditLayoutRule = resolvedCredit
+    ? `\n   - วางเครดิต **"CREATED BY ${resolvedCredit}"** ตัวเล็กเรียบหรูไว้ใต้ชื่อเพลง (ระยะ 28% - 30% จากขอบบน)`
+    : '';
+
+  const englishCreditPrompt = resolvedCredit
+    ? `, followed by minimal credit text "CREATED BY ${resolvedCredit}" at 28%-30% height`
+    : `, with NO creator credit text rendered on the image`;
+
   return `# คำสั่งสร้างภาพปกเพลง 9:16 (วิเคราะห์งานภาพจากเนื้อเพลงโดยตรง 100% - Direct Story-Driven Cover Art)
 จงอ่านข้อมูลเพลงและเนื้อร้องด้านล่างนี้ แล้ว **สร้างภาพปกเพลงแนวตั้ง 9:16 (Vertical 1080x1920) เพียง 1 ภาพเดียวเท่านั้น** ที่ถ่ายทอดเรื่องราว สัญลักษณ์ และอารมณ์ของเนื้อเพลงนี้ออกมาได้ลึกซึ้งและตรงประเด็นที่สุด:
 
 ════════════════════════════════════════════════════
-🎵 ชื่อเพลง (ต้องปรากฏบนภาพปกในโซนบน 15%-26%): "${title}"${hookHeadline ? `\n💬 คำพาดหัวสะกิดใจ (Sub-Headline ระดับ 26%-28%): "${hookHeadline}"` : ''}
-✒️ เครดิตผู้แต่ง (วางตัวเล็กเรียบหรูใต้ชื่อเพลง ระดับ 28%-30%): "CREATED BY ${credit}"
+🎵 ชื่อเพลง (ต้องปรากฏบนภาพปกในโซนบน 15%-26%): "${title}"${hookHeadline ? `\n💬 คำพาดหัวสะกิดใจ (Sub-Headline ระดับ 26%-28%): "${hookHeadline}"` : ''}${creditHeaderLine}
 🎯 ตัวละคร / จุดโฟกัสภาพหลัก: ${charInstruction}
 🎨 บรรยากาศ / โทนภาพและแสงสี: ${moodInstruction}
 
@@ -1272,8 +1330,7 @@ ${lyricsText}
 ## กฎเหล็กการจัดองค์ประกอบภาพปก TikTok 9:16 (บังคับปฏิบัติ 100%):
 1. **สร้างเฉพาะภาพปก 1 ภาพเท่านั้น:** ห้ามวาดหน้าจอโปรแกรม, ห้ามวาด UI แอป, ห้ามแบ่งช่องการ์ตูน (No split screen / No collage)
 2. **การจัดวางชื่อเพลง (Title Safe Zone ด้านบน 15% - 28%):**
-   - เขียนชื่อเพลงภาษาไทย **"${title}"** ด้วยฟอนต์ไทยระดับภาพยนตร์ที่สวยงาม คมชัด อ่านง่าย มีมิติแสงเงา (Drop shadow / Subtle glow) วางกึ่งกลางด้านบน (ระยะ 15% - 26% จากขอบบน)${hookTypographyRule}
-   - วางเครดิต **"CREATED BY ${credit}"** ตัวเล็กเรียบหรูไว้ใต้ชื่อเพลง (ระยะ 28% - 30% จากขอบบน)
+   - เขียนชื่อเพลงภาษาไทย **"${title}"** ด้วยฟอนต์ไทยระดับภาพยนตร์ที่สวยงาม คมชัด อ่านง่าย มีมิติแสงเงา (Drop shadow / Subtle glow) วางกึ่งกลางด้านบน (ระยะ 15% - 26% จากขอบบน)${hookTypographyRule}${creditLayoutRule}
 3. **การเว้นพื้นที่ว่างสำหรับซับไตเติลคาราโอเกะ (Negative Space 40% - 72% กลางภาพ):**
    - บริเวณกึ่งกลางค่อนล่างของภาพ (40% - 72%) ต้องเป็นพื้นที่โปร่งตา ละลายหลังนุ่มนวล (Shallow depth of field f/1.8 bokeh) ห้ามมีตัวอักษรอื่นใด เพื่อให้ใส่ซับไตเติลวิ่งในขั้นตอนตัดต่อได้ชัดเจน
 4. **พื้นที่ห้ามวางข้อความเด็ดขาด (Bottom 25% & Right 18%):**
@@ -1286,7 +1343,7 @@ Vertical 9:16 cinematic album cover art (1080x1920), photorealistic masterpiece,
 - **MAIN SUBJECT & VISUAL METAPHOR:** ${visual.character}, positioned center or slightly left-of-center to clear right-side social UI buttons.
 - **ENVIRONMENT & NEGATIVE SPACE:** ${visual.setting}. The middle-lower area (40% to 72% height) features smooth, uncluttered f/1.8 bokeh negative space for karaoke lyrics.
 - **LIGHTING & COLOR PALETTE:** ${visual.lighting}. ${visual.colorPalette}. Mood: ${visual.mood}.
-- **TYPOGRAPHY IN UPPER TITLE SAFE ZONE (15% - 28% FROM TOP):** Render bold, legible cinematic Thai title text "${title}" centered in the upper safe zone${hookHeadline ? `, with smaller subtitle "${hookHeadline}" just below it` : ''}, followed by minimal credit text "CREATED BY ${credit}" at 28%-30% height. Strictly NO text in the bottom 25% of the frame.
+- **TYPOGRAPHY IN UPPER TITLE SAFE ZONE (15% - 28% FROM TOP):** Render bold, legible cinematic Thai title text "${title}" centered in the upper safe zone${hookHeadline ? `, with smaller subtitle "${hookHeadline}" just below it` : ''}${englishCreditPrompt}. Strictly NO text in the bottom 25% of the frame.
 - **NEGATIVE PROMPT:** software interface, computer screen, UI buttons, flowchart, split screen, grid, collage, text at bottom of image, watermark, deformed hands, extra fingers, blurry typography.`;
 }
 
@@ -1311,5 +1368,5 @@ export function buildGoogleFlowMotionPrompt(
   const title = input.songTitle ? input.songTitle.trim() : 'Untitled Song';
   const visual = buildDynamicVisualContext(title, input.lyrics || '', input.characterSymbol, input.moodTone);
 
-  return `Cinematic 9:16 vertical music video background loop for "${title}", 10-second duration, perfectly seamless infinite loop where frame at 10.0s matches 0.0s identically. Locked-off tripod camera, strictly ZERO camera pan, ZERO tilt, ZERO zoom-in, ZERO zoom-out, constant 100% subject scale and position. All Thai title typography and credit text in the upper safe zone remain 100% static, sharp, and locked in place without warping or shimmering. Organic in-place micro-motion synchronized with the song's atmosphere (${visual.mood}): gentle rhythmic chest breathing (3.3-second cycle, 3 full cycles in 10s), soft natural hair and fabric sway in a steady breeze, continuous atmospheric particles and subtle volumetric light rays drifting smoothly. 4K ultra-stable, photorealistic, zero jump cuts, zero morphing.`;
+  return `Cinematic 9:16 vertical music video background loop for "${title}", 10-second duration, perfectly seamless infinite loop where frame at 10.0s matches 0.0s identically. Locked-off tripod camera, strictly ZERO camera pan, ZERO tilt, ZERO zoom-in, ZERO zoom-out, constant 100% subject scale and position. All Thai title typography and overlay text in the upper safe zone remain 100% static, crisp, and locked in place without warping or shimmering. Organic in-place micro-motion synchronized with the scene (${visual.mood}): if a person is present, gentle natural breathing rhythm (3.3s cycle, 3 full cycles in 10s) and soft air sway on hair or clothing; for objects or atmospheric scenery, subtle wind foliage movement, gentle water/light shimmer, drifting dust motes, and volumetric light rays cycling smoothly. 4K ultra-stable, photorealistic, zero jump cuts, zero morphing.`;
 }

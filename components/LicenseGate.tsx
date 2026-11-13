@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ShieldCheck,
   Key,
@@ -8,11 +8,11 @@ import {
   Loader2,
   AlertTriangle,
   CheckCircle2,
-  Sparkles,
   User,
   Clipboard,
   Lock,
 } from "lucide-react";
+import { readTextFromClipboard } from "@/lib/clipboard";
 import { LicenseSession, getOrCreateDeviceId } from "./LicenseModal";
 
 interface LicenseGateProps {
@@ -26,24 +26,31 @@ export default function LicenseGate({ onSuccess }: LicenseGateProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [pasteHint, setPasteHint] = useState("");
+  const unlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setDeviceId(getOrCreateDeviceId());
     }
+    return () => {
+      if (unlockTimerRef.current) {
+        clearTimeout(unlockTimerRef.current);
+        unlockTimerRef.current = null;
+      }
+    };
   }, []);
 
   const handlePaste = async () => {
-    try {
-      if (navigator.clipboard) {
-        const text = await navigator.clipboard.readText();
-        if (text) {
-          setKeyInput(text.trim().toUpperCase());
-          setErrorMsg("");
-        }
-      }
-    } catch (e) {
-      // Clipboard permissions denied
+    setPasteHint("");
+    const result = await readTextFromClipboard();
+    if (result.ok && result.text.trim()) {
+      setKeyInput(result.text.trim().toUpperCase().replace(/\s+/g, ""));
+      setErrorMsg("");
+    } else if (!result.ok) {
+      setPasteHint("เบราว์เซอร์จำกัดสิทธิ์อ่านคลิปบอร์ดอัตโนมัติ — กรุณากด Ctrl+V / Cmd+V วางในช่องคีย์ได้ทันที");
+    } else {
+      setPasteHint("ไม่พบข้อความในคลิปบอร์ด — กรุณาคัดลอกคีย์แล้วลองอีกครั้ง");
     }
   };
 
@@ -59,6 +66,7 @@ export default function LicenseGate({ onSuccess }: LicenseGateProps) {
     setIsLoading(true);
     setErrorMsg("");
     setSuccessMsg("");
+    setPasteHint("");
 
     try {
       const activeDeviceId = deviceId || getOrCreateDeviceId();
@@ -68,7 +76,6 @@ export default function LicenseGate({ onSuccess }: LicenseGateProps) {
         body: JSON.stringify({
           key: cleanKey,
           deviceId: activeDeviceId,
-          machineId: activeDeviceId,
           userName: userName.trim(),
         }),
       });
@@ -84,9 +91,14 @@ export default function LicenseGate({ onSuccess }: LicenseGateProps) {
           deviceId: activeDeviceId,
         };
 
-        localStorage.setItem("vericap_license_session", JSON.stringify(session));
+        try {
+          localStorage.setItem("vericap_license_session", JSON.stringify(session));
+        } catch {
+          // Non-fatal if storage is blocked
+        }
         setSuccessMsg(data.message || "เปิดใช้งานสิทธิ์เข้าใช้งานสำเร็จเรียบร้อยแล้ว!");
-        setTimeout(() => {
+        if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
+        unlockTimerRef.current = setTimeout(() => {
           onSuccess(session);
         }, 1200);
       } else {
@@ -96,7 +108,7 @@ export default function LicenseGate({ onSuccess }: LicenseGateProps) {
         );
       }
     } catch (err: any) {
-      setErrorMsg("เกิดข้อผิดพลาดในการเชื่อมต่อ: " + (err.message || "ไม่สามารถติดต่อเซิร์ฟเวอร์ได้"));
+      setErrorMsg("เกิดข้อผิดพลาดในการเชื่อมต่อ: " + (err?.message || "ไม่สามารถติดต่อเซิร์ฟเวอร์ได้"));
     } finally {
       setIsLoading(false);
     }
@@ -145,7 +157,10 @@ export default function LicenseGate({ onSuccess }: LicenseGateProps) {
           <form onSubmit={handleVerifyAndUnlock} className="space-y-4">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-200 flex items-center space-x-1.5">
+                <label
+                  htmlFor="license-gate-key-input"
+                  className="text-xs font-bold text-slate-200 flex items-center space-x-1.5"
+                >
                   <Key className="w-3.5 h-3.5 text-amber-400" />
                   <span>License Key (รหัสเข้าใช้งาน)</span>
                 </label>
@@ -160,6 +175,7 @@ export default function LicenseGate({ onSuccess }: LicenseGateProps) {
               </div>
 
               <input
+                id="license-gate-key-input"
                 type="text"
                 autoFocus
                 placeholder="เช่น VCV-ABCD-EFGH-JKLM-NPQR"
@@ -167,17 +183,25 @@ export default function LicenseGate({ onSuccess }: LicenseGateProps) {
                 onChange={(e) => {
                   setKeyInput(e.target.value.toUpperCase());
                   setErrorMsg("");
+                  setPasteHint("");
                 }}
                 className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-500 font-mono tracking-wider focus:outline-none transition-all shadow-inner"
               />
+              {pasteHint && (
+                <p className="text-[11px] text-amber-300/90 leading-relaxed">{pasteHint}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
+              <label
+                htmlFor="license-gate-name-input"
+                className="text-xs font-semibold text-slate-300 flex items-center space-x-1.5"
+              >
                 <User className="w-3.5 h-3.5 text-slate-400" />
                 <span>ชื่อของคุณหรือชื่อร้านค้า (ไม่บังคับ)</span>
               </label>
               <input
+                id="license-gate-name-input"
                 type="text"
                 placeholder="ระบุชื่อเพื่อให้บันทึกลงใน Google Sheets"
                 value={userName}
@@ -188,7 +212,10 @@ export default function LicenseGate({ onSuccess }: LicenseGateProps) {
 
             {/* Error Message */}
             {errorMsg && (
-              <div className="p-3 bg-rose-950/70 border border-rose-500/50 rounded-xl text-xs text-rose-200 flex items-start space-x-2 animate-fadeIn">
+              <div
+                role="alert"
+                className="p-3 bg-rose-950/70 border border-rose-500/50 rounded-xl text-xs text-rose-200 flex items-start space-x-2 animate-fadeIn"
+              >
                 <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                 <span className="leading-relaxed font-semibold">{errorMsg}</span>
               </div>
@@ -196,7 +223,10 @@ export default function LicenseGate({ onSuccess }: LicenseGateProps) {
 
             {/* Success Message */}
             {successMsg && (
-              <div className="p-3 bg-emerald-950/70 border border-emerald-500/50 rounded-xl text-xs text-emerald-200 flex items-start space-x-2 animate-fadeIn">
+              <div
+                role="status"
+                className="p-3 bg-emerald-950/70 border border-emerald-500/50 rounded-xl text-xs text-emerald-200 flex items-start space-x-2 animate-fadeIn"
+              >
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <span className="leading-relaxed font-semibold">{successMsg}</span>
               </div>
@@ -224,11 +254,11 @@ export default function LicenseGate({ onSuccess }: LicenseGateProps) {
 
           {/* Footer note */}
           <div className="pt-2 border-t border-slate-800 text-center space-y-1">
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-400">
               ยังไม่มี License Key? กรุณาติดต่อผู้ดูแลระบบเพื่อขอรับสิทธิ์เข้าใช้งาน
             </p>
             {deviceId && (
-              <p className="text-[10px] text-slate-600 font-mono">
+              <p className="text-[10px] text-slate-400 font-mono">
                 Device ID: {deviceId}
               </p>
             )}
