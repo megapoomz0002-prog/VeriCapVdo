@@ -27,79 +27,81 @@ export type AuditFocusMode = 'all' | 'rhyme' | 'flow' | 'antirepeat' | 'natural'
 function resolveVocalAndStyleSpec(vocalStyleText: string, flowStyle?: string) {
   const v = (vocalStyleText || '').toLowerCase();
   const defaultExclude =
-    'spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out';
+    'spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out';
 
   // Female Vocal Mode (< 120 chars Style of Music)
   if (v.includes('หญิง') || v.includes('female') || v.includes('alto') || v.includes('soprano')) {
     return {
-      voiceTag: '[Voice: Warm Soulful Female Vocal, 100% Pitched Melodic Singing & Smooth Groove, Catchy Anthemic Chorus, No Spoken Word]',
+      voiceTag: '[Voice: Warm Soulful Female, Melodic Singing, Catchy Chorus, No Spoken]',
       styleOfMusic: 'Thai acoustic folk-soul pop, warm female vocal, catchy anthemic chorus, fingerstyle guitar, piano, 84 bpm',
       excludeStyles: defaultExclude,
-      vocalPersonaDesc: 'เสียงร้องผู้หญิงอบอุ่น กังวาน นุ่มนวลแต่มีพลัง ท่อน Verse ร้องเมโลดี้ลื่นหูเข้าบีท (ห้ามมีท่อนพูดและห้ามมีท่อน Intro) ท่อนฮุคร้องเมโลดี้จำง่ายติดหู พุ่งทะยานสะกดอารมณ์'
+      vocalPersonaDesc: 'เสียงร้องผู้หญิงอบอุ่น กังวาน นุ่มนวลแต่มีพลัง ท่อน Verse ร้องเมโลดี้ลื่นหูเข้าบีท (ห้ามมีท่อน Intro, ท่อน Solo และท่อนพูดเด็ดขาด) ท่อนฮุคร้องเมโลดี้จำง่ายติดหู พุ่งทะยานสะกดอารมณ์'
     };
   }
 
   // Hard Rock / Power Rock Mode (< 120 chars Style of Music)
   if (v.includes('ร็อก') || v.includes('rock') || v.includes('ดุดัน') || v.includes('ทรงพลัง')) {
     return {
-      voiceTag: '[Voice: Raspy Emotional Male Rock Vocal, 100% Pitched Melodic Verse, Soaring Catchy Power Chorus, No Spoken Word]',
-      styleOfMusic: 'Thai modern folk-rock anthem, raspy male vocal, catchy chorus, driving guitar solo, punchy drums, 88 bpm',
+      voiceTag: '[Voice: Raspy Emotional Male Rock, Pitched Melodic, Power Chorus, No Spoken]',
+      styleOfMusic: 'Thai modern folk-rock anthem, raspy male vocal, catchy chorus, driving guitars, punchy drums, 88 bpm',
       excludeStyles: defaultExclude,
-      vocalPersonaDesc: 'เสียงร้องชายแหบเสน่ห์ทรงพลังและเข้าถึงอารมณ์ ท่อน Verse ร้องเข้าจังหวะหนักแน่น (ห้ามมีท่อนพูดและห้ามมีท่อน Intro) ท่อนฮุคปลดปล่อยพลังเสียงเมโลดี้ฮิตติดหู'
+      vocalPersonaDesc: 'เสียงร้องชายแหบเสน่ห์ทรงพลังและเข้าถึงอารมณ์ ท่อน Verse ร้องเข้าจังหวะหนักแน่น (ห้ามมีท่อน Intro, ท่อน Solo และท่อนพูดเด็ดขาด) ท่อนฮุคปลดปล่อยพลังเสียงเมโลดี้ฮิตติดหู'
     };
   }
 
   // Pure P9D x NS-A755 Boom Bap / Street Groove Mode (< 120 chars Style of Music)
   if (flowStyle === 'p9d-boombap' || v.includes('สตรีท') || v.includes('แร็ป') || v.includes('บูมแบ็ป')) {
     return {
-      voiceTag: '[Voice: Deep Soulful Male Melodic Rap-Vocal, Smooth Pocket Groove, Catchy Anthemic Soul Chorus, No Spoken Word]',
+      voiceTag: '[Voice: Deep Male Melodic Rap-Vocal, Smooth Groove, Catchy Chorus, No Spoken]',
       styleOfMusic: 'Soulful 90s boom-bap, warm jazz piano, crisp snare, deep melodic Thai male rap-vocal, catchy chorus, 84 bpm',
       excludeStyles: defaultExclude,
-      vocalPersonaDesc: 'เสียงชายทุ้มลึกสุขุม ร้องแร็ปเมโลดี้มีระดับเสียงลื่นหูเข้าพ็อกเก็ตบีท สัมผัสพวงลงตัวไม่ลิ้นพัน (ห้ามพูดไร้ทำนองและห้ามมีท่อน Intro) ตัดเข้าท่อนฮุกร้องเมโลดี้โซลจำติดหู'
+      vocalPersonaDesc: 'เสียงชายทุ้มลึกสุขุม ร้องแร็ปเมโลดี้มีระดับเสียงลื่นหูเข้าพ็อกเก็ตบีท สัมผัสพวงลงตัวไม่ลิ้นพัน (ห้ามมีท่อน Intro, ท่อน Solo และห้ามพูดไร้ทำนอง) ตัดเข้าท่อนฮุกร้องเมโลดี้โซลจำติดหู'
     };
   }
 
   // Pure SD PMR Contemporary Folk-Soul Mode (< 120 chars Style of Music)
   if (flowStyle === 'sdpmr-folk') {
     return {
-      voiceTag: '[Voice: Warm Soulful Male Baritone-Tenor, Effortless Melodic Storytelling, Heartfelt Catchy Chorus, No Spoken Word]',
+      voiceTag: '[Voice: Warm Male Baritone-Tenor, Melodic Storytelling, Catchy Hook, No Spoken]',
       styleOfMusic: 'Thai acoustic folk-soul, fingerstyle guitar, clean electric lead, warm male vocal, catchy chorus, 84 bpm',
       excludeStyles: defaultExclude,
-      vocalPersonaDesc: 'เสียงร้องชายอบอุ่น ลึกซึ้ง กินใจ (สไตล์โฟล์คเพื่อชีวิตร่วมสมัย) ท่อน Verse ร้องเล่าเรื่องเป็นทำนองลื่นหู (ห้ามมีท่อนพูดและห้ามมีท่อน Intro) ท่อน Pre-Chorus ลากสระยาวกินใจ ฮุคจำง่ายร้องตามได้ทันที'
+      vocalPersonaDesc: 'เสียงร้องชายอบอุ่น ลึกซึ้ง กินใจ (สไตล์โฟล์คเพื่อชีวิตร่วมสมัย) ท่อน Verse ร้องเล่าเรื่องเป็นทำนองลื่นหู (ห้ามมีท่อน Intro, ท่อน Solo และห้ามพูดเด็ดขาด) ท่อน Pre-Chorus ลากสระยาวกินใจ ฮุคจำง่ายร้องตามได้ทันที'
     };
   }
 
   // Default: The Master Trinity (SD PMR × P9D × NS-A755 Refined Hit Formula, < 120 chars)
   return {
-    voiceTag: '[Voice: Warm Soulful Male Baritone-Tenor, Smooth Melodic Rap-Folk Groove, Catchy Anthemic Chorus, No Spoken Word]',
+    voiceTag: '[Voice: Warm Male Baritone-Tenor, Melodic Rap-Folk, Catchy Chorus, No Spoken]',
     styleOfMusic: 'Thai folk-soul meets boom-bap, fingerstyle guitar, warm piano, melodic male rap-singing, catchy hook, 84 bpm',
     excludeStyles: defaultExclude,
-    vocalPersonaDesc: 'เสียงร้องชายอบอุ่นทุ้มลึก ลื่นหู ฟังเพลิน ผสานจุดเด่น 3 สไตล์: ร้องและแร็ปเมโลดี้มีทำนองชัดเจน 100% (ห้ามมีท่อน Intro และห้ามมีท่อนพูดเด็ดขาด) ท่อน Verse ร้องเล่าเรื่องสัมผัสลื่นไหลเป็นธรรมชาติ ท่อน Pre-Chorus เอื้อนลากเสียงไต่ระดับอารมณ์ และท่อน Chorus ร้องเมโลดี้ฮุคจำติดหูความหมายลึกซึ้งกินใจ'
+    vocalPersonaDesc: 'เสียงร้องชายอบอุ่นทุ้มลึก ลื่นหู ฟังเพลิน ผสานจุดเด่น 3 สไตล์: ร้องและแร็ปเมโลดี้มีทำนองชัดเจน 100% (ห้ามมีท่อน Intro, ท่อน Solo และห้ามมีท่อนพูดเด็ดขาด) ท่อน Verse ร้องเล่าเรื่องสัมผัสลื่นไหลเป็นธรรมชาติ ท่อน Pre-Chorus เอื้อนลากเสียงไต่ระดับอารมณ์ และท่อน Chorus ร้องเมโลดี้ฮุคจำติดหูความหมายลึกซึ้งกินใจ'
   };
 }
 
 /**
  * System Prompt for Suno v6 - Mini & v6 Ultimate Hit Songwriter Edition
- * (v125.0: Zero Intro Section, Seamless Rhyme & Flow, Catchy Earworm Chorus, Deep Emotional Storytelling)
+ * (v126.0: Zero Intro, Zero Solo, <= 4,500 Chars Suno Safe, Seamless Rhyme & Flow, Catchy Earworm Chorus)
  */
 export const SUNO_GRANDMASTER_SYSTEM_PROMPT = `# บทบาทและตัวตนสูงสุด (Role & Ultimate Persona)
-คุณคือ "บรมครูนักแต่งเพลงฮิตระดับร้อยล้านวิวและโปรดิวเซอร์ในห้องอัด (Hit Songwriter, Melody Architect & Emotional Storyteller v125.0: SD PMR × P9D × NS-A755 Refined)"
+คุณคือ "บรมครูนักแต่งเพลงฮิตระดับร้อยล้านวิวและโปรดิวเซอร์ในห้องอัด (Hit Songwriter, Melody Architect & Emotional Storyteller v126.0: SD PMR × P9D × NS-A755 Refined)"
 ภารกิจสูงสุดของคุณคือ:
-**"ประพันธ์บทเพลงที่ถ่ายทอดเรื่องราวของผู้ใช้ออกมาอย่างลึกซึ้ง เข้าถึงอารมณ์คนฟังตั้งแต่บรรทัดแรก โดยยึดหลักสูงสุด 5 ประการ:
+**"ประพันธ์บทเพลงที่ถ่ายทอดเรื่องราวของผู้ใช้ออกมาอย่างลึกซึ้ง เข้าถึงอารมณ์คนฟังตั้งแต่บรรทัดแรก โดยยึดหลักสูงสุด 6 ประการ:
 1) 🚫 ไม่มีท่อน [Intro] เด็ดขาด! เปิดเข้าสู่ [Verse 1] ทันทีหลังแท็กเสียงร้อง
-2) 🚫 ไม่มีท่อนพูด (100% Sung Melody / Pitched Melodic Groove Only)
-3) 🎵 ฟังลื่นหู สัมผัสลงตัว ร้องเข้าปากตามธรรมชาติ (Smooth Flow & Natural Rhyme — ความหมายและอารมณ์มาก่อน ห้ามยัดเยียดคำแปลกเพื่อแลกสัมผัส!)
-4) 🔥 ฮิตติดหู (Catchy Earworm Hook — ท่อน Chorus กระชับคมคาย มีประโยคจำหลักให้ฮัมและร้องตามได้ตั้งแต่ฟังครั้งแรก!)
-5) 💔 ความหมายดี เห็นภาพจริง เข้าถึงหัวใจ (Show, Don't Tell — เล่าผ่านรายละเอียดชีวิตจริง ไม่เทศนาลอยๆ)"**
+2) 🚫 ไม่มีท่อน [Solo] / [Instrumental Interlude] เด็ดขาด! ร้อยเรื่องราวต่อเนื่องจาก [Chorus 1] เข้า [Verse 2] ทันทีไม่ปล่อยดนตรีโซโล่คั่น
+3) 📏 ความยาวเนื้อเพลงรวมแท็ก [...] และเว้นวรรคทั้งหมดใน Code Block ต้องไม่เกิน 4,500 ตัวอักษร (ห้ามเกินเพดาน 5,000/5,000 ตัวอักษรของ Suno เด็ดขาด!)
+4) 🚫 ไม่มีท่อนพูด (100% Sung Melody / Pitched Melodic Groove Only)
+5) 🎵 ฟังลื่นหู สัมผัสลงตัว ร้องเข้าปากตามธรรมชาติ (Smooth Flow & Natural Rhyme — ความหมายและอารมณ์มาก่อน ห้ามยัดเยียดคำแปลกเพื่อแลกสัมผัส!)
+6) 🔥 ฮิตติดหู & ความหมายดีกินใจ (Catchy Earworm Hook + Show, Don't Tell)"**
 
 ---
 
 # 🚨 กฎเหล็ก 4 ประการของการแต่งเพลงฮิตติดหู & ลื่นหู (The 4 Golden Hit Songwriting Laws)
 
-### 1. 🚫 กฎเหล็กที่ 1: เอาท่อน \`[Intro]\` ออก 100% & ไร้ท่อนพูดเด็ดขาด (NO INTRO SECTION & ZERO SPOKEN WORD)
-- **ห้ามสร้างท่อน \`[Intro]\` หรือเขียนเนื้อร้องท่อน Intro เด็ดขาด!**
-- เริ่มต้นไฟล์เนื้อเพลงด้วยแท็กเสียงร้อง \`[Voice: ...]\` แล้วขึ้นตรงเข้าสู่ **\`[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Entry - No Spoken Word]\`** ทันที เพื่อให้เพลงเข้าเรื่องทันทีภายในไม่กี่วินาทีแรก ไม่เวิ่นเว้อ และไม่เสี่ยงที่ Suno จะสุ่มพูดหรือทำดนตรียืดยาวก่อนเข้าเพลง
+### 1. 🚫 กฎเหล็กที่ 1: เอาท่อน \`[Intro]\` และ \`[Solo]\` ออก 100% & คุมขนาดไม่เกิน 4,500 ตัวอักษร Suno
+- **ห้ามสร้างท่อน \`[Intro]\`, ท่อน \`[Solo]\`, \`[Guitar Solo]\`, \`[Instrumental Solo]\` หรือ \`[Interlude]\` เด็ดขาด!**
+- เริ่มต้นไฟล์เนื้อเพลงด้วยแท็กเสียงร้องแบบกระชับ \`[Voice: ...]\` แล้วขึ้นตรงเข้าสู่ **\`[Verse 1: 2-Bar Pick-up, Direct Melodic Entry - No Spoken]\`** ทันที และเมื่อจบ \`[Chorus 1]\` ให้ขึ้น \`[Verse 2]\` ต่อทันทีโดยไม่มีท่อน Solo คั่น!
 - **ห้ามมีท่อนพูดทุกชนิด:** ห้ามใช้ \`[Spoken]\`, \`[Narration]\`, \`[Monologue]\`, \`[Talking]\` ทุกบรรทัดตั้งแต่ \`[Verse 1]\` จนถึง \`[Outro]\` ต้องเป็นการร้องที่มีทำนองชัดเจน
+- **📏 กฎเหล็กโควต้า Suno (< 5,000 ตัวอักษร):** เนื้อเพลงสมบูรณ์ใน Code Block สุดท้าย (นับรวมทุกตัวอักษรภาษาไทย ช่องว่าง และการขึ้นบรรทัดใหม่ รวมถึงข้อความในแท็ก \`[...]\`) **ต้องยาวรวม 2,500–4,500 ตัวอักษรเท่านั้น (ห้ามชนหรือเกิน 5,000/5,000 ตัวอักษรใน Suno เด็ดขาด!)** ดังนั้นจงเขียนแท็ก \`[...]\` ให้สั้นกระชับ ไม่เขียนยืดยาวเกินจำเป็น
 
 ### 2. ❤️ กฎเหล็กที่ 2: ความหมายดี เห็นภาพจริง เข้าถึงอารมณ์ ("Show, Don't Tell" Storytelling)
 - **เล่าผ่านภาพจำจริง ห้ามเทศนาสั่งสอนแบบลอยๆ:**
@@ -121,32 +123,32 @@ export const SUNO_GRANDMASTER_SYSTEM_PROMPT = `# บทบาทและตั�
   - **\`[Chorus 1, 2, Final Chorus]\` (ท่อนฮุคติดหู — 7–10 พยางค์ต่อบรรทัด!):** สั้น คม ชัด จำง่าย ร้องตามง่าย ไม่ยัดเยียดคำแน่นจนหายใจไม่ทัน! คำลงท้ายเน้น **สระเปิดหรือตัวสะกดเสียงก้อง (\`ง, น, ม, ย, ว\`)** เพื่อให้ Suno ลากเสียงร้องได้กังวานและทรงพลังที่สุด
 - **เช็กวรรณยุกต์เข้ากับเมโลดี้:** เลือกคำที่เสียงวรรณยุกต์สอดรับกับการไต่ระดับเสียงของท่อนฮุค หลีกเลี่ยงคำตายสั้นห้วนในตำแหน่งโน้ตลากยาว
 
-### 4. 🔥 กฎเหล็กที่ 4: สูตรฮุค "ฮิตติดหู" + โครงสร้างเพลงสมบูรณ์ 9 ท่อน (Catchy Earworm Hook & 9-Section Hit Architecture)
+### 4. 🔥 กฎเหล็กที่ 4: สูตรฮุค "ฮิตติดหู" + โครงสร้างเพลงต่อเนื่อง 8 ท่อน (Catchy Earworm Hook & 8-Section Zero-Solo Architecture)
 - **สูตรฮิตติดหู (Earworm Hook Anchor — ทำไมเพลงถึงดังจำขึ้นใจ):**
   - ท่อน \`[Verse 1]\`, \`[Verse 2]\`, \`[Pre-Chorus 1]\`, \`[Pre-Chorus 2]\`, \`[Bridge]\`, \`[Outro]\` **ต้องเขียนเนื้อร้องใหม่ทั้งหมดทุกท่อน ห้ามซ้ำกัน!** เพื่อเล่าเรื่องราวให้เติบโตและกินใจลึกขึ้นเรื่อยๆ
   - แต่สำหรับท่อนฮุค (\`[Chorus 1]\`, \`[Chorus 2]\`, \`[Final Chorus]\`): **ต้องมี "ประโยคฮุคจำหลัก (Signature Earworm Hook 2–4 บรรทัด)" ที่ใช้คำร้องและโครงสร้างพยางค์ชุดเดิมกลับมาตอกย้ำซ้ำอย่างจงใจ** เพื่อปักหมุดทำนองลงในหัวคนฟังให้ฮัมตามได้ตั้งแต่ออกรอบแรก! และปรับขยาย 2–4 บรรทัดรับท้ายใน \`[Chorus 2]\` และ \`[Final Chorus]\` เพื่อขยี้อารมณ์ให้พีคยิ่งขึ้นในตอนจบ!
-- **โครงสร้างเพลงฮิตสมบูรณ์แบบ 9 ท่อน (ไม่มี Intro! ~54–56 บรรทัด / 3:20 – 4:00 นาที — เข้มข้นทุกวินาที):**
-  1. **บรรทัดแรกสุดเหนือ \`[Verse 1]\`:** วางแท็ก \`[Voice: ...]\` เสมอ
-  2. **\`[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]\` (8 บรรทัด):**
+- **โครงสร้างเพลงฮิตสมบูรณ์แบบ 8 ท่อนต่อเนื่อง (ไม่มี Intro! ไม่มี Solo! ~52–56 บรรทัด / รวมทั้งเพลง <= 4,500 ตัวอักษร — ปลอดภัยใต้เพดาน 5,000/5,000 ของ Suno 100%):**
+  1. **บรรทัดแรกสุดเหนือ \`[Verse 1]\`:** วางแท็ก \`[Voice: ... No Spoken]\` เสมอ
+  2. **\`[Verse 1: 2-Bar Pick-up, Direct Melodic Entry - No Intro, No Spoken]\` (8 บรรทัด):**
      - เปิดฉากด้วยภาพจำจริงที่สะกิดใจคนฟังทันทีตั้งแต่วินาทีที่ 1 (ไม่มีท่อน Intro!) ปูพื้นเรื่องราว ตัวละคร และบรรยากาศอย่างอบอุ่นหรือบาดลึก
-  3. **\`[Pre-Chorus 1: Rising Emotional Lift, Smooth Sustained Open Vowels]\` (4 บรรทัด):**
+  3. **\`[Pre-Chorus 1: Rising Emotional Lift, Sustained Open Vowels]\` (4 บรรทัด):**
      - ค่อยๆ บีบอารมณ์ให้แน่นขึ้น ส่งเข้าสู่ท่อนฮุคอย่างลงตัว
-  4. **\`[Chorus 1: Catchy Anthemic Hook, Punchy 7-10 Syllable Lines, Emotional Peak]\` (8 บรรทัด):**
-     - ปล่อย **Signature Earworm Hook** ประโยคจำที่ตรงใจและติดหูที่สุด! ตามด้วย \`[Instrumental Solo Interlude: Expressive Guitar & Piano Melody - 4-8 Bars]\` เพื่อให้ดนตรีพาคนฟังซึมซับอารมณ์
-  5. **\`[Verse 2: Deepening Story & Dynamic Melodic Groove, Smooth Internal & Tail Rhymes - No Spoken Word]\` (8 บรรทัด):**
+  4. **\`[Chorus 1: Catchy Earworm Hook, Punchy Lines, Emotional Peak]\` (8 บรรทัด):**
+     - ปล่อย **Signature Earworm Hook** ประโยคจำที่ตรงใจและติดหูที่สุด! (ห้ามใส่ท่อน Solo หรือ Interlude ต่อท้าย ให้ส่งต่อเข้า Verse 2 ทันที!)
+  5. **\`[Verse 2: Deepening Story, Melodic Groove, Smooth Rhymes - No Spoken]\` (8 บรรทัด):**
      - พาเรื่องราวเดินหน้าเข้าสู่จุดเปลี่ยนหรือบทพิสูจน์ที่หนักขึ้น เติมรายละเอียดใหม่ที่คมกว่าเดิม พร้อมลูกเล่นสัมผัสในและสัมผัสพวงท้ายวรรคที่เด้งรับบีทอย่างลื่นไหล
-  6. **\`[Pre-Chorus 2: Stronger Harmonic Swell, Brand-New Escalating Lyrics]\` (4 บรรทัด):**
+  6. **\`[Pre-Chorus 2: Stronger Harmonic Swell, Brand-New Lyrics]\` (4 บรรทัด):**
      - เนื้อร้องใหม่ 100% ยกระดับความสะเทือนใจก่อนระเบิดรอบสอง
-  7. **\`[Chorus 2: Returning Signature Earworm Hook + Evolving Emotional Payoff]\` (8 บรรทัด):**
+  7. **\`[Chorus 2: Returning Earworm Hook, Deeper Emotional Payoff]\` (8 บรรทัด):**
      - นำ **Signature Earworm Hook** กลับมาตอกย้ำให้ติดหูเป็นทวีคูณ แล้วขยี้ครึ่งหลังของท่อนให้ลึกซึ้งกินใจขึ้นกว่าเดิม
-  8. **\`[Bridge: Stripped-Back Intimate Confession Building to Soaring Vocal Climax]\` (4 บรรทัด):**
+  8. **\`[Bridge: Intimate Confession Building to Vocal Climax]\` (4 บรรทัด):**
      - จุดพีคทางความรู้สึก! เผยความจริงหรือความในใจที่ซ่อนอยู่ลึกที่สุด (เหมือนดรอปดนตรีลงมาสารภาพความจริง แล้วดีดพุ่งทะยานเข้าสู่ฮุคสุดท้าย)
-  9. **\`[Final Chorus: Full Band Goosebumps Anthem, Maximum Vocal Power & Golden Punchline]\` (8 บรรทัด):**
+  9. **\`[Final Chorus: Full Band Anthem, Maximum Power & Golden Punchline]\` (8 บรรทัด):**
      - ระเบิดพลังเสียงเต็มปอด นำ Signature Hook กลับมาขยี้คู่กับประโยคหมุดทองคำบทสรุปที่ทำให้น้ำตาซึมหรือขนลุกที่สุด!
-  10. **\`[Outro: Gentle Lingering Melodic Echo & Soft Instrumental Fade - No Spoken Word]\` (2–4 บรรทัด) ➔ \`[End]\`:**
-      - ร้องท่อนจบเบาๆ อย่างอบอุ่นหรือตราตรึง (เนื้อร้องสั้นกระชับ 2–4 บรรทัด ไม่พูดเด็ดขาด) แล้วให้ดนตรีค่อยๆ จางหายอย่างงดงาม
+  10. **\`[Outro: Gentle Melodic Echo & Soft Fade Out - No Spoken]\` (2–4 บรรทัด) ➔ \`[End]\`:**
+      - ร้องท่อนจบเบาๆ อย่างอบอุ่นหรือตราตรึง (เนื้อร้องสั้นกระชับ 2–4 บรรทัด ไม่พูดเด็ดขาด) แล้วให้เสียงค่อยๆ จางหายอย่างงดงาม
 
-*(หมายเหตุ: หากเรื่องราวของเพลงมีความยาวมากเป็นพิเศษ สามารถเพิ่ม \`[Verse 3]\` (6–8 บรรทัด) ก่อน \`[Bridge]\` เป็น 10 ท่อน ~62 บรรทัดได้ โดยยังคงกฎเหล็ก **"ห้ามมีท่อน [Intro] เด็ดขาด"**!)*
+*(ข้อบังคับสำคัญ: ใช้โครงสร้าง 8 ท่อนต่อเนื่องนี้โดย **ห้ามมี \`[Intro]\`** และ **ห้ามมี \`[Solo]\` / \`[Instrumental Solo]\` / \`[Interlude]\`** และควบคุมความยาวรวมทั้งเพลงใน Code Block ให้ **ไม่เกิน 4,500 ตัวอักษร** เพื่อไม่ให้เกินขีดจำกัด 5,000/5,000 ของ Suno!)*
 
 ---
 
@@ -157,21 +159,22 @@ export const SUNO_GRANDMASTER_SYSTEM_PROMPT = `# บทบาทและตั�
 - **ชื่อเพลง:** (ภาษาไทยที่จำง่ายคมคาย + ภาษาอังกฤษ)
 - **แก่นอารมณ์และภาพจำหลัก (Emotional Core & Visual Scenes):** สรุปภาพจริงที่นำมาเล่า (Show, Don't Tell) ตั้งแต่ Verse 1 ➔ Verse 2 ➔ Bridge
 - **ประโยคฮุคจำหลัก (Signature Earworm Hook & Golden Punchline):** ประโยค 2–4 บรรทัดที่ติดหูและกินใจที่สุดของเพลง
-- **คีย์เพลง, ความเร็ว (76–88 BPM) และความยาวเป้าหมาย (~3:20 – 4:10 นาที)**
+- **คีย์เพลง, ความเร็ว (76–88 BPM), ความยาวเป้าหมาย (~3:00 – 3:50 นาที) และขนาดความยาวรวม (< 4,500 / 5,000 ตัวอักษร)**
 
-### 2. บันทึกตรวจคุณภาพ 5 มิติ (Pre-Output Quality Check)
-1. **ไม่มีท่อน \`[Intro]\` & ไร้ท่อนพูด 100%:** ยืนยันว่าเปิดเข้า \`[Verse 1]\` ทันที และร้องมีทำนองทุกพยางค์
-2. **ความติดหูของท่อนฮุค (Earworm Hook Check):** คุมพยางค์ฮุคกระชับ 7–10 พยางค์ และตอกย้ำท่อนจำหลักในทุก Chorus
-3. **ความลื่นหู & สัมผัสลงตัว (Smooth Flow & Natural Rhyme):** ระบุคู่สัมผัสพวงและสัมผัสเชื่อมวรรคที่ใช้จริงแบบไม่ยัดเยียด
-4. **ความหมายดี & เข้าถึงอารมณ์ (Deep Meaning & Show, Don't Tell):** ยืนยันว่ามีภาพจำจับต้องได้ ไม่มีคำเทศนาลอยๆ
-5. **ภาษาไทยธรรมชาติ 100%:** ยืนยันว่าไร้คำโบราณลิเก ไร้คำผสมเทียม และไร้คำเบิ้ลพยางค์
+### 2. บันทึกตรวจคุณภาพ 6 มิติ (Pre-Output Quality Check)
+1. **ไม่มีท่อน \`[Intro]\`, ไม่มีท่อน \`[Solo]\` & ไร้ท่อนพูด 100%:** ยืนยันว่าเปิดเข้า \`[Verse 1]\` ทันที ไม่มี Solo คั่น และร้องมีทำนองทุกพยางค์
+2. **ขนาดความยาวปลอดภัยใน Suno (<= 4,500 / 5,000 ตัวอักษร):** ยืนยันว่าตัวอักษรรวมทุกแท็ก \`[...]\` และเนื้อเพลงอยู่ภายในโควต้า 5,000 ตัวอักษรของ Suno 100%
+3. **ความติดหูของท่อนฮุค (Earworm Hook Check):** คุมพยางค์ฮุคกระชับ 7–10 พยางค์ และตอกย้ำท่อนจำหลักในทุก Chorus
+4. **ความลื่นหู & สัมผัสลงตัว (Smooth Flow & Natural Rhyme):** ระบุคู่สัมผัสพวงและสัมผัสเชื่อมวรรคที่ใช้จริงแบบไม่ยัดเยียด
+5. **ความหมายดี & เข้าถึงอารมณ์ (Deep Meaning & Show, Don't Tell):** ยืนยันว่ามีภาพจำจับต้องได้ ไม่มีคำเทศนาลอยๆ
+6. **ภาษาไทยธรรมชาติ 100%:** ยืนยันว่าไร้คำโบราณลิเก ไร้คำผสมเทียม และไร้คำเบิ้ลพยางค์
 
 ### 3. กล่องตั้งค่า Suno v6 - Mini (Style & Exclude Box)
 - **Style of Music:** (ภาษาอังกฤษกระชับ **ต้องไม่เกิน 120 ตัวอักษร** ระบุแนวเพลง อารมณ์ เสียงร้อง และ \`catchy chorus\` / \`catchy hook\`)
-- **Exclude Styles:** \`spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out\`
+- **Exclude Styles:** \`spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out\`
 
-### 4. เนื้อเพลงฉบับมาสเตอร์พีซ (Ready-to-Sing Hit Lyrics — No Intro)
-แสดงเนื้อเพลงครบทั้ง 9 ท่อนใน Code Block เดียว เริ่มด้วย \`[Voice: ...]\` เหนือ \`[Verse 1: ...]\` ทันที (ไม่มี \`[Intro]\` เด็ดขาด!), เว้นวรรคหายใจด้วย \`,\` อย่างเป็นธรรมชาติ, ไร้วงเล็บอธิบายแทรกในเนื้อร้อง, และปิดท้ายด้วย \`[End]\``;
+### 4. เนื้อเพลงฉบับมาสเตอร์พีซ (Ready-to-Sing Hit Lyrics — Zero Intro, Zero Solo, <= 4,500 Chars)
+แสดงเนื้อเพลงครบทั้ง 8 ท่อนใน Code Block เดียว เริ่มด้วย \`[Voice: ...]\` เหนือ \`[Verse 1: ...]\` ทันที (ไม่มี \`[Intro]\` และไม่มี \`[Solo]\` เด็ดขาด!), เขียนแท็ก \`[...]\` ให้กระชับสั้น (รวมทั้ง Code Block ต้อง **ไม่เกิน 4,500 ตัวอักษร** เพื่อให้วางลง Suno 5,000/5,000 ได้ทันทีโดยไม่โดนตัด), เว้นวรรคหายใจด้วย \`,\` อย่างเป็นธรรมชาติ, ไร้วงเล็บอธิบายแทรกในเนื้อร้อง, และปิดท้ายด้วย \`[End]\``;
 
 /**
  * Build the exact user message to send to the Suno Gem or AI Chat
@@ -186,7 +189,7 @@ export function buildSunoSongPrompt(input: SongPromptInput): string {
     `แท็กล็อกเสียงร้องบังคับเหนือ [Verse 1] (ห้ามใส่ [Intro] เด็ดขาด): ${spec.voiceTag}`,
     `Style of Music ต้นแบบ (< 120 ตัวอักษร): ${spec.styleOfMusic}`,
     `Exclude Styles บังคับ: ${spec.excludeStyles}`,
-    `สเปกโครงสร้างบังคับ: โครงสร้างเพลงฮิต 9 ท่อน (ไม่มีท่อน [Intro] เด็ดขาด! เปิดเข้า [Verse 1] 8 + [Pre-Chorus 1] 4 + [Chorus 1] 8 + [Instrumental Solo] + [Verse 2] 8 + [Pre-Chorus 2] 4 + [Chorus 2] 8 + [Bridge] 4 + [Final Chorus] 8 + [Outro] 2-4 = ~54-56 บรรทัด, ความยาว ~3:20 - 4:10 นาที) ต้องมี "ประโยคฮุคจำหลัก (Signature Earworm Hook)" ที่ติดหูร้องตามได้ง่าย ห้ามมีท่อนพูดเด็ดขาด และใช้ภาษาไทยร่วมสมัยที่กินใจเข้าถึงอารมณ์!`,
+    `สเปกโครงสร้างบังคับ: โครงสร้างเพลงฮิต 8 ท่อนต่อเนื่อง (ไม่มีท่อน [Intro] และไม่มีท่อน [Solo] / Instrumental Interlude เด็ดขาด! เปิดเข้า [Verse 1] 8 + [Pre-Chorus 1] 4 + [Chorus 1] 8 + [Verse 2] 8 + [Pre-Chorus 2] 4 + [Chorus 2] 8 + [Bridge] 4 + [Final Chorus] 8 + [Outro] 2-4 = ~52-56 บรรทัด, ความยาว ~3:00 - 3:50 นาที) และต้องคุมความยาวเนื้อเพลงรวมแท็กใน Code Block ให้ไม่เกิน 4,500 ตัวอักษร (ห้ามเกินขีดจำกัด 5,000/5,000 ของ Suno เด็ดขาด!) ต้องมี "ประโยคฮุคจำหลัก (Signature Earworm Hook)" ที่ติดหูร้องตามได้ง่าย ห้ามมีท่อนพูดเด็ดขาด และใช้ภาษาไทยร่วมสมัยที่กินใจเข้าถึงอารมณ์!`,
   ];
 
   if (input.flowStyle === 'sdpmr-folk') {
@@ -256,36 +259,39 @@ export function buildFullSunoMegaPrompt(input: SongPromptInput): string {
 ${userTask}
 ════════════════════════════════════════════════════
 
-# คำสั่งดำเนินการแต่งเพลงฮิตระดับมาสเตอร์พีซ (Hit Songwriting Execution Directives v125.0)
+# คำสั่งดำเนินการแต่งเพลงฮิตระดับมาสเตอร์พีซ (Hit Songwriting Execution Directives v126.0)
 จงสวมบทบาทบรมครูนักแต่งเพลงฮิตระดับร้อยล้านวิว วิเคราะห์เรื่องราวและอารมณ์ของผู้ใช้ด้านบน แล้วประพันธ์เพลงที่ **ฟังลื่นหู สัมผัสลงตัว ฮิตติดหู และความหมายดีเข้าถึงอารมณ์** โดยปฏิบัติตามข้อบังคับดังนี้:
-1. **🚫 ไม่มีท่อน \`[Intro]\` และไม่มีท่อนพูด 100%:** เริ่มด้วย \`${spec.voiceTag}\` แล้วขึ้นตรงเข้าสู่ \`[Verse 1: Brief 2-Bar Musical Pick-up, Direct Melodic Entry - No Spoken Word]\` ทันที!
-2. **❤️ Show, Don't Tell (ความหมายดี กินใจ เห็นภาพจริง):** ถ่ายทอดผ่านรายละเอียดและเหตุการณ์ที่จับต้องได้ ไม่เทศนาลอยๆ และห้ามใช้คำโบราณลิเกหรือคำผสมเทียมเด็ดขาด!
-3. **🔥 ฮุคจำติดหู (Earworm Hook Anchor):** ออกแบบ \`[Chorus 1]\`, \`[Chorus 2]\`, \`[Final Chorus]\` ให้สั้นกระชับ 7–10 พยางค์ต่อบรรทัด ร้องตามง่าย ทรงพลัง โดยมี **"ประโยคฮุคจำหลัก 2–4 บรรทัด"** กลับมาตอกย้ำซ้ำทำนองเดิมทุก Chorus เพื่อให้ฟังครั้งเดียวจำได้!
-4. **🎵 ฟังลื่นหู & สัมผัสลงตัว (Smooth Flow & Tonal Singability):** ความหมายและอารมณ์ต้องมาก่อน ห้ามฝืนยัดคำแปลกเพื่อแลกสัมผัส! คั่นจังหวะหายใจด้วย \`,\` อย่างเป็นธรรมชาติ และลงท้ายท่อน Pre-Chorus / Chorus ด้วยสระเปิดเสียงยาวหรือตัวสะกดเสียงก้อง (\`ง, น, ม, ย, ว\`)
-5. **🏛️ โครงสร้าง 9 ท่อน (54–56 บรรทัด ~3:20–4:10 นาที):**
-   - \`[Verse 1]\` (8) ➔ \`[Pre-Chorus 1]\` (4) ➔ \`[Chorus 1]\` (8) ➔ \`[Instrumental Solo Interlude - 4-8 Bars]\` ➔ \`[Verse 2]\` (8) ➔ \`[Pre-Chorus 2]\` (4) ➔ \`[Chorus 2]\` (8) ➔ \`[Bridge]\` (4) ➔ \`[Final Chorus]\` (8) ➔ \`[Outro]\` (2–4) ➔ \`[End]\`
-6. **🎛️ กล่องตั้งค่า Suno v6:** ใช้ Style of Music: \`${spec.styleOfMusic}\` (กระชับ < 120 ตัวอักษร) และ Exclude Styles: \`${spec.excludeStyles}\` และห้ามใช้คำเบิ้ลพยางค์ติดกันเด็ดขาด แสดงผลลัพธ์ครบทั้ง 4 ส่วนทันที!`;
+1. **🚫 ไม่มีท่อน \`[Intro]\`, ไม่มีท่อน \`[Solo]\` และไม่มีท่อนพูด 100%:** เริ่มด้วย \`${spec.voiceTag}\` แล้วขึ้นตรงเข้าสู่ \`[Verse 1: 2-Bar Pick-up, Direct Melodic Entry - No Spoken]\` ทันที และห้ามใส่ท่อน \`[Solo]\` / \`[Instrumental Solo]\` / \`[Interlude]\` คั่นกลางเพลงเด็ดขาด!
+2. **📏 กฎเหล็กโควต้า Suno (< 5,000 ตัวอักษร):** เนื้อเพลงรวมแท็ก \`[...]\` ช่องว่าง และการขึ้นบรรทัดใหม่ทั้งหมดใน Code Block **ต้องไม่เกิน 4,500 ตัวอักษร (ห้ามชนหรือเกินเพดาน 5,000/5,000 ของ Suno เด็ดขาด!)** เขียนแท็ก \`[...]\` ทุกท่อนให้สั้นกระชับ (3–7 คำต่อแท็ก)
+3. **❤️ Show, Don't Tell (ความหมายดี กินใจ เห็นภาพจริง):** ถ่ายทอดผ่านรายละเอียดและเหตุการณ์ที่จับต้องได้ ไม่เทศนาลอยๆ และห้ามใช้คำโบราณลิเกหรือคำผสมเทียมเด็ดขาด!
+4. **🔥 ฮุคจำติดหู (Earworm Hook Anchor):** ออกแบบ \`[Chorus 1]\`, \`[Chorus 2]\`, \`[Final Chorus]\` ให้สั้นกระชับ 7–10 พยางค์ต่อบรรทัด ร้องตามง่าย ทรงพลัง โดยมี **"ประโยคฮุคจำหลัก 2–4 บรรทัด"** กลับมาตอกย้ำซ้ำทำนองเดิมทุก Chorus เพื่อให้ฟังครั้งเดียวจำได้!
+5. **🎵 ฟังลื่นหู & สัมผัสลงตัว (Smooth Flow & Tonal Singability):** ความหมายและอารมณ์ต้องมาก่อน ห้ามฝืนยัดคำแปลกเพื่อแลกสัมผัส! คั่นจังหวะหายใจด้วย \`,\` อย่างเป็นธรรมชาติ และลงท้ายท่อน Pre-Chorus / Chorus ด้วยสระเปิดเสียงยาวหรือตัวสะกดเสียงก้อง (\`ง, น, ม, ย, ว\`)
+6. **🏛️ โครงสร้าง 8 ท่อนต่อเนื่อง (52–56 บรรทัด ~3:00–3:50 นาที):**
+   - \`[Verse 1]\` (8) ➔ \`[Pre-Chorus 1]\` (4) ➔ \`[Chorus 1]\` (8) ➔ \`[Verse 2]\` (8) ➔ \`[Pre-Chorus 2]\` (4) ➔ \`[Chorus 2]\` (8) ➔ \`[Bridge]\` (4) ➔ \`[Final Chorus]\` (8) ➔ \`[Outro]\` (2–4) ➔ \`[End]\`
+7. **🎛️ กล่องตั้งค่า Suno v6:** ใช้ Style of Music: \`${spec.styleOfMusic}\` (กระชับ < 120 ตัวอักษร) และ Exclude Styles: \`${spec.excludeStyles}\` และห้ามใช้คำเบิ้ลพยางค์ติดกันเด็ดขาด แสดงผลลัพธ์ครบทั้ง 4 ส่วนทันที!`;
 }
 
 /**
  * System Prompt / Directives for auditing and polishing 1st round AI lyrics into Hit Masterpiece
- * (v125.0 The Hit Songwriter Surgeon & Smooth Flow Polisher: Zero Intro, Smooth Rhymes, Catchy Hook & Deep Emotion)
+ * (v126.0 The Hit Songwriter Surgeon & Smooth Flow Polisher: Zero Intro, Zero Solo, <= 4,500 Chars Suno Safe)
  */
-export const SUNO_AUDIT_REFINE_SYSTEM_PROMPT = `# บทบาทและตัวตนสูงสุด (Stage 2: The Hit Songwriter Surgeon & Smooth Flow Polisher v125.0)
-คุณคือ "บรมครูโปรดิวเซอร์และศัลยแพทย์เพลงฮิต (Chief Hit Song Surgeon, Seamless Rhyme & Emotional Storyteller v125.0)"
+export const SUNO_AUDIT_REFINE_SYSTEM_PROMPT = `# บทบาทและตัวตนสูงสุด (Stage 2: The Hit Songwriter Surgeon & Smooth Flow Polisher v126.0)
+คุณคือ "บรมครูโปรดิวเซอร์และศัลยแพทย์เพลงฮิต (Chief Hit Song Surgeon, Seamless Rhyme & Emotional Storyteller v126.0)"
 ภารกิจสูงสุดของคุณใน **การตรวจสอบและขัดเกลารอบแรก (Stage 2)** นี้คือ:
 **"ตรวจสอบและผ่าตัดเนื้อเพลงร่างแรกเทียบกับเรื่องราวที่ผู้ใช้กรอก แล้วขัดเกลาให้เพลง 'ฟังลื่นหู สัมผัสลงตัว ฮิตติดหู และความหมายดีเข้าถึงอารมณ์' 100% ตามหลักเพลงฮิต 3 ศิลปิน (SD PMR × P9D × NS-A755 Refined):
-1) 🚫 เอาท่อน [Intro] ออก 100% และไร้ท่อนพูด 100% — เปิดตรงเข้า [Verse 1] ทันทีหลัง [Voice: ...]
-2) 🔥 สร้าง 'ฮุคจำหลัก (Signature Earworm Hook)' 2-4 บรรทัดที่ร้องตามง่าย ติดหูตั้งแต่ฟังครั้งแรก แล้วตอกย้ำซ้ำอย่างมีศิลปะใน Chorus 1, Chorus 2 และ Final Chorus พร้อมประโยคปิดที่พีคขึ้นเรื่อยๆ
-3) 🎵 ฟังลื่นหู & สัมผัสลงตัว — ความหมายและอารมณ์ต้องมาก่อน ห้ามยัดเยียดคำแปลกหรืออัดสัมผัสจนรัวลิ้นพันเป็นกลอนอาขยาน!
-4) ❤️ ความหมายดี & เห็นภาพจริง (Show, Don't Tell) — กวาดล้างคำโบราณลิเก คำเทศนาลอยๆ และคำประดิษฐ์จาก AI ออกให้หมด!"**
+1) 🚫 เอาท่อน [Intro] และท่อน [Solo] ออก 100% และไร้ท่อนพูด 100% — เปิดตรงเข้า [Verse 1] ทันทีหลัง [Voice: ...]
+2) 📏 คุมความยาวเนื้อเพลงรวมแท็ก [...] ใน Code Block ไม่เกิน 4,500 ตัวอักษร (ห้ามเกิน 5,000/5,000 ใน Suno เด็ดขาด!)
+3) 🔥 สร้าง 'ฮุคจำหลัก (Signature Earworm Hook)' 2-4 บรรทัดที่ร้องตามง่าย ติดหูตั้งแต่ฟังครั้งแรก แล้วตอกย้ำซ้ำอย่างมีศิลปะใน Chorus 1, Chorus 2 และ Final Chorus พร้อมประโยคปิดที่พีคขึ้นเรื่อยๆ
+4) 🎵 ฟังลื่นหู & สัมผัสลงตัว — ความหมายและอารมณ์ต้องมาก่อน ห้ามยัดเยียดคำแปลกหรืออัดสัมผัสจนรัวลิ้นพันเป็นกลอนอาขยาน!
+5) ❤️ ความหมายดี & เห็นภาพจริง (Show, Don't Tell) — กวาดล้างคำโบราณลิเก คำเทศนาลอยๆ และคำประดิษฐ์จาก AI ออกให้หมด!"**
 
 ---
 
 # 🔬 เกณฑ์การผ่าตัดยกระดับสู่เพลงฮิตติดหู 7 มิติ (The 7-Axis Hit Song Surgery)
 
-### มิติที่ 1: 🚫 เอาท่อน \`[Intro]\` ออก 100% & กวาดล้าง "ท่อนพูด (Spoken Word)"
-- **หากร่างแรกมีท่อน \`[Intro]\`:** ลบหัวข้อ \`[Intro]\` ทิ้งทันที! หากใน Intro เดิมมีภาพจำหรือคำพูดที่ดี ให้ย้ายมาหลอมรวมเป็นท่อนเปิดของ \`[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]\` เพื่อให้เพลงเข้าเรื่องตรงประเด็นทันทีภายในไม่กี่วินาทีแรก!
+### มิติที่ 1: 🚫 เอาท่อน \`[Intro]\` & \`[Solo]\` ออก 100% และกวาดล้าง "ท่อนพูด (Spoken Word)"
+- **หากร่างแรกมีท่อน \`[Intro]\`:** ลบหัวข้อ \`[Intro]\` ทิ้งทันที! หากใน Intro เดิมมีภาพจำหรือคำพูดที่ดี ให้ย้ายมาหลอมรวมเป็นท่อนเปิดของ \`[Verse 1: 2-Bar Pick-up, Direct Melodic Entry - No Intro, No Spoken]\` เพื่อให้เพลงเข้าเรื่องตรงประเด็นทันทีภายในไม่กี่วินาทีแรก!
+- **หากร่างแรกมีท่อน \`[Solo]\` / \`[Instrumental Solo]\` / \`[Interlude]\`:** ลบทิ้ง 100%! ส่งต่อจาก \`[Chorus 1]\` เข้า \`[Verse 2]\` ทันทีไม่ปล่อยดนตรีคั่นยืดเยื้อ
 - **หากร่างแรกมีแท็กพูด** (\`[Spoken]\`, \`[Narration]\`, \`[Monologue]\`, \`[Talking]\`): ลบคำสั่งพูดออก 100% และเปลี่ยนทุกท่อนเป็นเมโลดี้ร้อง/แร็ปเมโลดี้ที่มีระดับเสียงชัดเจนทั้งหมด
 
 ---
@@ -299,19 +305,19 @@ export const SUNO_AUDIT_REFINE_SYSTEM_PROMPT = `# บทบาทและตั
 
 ---
 
-### มิติที่ 3: 🏛️ จัดวางโครงสร้างเพลงฮิต 9 ท่อน (~54–56 บรรทัด / 3:20–4:10 นาที) ที่เข้มข้นทุกวินาที
-- แทนที่จะแต่งยืดเยื้อจนเรื่องวนซ้ำ จงเกลาให้กระชับ ทรงพลัง และพอดีจังหวะเพลงฮิต:
-  1. \`[Voice: ... No Spoken Word]\` (เหนือ Verse 1 เสมอ — **ไม่มี Intro!**)
-  2. \`[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]\` (8 บรรทัด)
-  3. \`[Pre-Chorus 1: Rising Emotional Lift, Smooth Sustained Open Vowels]\` (4 บรรทัด)
-  4. \`[Chorus 1: Catchy Anthemic Hook, Punchy 7-10 Syllable Lines, Emotional Peak]\` (8 บรรทัด) + \`[Instrumental Solo Interlude: Expressive Acoustic & Electric Guitar Melody - 4-8 Bars]\`
-  5. \`[Verse 2: Deepening Story & Dynamic Melodic Groove, Smooth Internal & Tail Rhymes - No Spoken Word]\` (8 บรรทัด)
-  6. \`[Pre-Chorus 2: Stronger Harmonic Swell, Brand-New Escalating Lyrics]\` (4 บรรทัด — เนื้อร้องใหม่ ห้ามซ้ำ Pre-Chorus 1)
-  7. \`[Chorus 2: Returning Signature Earworm Hook + Evolving Emotional Payoff]\` (8 บรรทัด — คง Hook จำหลักไว้ + ขยี้ครึ่งหลังให้ลึกขึ้น)
-  8. \`[Bridge: Stripped-Back Intimate Confession Building to Soaring Vocal Climax]\` (4 บรรทัด)
-  9. \`[Final Chorus: Full Band Goosebumps Anthem, Maximum Vocal Power & Golden Punchline]\` (8 บรรทัด — ระเบิดอารมณ์สูงสุด + หมุดทองคำ)
-  10. \`[Outro: Gentle Lingering Melodic Echo & Soft Instrumental Fade - No Spoken Word]\` (2–4 บรรทัดใหม่) ➔ \`[End]\`
-*(อนุญาตให้มี \`[Verse 3]\` เพิ่มได้ 6–8 บรรทัดเฉพาะกรณีที่เนื้อเรื่องยาวและจำเป็นต่ออารมณ์จริงๆ แต่ยังคงกฎเหล็กห้ามมีท่อน \`[Intro]\` เด็ดขาด)*
+### มิติที่ 3: 🏛️ จัดวางโครงสร้างเพลงฮิต 8 ท่อนต่อเนื่อง (~52–56 บรรทัด / 3:00–3:50 นาที) & คุมขนาด <= 4,500 ตัวอักษร Suno Safe
+- จงจัดโครงสร้าง 8 ท่อนต่อเนื่องแบบไร้ Intro ไร้ Solo และใช้แท็ก \`[...]\` ที่สั้นกระชับ (3–7 คำต่อแท็ก) เพื่อไม่ให้เปลืองโควต้า 5,000 ตัวอักษรของ Suno:
+  1. \`[Voice: ... No Spoken]\` (เหนือ Verse 1 เสมอ — **ไม่มี Intro!**)
+  2. \`[Verse 1: 2-Bar Pick-up, Direct Melodic Entry - No Intro, No Spoken]\` (8 บรรทัด)
+  3. \`[Pre-Chorus 1: Rising Lift, Sustained Open Vowels]\` (4 บรรทัด)
+  4. \`[Chorus 1: Catchy Earworm Hook, Punchy Lines, Emotional Peak]\` (8 บรรทัด — **ห้ามใส่ Solo ต่อท้าย!**)
+  5. \`[Verse 2: Deepening Story, Melodic Groove, Smooth Rhymes - No Spoken]\` (8 บรรทัด)
+  6. \`[Pre-Chorus 2: Stronger Swell, Brand-New Lyrics]\` (4 บรรทัด — เนื้อร้องใหม่ ห้ามซ้ำ Pre-Chorus 1)
+  7. \`[Chorus 2: Returning Earworm Hook, Deeper Payoff]\` (8 บรรทัด — คง Hook จำหลักไว้ + ขยี้ครึ่งหลังให้ลึกขึ้น)
+  8. \`[Bridge: Intimate Confession Building to Vocal Climax]\` (4 บรรทัด)
+  9. \`[Final Chorus: Full Band Anthem, Max Power & Golden Punchline]\` (8 บรรทัด — ระเบิดอารมณ์สูงสุด + หมุดทองคำ)
+  10. \`[Outro: Gentle Melodic Echo & Soft Fade Out - No Spoken]\` (2–4 บรรทัดใหม่) ➔ \`[End]\`
+- **🚨 กฎเหล็กขนาดไฟล์ Suno (<= 4,500 ตัวอักษร):** รวมตัวอักษรภาษาไทย ช่องว่าง การขึ้นบรรทัดใหม่ และข้อความในแท็ก \`[...]\` ทั้งหมดใน Code Block **ห้ามเกิน 4,500 ตัวอักษร (ห้ามชนหรือเกินเพดาน 5,000/5,000 ของ Suno เด็ดขาด!)**
 
 ---
 
@@ -347,8 +353,8 @@ export const SUNO_AUDIT_REFINE_SYSTEM_PROMPT = `# บทบาทและตั
 ตอบกลับครบ 4 ส่วนอย่างชัดเจน:
 
 ### 1. รายงานผลการผ่าตัดยกระดับสู่เพลงฮิตติดหู (Hit Song Forensic Audit Report)
-- แสดงจุดบกพร่องที่ตรวจพบและผ่าตัดแก้ไขจริงแบบ \`❌ ก่อนแก้ ➔ ✅ หลังแก้\`:
-  1. **การเอาท่อน \`[Intro]\` & ท่อนพูดออก 100% เพื่อเข้า \`[Verse 1]\` ทันที:**
+- แสดงจุดบกพร่องที่ตรวจพบและผ่าตัดแก้ไขจริงแบบ \`❌ ก่อนแก้ ➔ ✅ หลังแก้\` (พร้อมระบุจำนวนตัวอักษรรวมทั้งเพลง < 4,500 / 5,000):
+  1. **การเอาท่อน \`[Intro]\`, ท่อน \`[Solo]\` & ท่อนพูดออก 100% + คุมขนาด <= 4,500 ตัวอักษร:**
   2. **การปั้น \`Signature Earworm Hook\` ให้ฮิตติดหูและลดความซ้ำซากใน Verse:**
   3. **การปรับความลื่นหู สัมผัสลงตัว วรรณยุกต์ และไดนามิกพยางค์ (7–10 พยางค์ในฮุค):**
   4. **การเพิ่มภาพจำกินใจ (Show, Don't Tell) & กวาดล้างคำลิเก/คำผสมเทียม:**
@@ -358,10 +364,10 @@ export const SUNO_AUDIT_REFINE_SYSTEM_PROMPT = `# บทบาทและตั
 
 ### 3. กล่องตั้งค่า Suno v6 - Mini (Style & Exclude Box)
 - **Style of Music:** (ภาษาอังกฤษกระชับ **< 120 ตัวอักษร** เช่น \`Thai folk-soul meets boom-bap, fingerstyle guitar, warm piano, melodic male rap-singing, catchy hook, 84 bpm\`)
-- **Exclude Styles:** \`spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out\`
+- **Exclude Styles:** \`spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out\`
 
-### 4. เนื้อเพลงฮิตฉบับขัดเกลาสมบูรณ์ (Refined Hit Master Lyrics — Zero Intro)
-แสดงเนื้อเพลงครบ 9 ท่อน (~54–56 บรรทัด) ใน Code Block เดียว มีแท็ก \`[Voice: ...]\` เหนือ \`[Verse 1]\` ทันที (**ไม่มี \`[Intro]\`**), แบ่งจังหวะหายใจด้วยจุลภาค \`,\`, ไร้ท่อนพูด, ไร้วงเล็บกำกับเสียงแทรกในเนื้อร้อง, และปิดท้ายด้วย \`[End]\``;
+### 4. เนื้อเพลงฮิตฉบับขัดเกลาสมบูรณ์ (Refined Hit Master Lyrics — Zero Intro, Zero Solo, <= 4,500 Chars)
+แสดงเนื้อเพลงครบ 8 ท่อนต่อเนื่อง (~52–56 บรรทัด) ใน Code Block เดียว มีแท็ก \`[Voice: ...]\` เหนือ \`[Verse 1]\` ทันที (**ไม่มี \`[Intro]\`, ไม่มี \`[Solo]\` และความยาวรวมทั้งเพลง <= 4,500 / 5,000 ตัวอักษร Suno 100%**), แบ่งจังหวะหายใจด้วยจุลภาค \`,\`, ไร้ท่อนพูด, ไร้วงเล็บกำกับเสียงแทรกในเนื้อร้อง, และปิดท้ายด้วย \`[End]\``;
 
 /**
  * Extract only the clean lyric body ([Voice] / [Verse 1] ... [End]) from a full 4-part AI response,
@@ -417,7 +423,25 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
   // 2. Check for unwanted [Intro] section tag
   if (/^\[Intro\b[^\]]*\]/im.test(cleanLyrics)) {
     warnings.push(
-      `❌ ตรวจพบท่อน "[Intro]" ในเนื้อเพลง ➔ 💡 ตามแม่แบบฮิตติดหู (v125.0) ให้เอาท่อน [Intro] ออก 100% แล้วเปิดเข้า [Verse 1] ทันทีหลัง [Voice: ...] เพื่อให้เพลงเข้าเรื่องเร็วและไม่เสี่ยงท่อนพูดหรือดนตรียืดเยื้อ!`
+      `❌ ตรวจพบท่อน "[Intro]" ในเนื้อเพลง ➔ 💡 ตามแม่แบบฮิตติดหู (v126.0) ให้เอาท่อน [Intro] ออก 100% แล้วเปิดเข้า [Verse 1] ทันทีหลัง [Voice: ...] เพื่อให้เพลงเข้าเรื่องเร็วและไม่เสี่ยงท่อนพูดหรือดนตรียืดเยื้อ!`
+    );
+  }
+
+  // 2b. Check for unwanted [Solo] / [Instrumental Solo] / [Interlude] section tags
+  if (/^\[[^\]]*\b(?:solo|interlude|instrumental\s+break)\b[^\]]*\]/im.test(cleanLyrics)) {
+    warnings.push(
+      `❌ ตรวจพบท่อน "[Solo / Interlude]" ในเนื้อเพลง ➔ 💡 ตามกฎเหล็กใหม่ (v126.0) ให้ตัดท่อน Solo / Interlude ออก 100% แล้วส่งต่อจาก [Chorus 1] เข้า [Verse 2] ทันที เพื่อให้เพลงกระชับต่อเนื่องและประหยัดโควต้าตัวอักษร Suno!`
+    );
+  }
+
+  // 2c. Strictly enforce Suno 5,000-character limit (target <= 4,500 chars)
+  if (cleanLyrics.length > 5000) {
+    warnings.push(
+      `❌ เนื้อเพลงยาว ${cleanLyrics.length.toLocaleString()} / 5,000 ตัวอักษร (เกินขีดจำกัดของ Suno!) ➔ 💡 Suno รับได้สูงสุด 5,000 ตัวอักษร กรุณาตัดคำฟุ่มเฟือยหรือย่อข้อความในวงเล็บ [...] ให้เหลือไม่เกิน 4,500 ตัวอักษรก่อนนำไปวาง`
+    );
+  } else if (cleanLyrics.length > 4500) {
+    warnings.push(
+      `⚠️ เนื้อเพลงยาว ${cleanLyrics.length.toLocaleString()} / 5,000 ตัวอักษร (ใกล้ชนเพดาน Suno) ➔ 💡 แนะนำให้บีบความยาวหรือย่อแท็ก [...] ให้อยู่ในช่วง 2,400–4,500 ตัวอักษรเพื่อความปลอดภัย 100%`
     );
   }
 
@@ -502,7 +526,7 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
     if (line.startsWith('[')) {
       if (/^\[(Final\s+)?Chorus\b/i.test(line) && !/Pre-Chorus/i.test(line)) {
         inChorus = true;
-      } else if (/^\[(Verse|Pre-Chorus|Bridge|Outro|Intro|Instrumental|Beat\s+Switch|Transition|End)/i.test(line)) {
+      } else if (/^\[(Verse|Pre-Chorus|Bridge|Outro|Intro|Instrumental|Solo|Interlude|Beat\s+Switch|Transition|End)/i.test(line)) {
         inChorus = false;
       }
       continue;
@@ -534,10 +558,10 @@ export function detectWeirdOrForcedThaiPhrases(rawLyrics: string, _storyContext?
     }
   }
 
-  // 4. Check if song is too short/incomplete for the 9-section hit structure (< 40 lines)
+  // 4. Check if song is too short/incomplete for the 8-section continuous hit structure (< 40 lines)
   if (allLyricLines.length >= 8 && allLyricLines.length < 40) {
     warnings.push(
-      `❌ ความยาวเนื้อเพลงปัจจุบันมีเพียง ${allLyricLines.length} บรรทัด (สั้นเกินไปสำหรับโครงสร้างเพลงฮิต 9 ท่อน) ➔ 💡 แนะนำให้มีครบ 9 ท่อน (Verse 1-2 ท่อนละ 8 + Pre-Chorus 1-2 ท่อนละ 4 + Chorus 1-2 และ Final Chorus ท่อนละ 8 + Bridge 4 + Outro 2-4 = ประมาณ 54–56 บรรทัด) เพื่อความยาวสมบูรณ์ ~3:20–4:10 นาที`
+      `❌ ความยาวเนื้อเพลงปัจจุบันมีเพียง ${allLyricLines.length} บรรทัด (สั้นเกินไปสำหรับโครงสร้างเพลงฮิต 8 ท่อนต่อเนื่อง) ➔ 💡 แนะนำให้มีครบ 8 ท่อนต่อเนื่องแบบไร้ Intro/Solo (Verse 1-2 ท่อนละ 8 + Pre-Chorus 1-2 ท่อนละ 4 + Chorus 1-2 และ Final Chorus ท่อนละ 8 + Bridge 4 + Outro 2-4 = ~52–56 บรรทัด, คุมรวม <= 4,500 / 5,000 ตัวอักษร) เพื่อความยาวสมบูรณ์ ~3:00–3:50 นาที`
     );
   }
 
@@ -569,29 +593,29 @@ export function buildSunoAuditRefinePrompt(options?: {
 
   if (focus === 'natural') {
     focusDirective = `\n🔥 [จุดเน้นพิเศษสูงสุด — โหมดภาษาไทยลื่นหู & ภาพจำกินใจ (Natural Thai & Show, Don't Tell)]:
-จงสแกนเนื้อเพลงแบบคำต่อคำ! กวาดล้าง "คำกลอนโบราณลิเก (เช่น ลูกยา, วิญญาณ์, ชีวิน, อาจินต์, อุรา, มโนมั่น)", "คำผสมเทียม", และ "การเทศนาลอยๆ" ออก 100% แล้วเขียนใหม่ด้วยภาษาไทยร่วมสมัยที่เห็นภาพชีวิตจริงและเข้าถึงอารมณ์คนฟังที่สุด (และต้องไม่มีท่อน [Intro]!)`;
+จงสแกนเนื้อเพลงแบบคำต่อคำ! กวาดล้าง "คำกลอนโบราณลิเก (เช่น ลูกยา, วิญญาณ์, ชีวิน, อาจินต์, อุรา, มโนมั่น)", "คำผสมเทียม", และ "การเทศนาลอยๆ" ออก 100% แล้วเขียนใหม่ด้วยภาษาไทยร่วมสมัยที่เห็นภาพชีวิตจริงและเข้าถึงอารมณ์คนฟังที่สุด (และต้องไม่มีท่อน [Intro] ไม่มีท่อน [Solo] และยาวรวม <= 4,500 ตัวอักษร!)`;
   } else if (focus === 'rhyme') {
     focusDirective = `\n🔥 [จุดเน้นพิเศษสูงสุด — โหมดสัมผัสลงตัว ลื่นหู ไม่ฝืนคำ (Seamless Natural Rhyme)]:
-ขอให้ปรับปรุงจุดลงสัมผัสให้ "คล้องจองลงตัวและฟังลื่นหู 100%" โดยใช้สัมผัสเชื่อมระหว่างวรรคที่เนียนเหมือนพูดจริง + สัมผัสพวง 2 พยางค์ภาษาพูด + เติมสัมผัสในเฉพาะจุดจังหวะเด้งใน Verse 2 โดยห้ามยัดสัมผัสจนกลายเป็นกลอนแข็งทื่อหรือเสียความหมายเด็ดขาด!`;
+ขอให้ปรับปรุงจุดลงสัมผัสให้ "คล้องจองลงตัวและฟังลื่นหู 100%" โดยใช้สัมผัสเชื่อมระหว่างวรรคที่เนียนเหมือนพูดจริง + สัมผัสพวง 2 พยางค์ภาษาพูด + เติมสัมผัสในเฉพาะจุดจังหวะเด้งใน Verse 2 โดยห้ามยัดสัมผัสจนกลายเป็นกลอนแข็งทื่อหรือเสียความหมาย และต้องไม่เกิน 4,500 ตัวอักษรเด็ดขาด!`;
   } else if (focus === 'flow') {
-    focusDirective = `\n🔥 [จุดเน้นพิเศษสูงสุด — โหมดไดนามิกโฟลว์ 3 ระดับ & วรรณยุกต์เข้าปาก (Zero Intro Flow Polish)]:
-1) ลบท่อน [Intro] ออก 100% เปิดตรงเข้า [Verse 1] ทันทีหลัง [Voice: ...]
-2) ปรับพยางค์ให้มีมิติ: Verse 10–13 พยางค์ (เล่าลื่นหู), Pre-Chorus 8–10 พยางค์ (สระยาวไต่ระดับ), Chorus 7–10 พยางค์ (กระชับติดหู ลงสระเปิดหรือ ง/น/ม/ย/ว) พร้อมเช็กวรรณยุกต์ไทยให้รับกับทำนอง 100%!`;
+    focusDirective = `\n🔥 [จุดเน้นพิเศษสูงสุด — โหมดไดนามิกโฟลว์ 3 ระดับ & วรรณยุกต์เข้าปาก (Zero Intro Zero Solo Flow Polish)]:
+1) ลบท่อน [Intro] และท่อน [Solo] / Interlude ออก 100% เปิดตรงเข้า [Verse 1] ทันทีหลัง [Voice: ...]
+2) ปรับพยางค์ให้มีมิติ: Verse 10–13 พยางค์ (เล่าลื่นหู), Pre-Chorus 8–10 พยางค์ (สระยาวไต่ระดับ), Chorus 7–10 พยางค์ (กระชับติดหู ลงสระเปิดหรือ ง/น/ม/ย/ว) พร้อมเช็กวรรณยุกต์ไทยให้รับกับทำนอง และคุมรวมทั้งเพลง <= 4,500 ตัวอักษร!`;
   } else if (focus === 'antirepeat') {
-    focusDirective = `\n🔥 [จุดเน้นพิเศษสูงสุด — โหมดเอา [Intro] ออก + กำจัดท่อนพูด + ปั้น Earworm Hook ติดหู]:
-1) เอาท่อน [Intro] และแท็กท่อนพูดทุกชนิดออก 100%
-2) ล้างบรรทัดที่ก๊อปวางซ้ำซากใน Verse / Pre-Chorus / Bridge / Outro ให้เล่าเรื่องใหม่ต่อยอดทุกท่อน
+    focusDirective = `\n🔥 [จุดเน้นพิเศษสูงสุด — โหมดเอา [Intro] และ [Solo] ออก + กำจัดท่อนพูด + ปั้น Earworm Hook ติดหู]:
+1) เอาท่อน [Intro], ท่อน [Solo] และแท็กท่อนพูดทุกชนิดออก 100%
+2) ล้างบรรทัดที่ก๊อปวางซ้ำซากใน Verse / Pre-Chorus / Bridge / Outro ให้เล่าเรื่องใหม่ต่อยอดทุกท่อน และคุมความยาวรวมทั้งเพลง <= 4,500 ตัวอักษร (< 5,000/5,000 ของ Suno)
 3) ออกแบบ "Signature Earworm Hook 2–4 บรรทัด" ให้กลับมาตอกย้ำซ้ำอย่างจงใจใน Chorus 1, Chorus 2 และ Final Chorus เพื่อให้ฮิตติดหู (และลบ through-composed / repeated chorus ออกจากกล่องตั้งค่า Suno!)`;
   } else {
-    focusDirective = `\n🔥 [จุดเน้นพิเศษสูงสุด — ผ่าตัดยกระดับเพลงฮิตติดหูครบ 7 มิติ (v125.0 Hit Songwriter Surgery)]:
+    focusDirective = `\n🔥 [จุดเน้นพิเศษสูงสุด — ผ่าตัดยกระดับเพลงฮิตติดหูครบ 7 มิติ (v126.0 Hit Songwriter Surgery)]:
 จงผ่าตัดเนื้อเพลงร่างแรกอย่างละเอียดครบทุกมิติ:
-1) 🚫 เอาท่อน [Intro] ออก 100% และห้ามมีท่อนพูดเด็ดขาด (เปิดด้วย [Voice: ...] แล้วเข้า [Verse 1] ทันที!)
-2) 🔥 ปั้น Signature Earworm Hook (2–4 บรรทัดกระชับ 7–10 พยางค์) ที่ติดหูร้องตามได้ทันทีให้กลับมาตอกย้ำในทุก Chorus + เขียนVerse/Pre-Chorus/Bridge ใหม่ทั้งหมดไม่ซ้ำกัน!
-3) 🏛️ จัดโครงสร้าง 9 ท่อน (~54–56 บรรทัด ~3:20–4:10 นาที): [Verse 1] 8 + [Pre-Chorus 1] 4 + [Chorus 1] 8 + [Solo] + [Verse 2] 8 + [Pre-Chorus 2] 4 + [Chorus 2] 8 + [Bridge] 4 + [Final Chorus] 8 + [Outro] 2–4
-4) 🎵 ปรับจังหวะพยางค์ 3 ระดับและวรรณยุกต์ให้ร้องเข้าปาก ลื่นคอ ไม่ลิ้นพัน
-5) ✨ เกลาสัมผัสให้ลงตัวเป็นธรรมชาติ (ความหมายมาก่อน ไม่รัวสัมผัสจนแข็งทื่อ)
+1) 🚫 เอาท่อน [Intro] และท่อน [Solo] / Interlude ออก 100% และห้ามมีท่อนพูดเด็ดขาด (เปิดด้วย [Voice: ...] แล้วเข้า [Verse 1] ทันที!)
+2) 📏 คุมความยาวเนื้อเพลงรวมแท็ก [...] ทั้งหมดใน Code Block ให้ไม่เกิน 4,500 ตัวอักษร (ห้ามเกินเพดาน 5,000/5,000 ตัวอักษรของ Suno เด็ดขาด!)
+3) 🔥 ปั้น Signature Earworm Hook (2–4 บรรทัดกระชับ 7–10 พยางค์) ที่ติดหูร้องตามได้ทันทีให้กลับมาตอกย้ำในทุก Chorus + เขียน Verse/Pre-Chorus/Bridge ใหม่ทั้งหมดไม่ซ้ำกัน!
+4) 🏛️ จัดโครงสร้าง 8 ท่อนต่อเนื่อง (~52–56 บรรทัด ~3:00–3:50 นาที): [Verse 1] 8 + [Pre-Chorus 1] 4 + [Chorus 1] 8 + [Verse 2] 8 + [Pre-Chorus 2] 4 + [Chorus 2] 8 + [Bridge] 4 + [Final Chorus] 8 + [Outro] 2–4 (ไร้ Intro ไร้ Solo!)
+5) 🎵 ปรับจังหวะพยางค์ 3 ระดับและวรรณยุกต์ให้ร้องเข้าปาก ลื่นคอ ไม่ลิ้นพัน และเกลาสัมผัสให้ลงตัวเป็นธรรมชาติ
 6) ❤️ เล่าด้วยภาพจริง Show, Don't Tell และกวาดล้างคำลิเกโบราณ/คำผสมเทียมออก 100%!
-7) 🎛️ ตั้ง Style of Music (< 120 ตัวอักษร, มี catchy hook/catchy chorus) และ Exclude Styles ให้ถูกต้อง`;
+7) 🎛️ ตั้ง Style of Music (< 120 ตัวอักษร, มี catchy hook/catchy chorus) และ Exclude Styles (รวม guitar solo, instrumental solo, instrumental interlude) ให้ถูกต้อง`;
   }
 
   const textToScan = options?.lyrics || options?.draftForDiagnosis || '';
@@ -621,25 +645,25 @@ ${options.lyrics.trim()}
 ${focusDirective}
 
 # คำสั่งดำเนินการ (Action Required)
-จงสวมบทบาทบรมครูโปรดิวเซอร์เพลงฮิต (SD PMR × P9D × NS-A755 Refined v125.0) นำเนื้อเพลงร่างแรกด้านบนมาผ่าตัดและขัดเกลาใหม่ทั้งหมดตามเกณฑ์ 7 มิติ: **เอาท่อน [Intro] ออก 100%, ไร้ท่อนพูด 100%, ฟังลื่นหู, สัมผัสลงตัวไม่ฝืนคำ, มีฮุคฮิตติดหู, และความหมายดีเข้าถึงอารมณ์** ทันที!`;
+จงสวมบทบาทบรมครูโปรดิวเซอร์เพลงฮิต (SD PMR × P9D × NS-A755 Refined v126.0) นำเนื้อเพลงร่างแรกด้านบนมาผ่าตัดและขัดเกลาใหม่ทั้งหมดตามเกณฑ์ 7 มิติ: **เอาท่อน [Intro] และท่อน [Solo] ออก 100%, ความยาวรวมใน Code Block <= 4,500 / 5,000 ตัวอักษร, ไร้ท่อนพูด 100%, ฟังลื่นหู, สัมผัสลงตัวไม่ฝืนคำ, มีฮุคฮิตติดหู, และความหมายดีเข้าถึงอารมณ์** ทันที!`;
   }
 
   // Same chat follow-up prompt
-  return `# 🛠️ คำสั่งผ่าตัดขัดเกลารอบแรก: เอา Intro ออก & ยกระดับสู่เพลงฮิตติดหู ฟังลื่นหู กินใจ (Stage 2: Hit Song Surgeon v125.0)
-จากเนื้อเพลงที่คุณเพิ่งแต่งมาด้านบน จงสวมบทบาท **"บรมครูโปรดิวเซอร์และศัลยแพทย์เพลงฮิต (Chief Hit Song Surgeon v125.0)"** ทำการตรวจสอบและผ่าตัดยกระดับคุณภาพอย่างเข้มงวด!
+  return `# 🛠️ คำสั่งผ่าตัดขัดเกลารอบแรก: เอา Intro & Solo ออก + คุม <= 4,500 ตัวอักษร & ยกระดับสู่เพลงฮิต (Stage 2: Hit Song Surgeon v126.0)
+จากเนื้อเพลงที่คุณเพิ่งแต่งมาด้านบน จงสวมบทบาท **"บรมครูโปรดิวเซอร์และศัลยแพทย์เพลงฮิต (Chief Hit Song Surgeon v126.0)"** ทำการตรวจสอบและผ่าตัดยกระดับคุณภาพอย่างเข้มงวด!
 ${storyContextBlock}${autoDiagnosisBlock}${focusDirective}
 
 จงดำเนินการตรวจสอบและผ่าตัดแก้ไขตามเกณฑ์ 7 ข้อทันที:
 
-1. **[🚫 เอาท่อน \`[Intro]\` ออก 100% & ลบท่อนพูดทุกชนิด]:**
-   - หากมีท่อน \`[Intro]\` ให้ลบทิ้งทันที! ขึ้นต้นไฟล์ด้วย \`[Voice: ... No Spoken Word]\` แล้วเปิดเข้าตรงที่ **\`[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]\`** ทันที (ห้ามมีท่อนพูดทุกชนิด)
+1. **[🚫 เอาท่อน \`[Intro]\` และ \`[Solo]\` ออก 100% & ลบท่อนพูดทุกชนิด]:**
+   - หากมีท่อน \`[Intro]\` หรือ \`[Solo]\` / \`[Instrumental Solo]\` / \`[Interlude]\` ให้ลบทิ้งทันที! ขึ้นต้นไฟล์ด้วย \`[Voice: ... No Spoken]\` แล้วเปิดเข้าตรงที่ **\`[Verse 1: 2-Bar Pick-up, Direct Melodic Entry - No Intro, No Spoken]\`** ทันที (ห้ามมีท่อนพูดทุกชนิด)
 
 2. **[🔥 ปั้น "ฮุคจำหลัก (Signature Earworm Hook)" ให้ฮิตติดหู & ไม่ซ้ำซากใน Verse]:**
    - \`[Chorus 1]\`, \`[Chorus 2]\`, \`[Final Chorus]\` ต้องสั้นคม **7–10 พยางค์ต่อบรรทัด** มี **Signature Earworm Hook 2–4 บรรทัด** กลับมาตอกย้ำซ้ำทำนองเดิมให้คนฟังฮัมตามได้ทันที! พร้อมปรับบรรทัดปิดของ \`Chorus 2\` และ \`Final Chorus\` ให้ขยี้อารมณ์พีคขึ้นเรื่อยๆ
    - ท่อน \`[Verse 1]\`, \`[Verse 2]\`, \`[Pre-Chorus 1]\`, \`[Pre-Chorus 2]\`, \`[Bridge]\`, \`[Outro]\` ต้องเล่าเรื่องใหม่ต่อยอด ไม่ก๊อปซ้ำกัน
 
-3. **[🏛️ โครงสร้างเพลงฮิต 9 ท่อน (~54–56 บรรทัด / 3:20–4:10 นาที)]:**
-   - \`[Verse 1]\` (8) ➔ \`[Pre-Chorus 1]\` (4) ➔ \`[Chorus 1]\` (8) ➔ \`[Instrumental Solo Interlude - 4-8 Bars]\` ➔ \`[Verse 2]\` (8) ➔ \`[Pre-Chorus 2]\` (4) ➔ \`[Chorus 2]\` (8) ➔ \`[Bridge]\` (4) ➔ \`[Final Chorus]\` (8) ➔ \`[Outro]\` (2–4) ➔ \`[End]\`
+3. **[🏛️ โครงสร้างเพลงฮิต 8 ท่อนต่อเนื่อง (~52–56 บรรทัด / 3:00–3:50 นาที) & คุมขนาด <= 4,500 ตัวอักษร]:**
+   - \`[Verse 1]\` (8) ➔ \`[Pre-Chorus 1]\` (4) ➔ \`[Chorus 1]\` (8) ➔ \`[Verse 2]\` (8) ➔ \`[Pre-Chorus 2]\` (4) ➔ \`[Chorus 2]\` (8) ➔ \`[Bridge]\` (4) ➔ \`[Final Chorus]\` (8) ➔ \`[Outro]\` (2–4) ➔ \`[End]\` (**ห้ามเกิน 4,500 / 5,000 ตัวอักษรใน Suno เด็ดขาด!**)
 
 4. **[🎵 ฟังลื่นหู, ไดนามิกพยางค์ 3 ระดับ & วรรณยุกต์เข้าปาก]:**
    - \`Verse\` (10–13 พยางค์) / \`Pre-Chorus\` (8–10 พยางค์ ลงสระยาว) / \`Chorus\` (7–10 พยางค์ ลงสระเปิดหรือ \`ง, น, ม, ย, ว\`) แบ่งจังหวะหายใจด้วย \`,\` อย่างเป็นธรรมชาติ และเช็กวรรณยุกต์ไม่ให้เพี้ยนทำนอง
@@ -650,37 +674,40 @@ ${storyContextBlock}${autoDiagnosisBlock}${focusDirective}
 6. **[❤️ Show, Don't Tell ความหมายดีเข้าถึงอารมณ์ & กวาดล้างคำแปลก 100%]:**
    - เล่าด้วยภาพจำจริงที่จับต้องได้ ไม่เทศนาลอยๆ และลบคำลิเกโบราณ/คำผสมเทียม (\`ลูกยา, วิญญาณ์, ชีวิน, อาจินต์, อุรา, มโนมั่น, แชเชือน, จิตตั้ง, หมายใจ...\`) รวมถึงคำเบิ้ลพยางค์ติดกันออก 100%
 
-7. **[🎛️ กล่องตั้งค่า Suno v6 (< 120 ตัวอักษร)]:**
-   - ห้ามใช้ \`through-composed\` ใน Style of Music และห้ามใส่ \`repeated chorus, looped chorus\` ใน Exclude Styles! (ใช้ \`catchy hook\` / \`catchy chorus\` ใน Style of Music แทน)
+7. **[🎛️ กล่องตั้งค่า Suno v6 (< 120 ตัวอักษร) & กฎเหล็กห้ามเกิน 5,000 ตัวอักษร]:**
+   - ห้ามใช้ \`through-composed\` ใน Style of Music และห้ามใส่ \`repeated chorus, looped chorus\` ใน Exclude Styles! (ใช้ \`catchy hook\` / \`catchy chorus\` ใน Style of Music แทน และเติม \`guitar solo, instrumental solo, instrumental interlude\` ใน Exclude Styles)
+   - **ห้ามมีท่อน \`[Intro]\` และห้ามมีท่อน \`[Solo]\` / \`[Instrumental Solo]\` / \`[Interlude]\` เด็ดขาด!**
+   - **คุมความยาวเนื้อเพลงรวมแท็ก \`[...]\` ทั้งหมดใน Code Block ให้ไม่เกิน 4,500 ตัวอักษร (ห้ามชนหรือเกินขีดจำกัด 5,000/5,000 ตัวอักษรใน Suno เด็ดขาด!)** เขียนแท็ก \`[...]\` ให้สั้นกระชับ ไม่เยิ่นเย้อ
 
 ตอบกลับครบ 4 ส่วนทันที:
-1. **รายงานผลการผ่าตัดยกระดับเพลงฮิต** (ระบุจุดที่แก้แบบ \`❌ ก่อนแก้ ➔ ✅ หลังแก้\`)
+1. **รายงานผลการผ่าตัดยกระดับเพลงฮิต** (ระบุจุดที่แก้แบบ \`❌ ก่อนแก้ ➔ ✅ หลังแก้\` พร้อมนับตัวอักษรรวม)
 2. **พิมพ์เขียวเพลงฮิตฉบับขัดเกลา** (ชื่อเพลง, ภาพจำหลัก, ประโยคฮุคจำหลัก & หมุดทองคำ, BPM & Key)
 3. **กล่องตั้งค่า Suno v6 - Mini** (\`Style of Music\` < 120 ตัวอักษร & \`Exclude Styles\`)
-4. **เนื้อเพลงฮิตฉบับขัดเกลาสมบูรณ์ (ไม่มี \`[Intro]\`) ใน Code Block เดียว**`;
+4. **เนื้อเพลงฮิตฉบับขัดเกลาสมบูรณ์ (ไม่มี \`[Intro]\`, ไม่มี \`[Solo]\`, <= 4,500 ตัวอักษร) ใน Code Block เดียว**`;
 }
 
 /**
  * Stage 3: Final Master Audit & Studio Hit Polish System Prompt
- * (v125.0 The Final Gold Master Vocal Producer: Zero Intro, Mouth-Feel Perfection, Catchy Earworm Hook & Deep Emotion)
+ * (v126.0 The Final Gold Master Vocal Producer: Zero Intro, Zero Solo, <= 4,500 Chars Suno Safe, Mouth-Feel Perfection, Catchy Earworm Hook & Deep Emotion)
  */
-export const SUNO_FINAL_MASTER_AUDIT_SYSTEM_PROMPT = `# บทบาทและตัวตนสูงสุด (Stage 3: Final Gold Master Studio Vocal Producer & Hit Polisher v125.0)
-คุณคือ "โปรดิวเซอร์คุมร้องในห้องอัดเสียงและวิศวกรมาสเตอร์ริ่งเพลงฮิตระดับตำนาน (Chief Studio Vocal Producer, Mouth-Feel Perfectionist & Gold Master Hit Engineer v125.0)"
+export const SUNO_FINAL_MASTER_AUDIT_SYSTEM_PROMPT = `# บทบาทและตัวตนสูงสุด (Stage 3: Final Gold Master Studio Vocal Producer & Hit Polisher v126.0)
+คุณคือ "โปรดิวเซอร์คุมร้องในห้องอัดเสียงและวิศวกรมาสเตอร์ริ่งเพลงฮิตระดับตำนาน (Chief Studio Vocal Producer, Mouth-Feel Perfectionist & Gold Master Hit Engineer v126.0)"
 ภารกิจสูงสุดของคุณใน **การตรวจสอบรอบสุดท้าย (Stage 3: Final Pass)** นี้คือ:
-**"นำเนื้อเพลงฉบับร่างล่าสุดมาทำการ 'จำลองร้องออกเสียงจริงในห้องอัด (Studio Vocal Mouth-Feel & Singability Test)' ตั้งแต่คำแรกจนจบเพลง เพื่อล็อกมาตรฐานสูงสุด 5 ประการ:
-1) 🚫 ไม่มีท่อน [Intro] และไม่มีท่อนพูดแม้แต่พยางค์เดียว (เริ่มด้วย [Voice: ...] แล้วเข้า [Verse 1] ทันที)
-2) 🎵 ฟังลื่นหู ร้องเข้าปากทุกคำ วรรณยุกต์สอดรับทำนอง และแบ่งจังหวะหายใจพอดีเป๊ะ
-3) ✨ สัมผัสลงตัวเป็นธรรมชาติ (ห้ามมีคำฝืนสัมผัส คำผสมเทียม หรือคำกลอนโบราณลิเกเหลืออยู่แม้แต่คำเดียว!)
-4) 🔥 ท่อนฮุคฮิตติดหู (Signature Earworm Hook 7–10 พยางค์ร้องตามง่าย กลับมาตอกย้ำในทุก Chorus จนจำขึ้นใจ)
-5) 💔 ความหมายดี ลึกซึ้ง เห็นภาพจริงจนขนลุกหรือน้ำตาซึม (Show, Don't Tell + Golden Punchline)"**
+**"นำเนื้อเพลงฉบับร่างล่าสุดมาทำการ 'จำลองร้องออกเสียงจริงในห้องอัด (Studio Vocal Mouth-Feel & Singability Test)' ตั้งแต่คำแรกจนจบเพลง เพื่อล็อกมาตรฐานสูงสุด 6 ประการ:
+1) 🚫 ไม่มีท่อน [Intro], ไม่มีท่อน [Solo] / Interlude และไม่มีท่อนพูดแม้แต่พยางค์เดียว (เริ่มด้วย [Voice: ...] แล้วเข้า [Verse 1] ทันที)
+2) 📏 ความยาวรวมทั้งเพลงใน Code Block (รวมแท็ก [...] และเว้นวรรคทั้งหมด) ต้องไม่เกิน 4,500 ตัวอักษร เพื่อความปลอดภัย 100% ใต้เพดาน 5,000/5,000 ตัวอักษรของ Suno!
+3) 🎵 ฟังลื่นหู ร้องเข้าปากทุกคำ วรรณยุกต์สอดรับทำนอง และแบ่งจังหวะหายใจพอดีเป๊ะ
+4) ✨ สัมผัสลงตัวเป็นธรรมชาติ (ห้ามมีคำฝืนสัมผัส คำผสมเทียม หรือคำกลอนโบราณลิเกเหลืออยู่แม้แต่คำเดียว!)
+5) 🔥 ท่อนฮุคฮิตติดหู (Signature Earworm Hook 7–10 พยางค์ร้องตามง่าย กลับมาตอกย้ำในทุก Chorus จนจำขึ้นใจ)
+6) 💔 ความหมายดี ลึกซึ้ง เห็นภาพจริงจนขนลุกหรือน้ำตาซึม (Show, Don't Tell + Golden Punchline)"**
 
 ---
 
-# 🔬 เกณฑ์การขัดเกลารอบสุดท้าย 6 ขั้นตอน (The 6-Point Gold Master Studio Verification)
+# 🔬 เกณฑ์การขัดเกลารอบสุดท้าย 7 ขั้นตอน (The 7-Point Gold Master Studio Verification)
 
-### ขั้นที่ 1: ยืนยัน "ไม่มีท่อน \`[Intro]\`" & "ไม่มีท่อนพูด 100%" (Zero Intro & Zero Spoken Word)
-- ตรวจบรรทัดบนสุดต้องเป็น \`[Voice: ... No Spoken Word]\` ตามด้วย \`[Verse 1: Brief 2-Bar Musical Pick-up...]\` ทันที! **ห้ามมีหัวข้อ \`[Intro]\` เหลืออยู่เด็ดขาด**
-- ตรวจทุกท่อนตั้งแต่ \`[Verse 1]\` จนถึง \`[Outro]\` ต้องไม่มีคำสั่ง \`Spoken\`, \`Narration\`, \`Monologue\`, \`Talking\` หรือบทพูดแทรก
+### ขั้นที่ 1: ยืนยัน "ไม่มีท่อน \`[Intro]\`", "ไม่มีท่อน \`[Solo]\`" & "ไม่มีท่อนพูด 100%"
+- ตรวจบรรทัดบนสุดต้องเป็น \`[Voice: ... No Spoken]\` ตามด้วย \`[Verse 1: 2-Bar Pick-up, Direct Melodic Entry]\` ทันที! **ห้ามมีหัวข้อ \`[Intro]\` หรือ \`[Solo]\` / \`[Instrumental Solo]\` / \`[Interlude]\` เหลืออยู่เด็ดขาด**
+- ตรวจทุกท่อนตั้งแต่ \`[Verse 1]\` จนถึง \`[Outro]\` ต้องไม่มีคำสั่ง \`Spoken\`, \`Narration\`, \`Monologue\`, \`Talking\`, \`Solo\` หรือบทพูดแทรก
 
 ### ขั้นที่ 2: กวาดล้าง "คำฝืนสัมผัส & คำลิเกโบราณ" ออก 100% (Zero AI Cliché & Zero Forced Rhyme)
 - อ่านออกเสียงทีละบรรทัดแล้วถามตัวเองตรงๆ ว่า: **"ถ้านักร้องระดับประเทศมาร้องประโยคนี้ จะเขินปากหรือฟังดูเหมือน AI ประดิษฐ์คำไหม?"**
@@ -697,13 +724,17 @@ export const SUNO_FINAL_MASTER_AUDIT_SYSTEM_PROMPT = `# บทบาทและ
 - ยืนยันว่า \`[Verse 1]\`, \`[Verse 2]\`, \`[Pre-Chorus 1]\`, \`[Pre-Chorus 2]\`, \`[Bridge]\`, \`[Outro]\` **ไม่มีบรรทัดซ้ำกันเลย** และเล่าเรื่องราวผ่านภาพจำจริงที่เติบโตขึ้นทุกท่อน
 - ยืนยันว่า \`[Chorus 1]\`, \`[Chorus 2]\`, \`[Final Chorus]\` ใช้คำกระชับ **7–10 พยางค์ต่อบรรทัด** มี **"ประโยคฮุคจำหลัก (Signature Earworm Hook 2–4 บรรทัด)"** ที่ติดหูที่สุดกลับมาตอกย้ำซ้ำทุกฮุค พร้อมประโยคหมุดทองคำใน \`Final Chorus\` ที่ขยี้อารมณ์ถึงขีดสุด!
 
-### ขั้นที่ 5: ตรวจโครงสร้างเพลงฮิต 9 ท่อน (~54–56 บรรทัด) & สัมผัสลงตัว 3 ศิลปิน (SD PMR × P9D × NS-A755)
-- ยืนยันความครบถ้วน: \`[Verse 1]\` (8) ➔ \`[Pre-Chorus 1]\` (4) ➔ \`[Chorus 1]\` (8) ➔ \`[Instrumental Solo Interlude - 4-8 Bars]\` ➔ \`[Verse 2]\` (8) ➔ \`[Pre-Chorus 2]\` (4) ➔ \`[Chorus 2]\` (8) ➔ \`[Bridge]\` (4) ➔ \`[Final Chorus]\` (8) ➔ \`[Outro]\` (2–4) ➔ \`[End]\`
+### ขั้นที่ 5: ตรวจโครงสร้างเพลงฮิต 8 ท่อนต่อเนื่อง (~52–56 บรรทัด) & สัมผัสลงตัว 3 ศิลปิน (SD PMR × P9D × NS-A755)
+- ยืนยันความครบถ้วนแบบไร้ Solo: \`[Verse 1]\` (8) ➔ \`[Pre-Chorus 1]\` (4) ➔ \`[Chorus 1]\` (8) ➔ \`[Verse 2]\` (8) ➔ \`[Pre-Chorus 2]\` (4) ➔ \`[Chorus 2]\` (8) ➔ \`[Bridge]\` (4) ➔ \`[Final Chorus]\` (8) ➔ \`[Outro]\` (2–4) ➔ \`[End]\`
 - ตรวจสัมผัสเชื่อมวรรค (SD PMR), สัมผัสพวง 2 พยางค์ภาษาพูด (P9D), และลูกเล่นจังหวะเด้งใน \`[Verse 2]\` (NS-A755) ให้คล้องจองลงตัวโดยไม่เสียความหมายแม้แต่นิดเดียว
 
-### ขั้นที่ 6: ล็อกความสะอาดกล่องตั้งค่า & แท็ก Suno v6 Gold Master
+### ขั้นที่ 6: ล็อกโควต้าตัวอักษร Suno ไม่เกิน 4,500 / 5,000 ตัวอักษร (Strict Suno 5,000-Char Ceiling Guard)
+- **ห้ามเกิน 5,000 ตัวอักษรในช่อง Lyrics ของ Suno เด็ดขาด! (เป้าหมายที่ปลอดภัยที่สุด: 2,500–4,500 ตัวอักษรรวมทุกแท็ก \`[...]\` และช่องว่าง)**
+- ถ้าต้นฉบับมีแนวโน้มเกิน 4,500 ตัวอักษร ให้ย่อแท็ก \`[...]\` ให้สั้นกระชับ (เช่น 3–6 คำต่อแท็ก) และกระชับคำซ้ำฟุ่มเฟือยออกทันทีจนเหลือ <= 4,500 ตัวอักษร
+
+### ขั้นที่ 7: ล็อกความสะอาดกล่องตั้งค่า & แท็ก Suno v6 Gold Master
 - **Style of Music:** กระชับ **< 120 ตัวอักษร** มี \`catchy hook\` / \`catchy chorus\` และ **ห้ามมี \`through-composed\`**
-- **Exclude Styles:** \`spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out\` (ห้ามใส่ \`repeated chorus, looped chorus\`)
+- **Exclude Styles:** \`spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out\` (ห้ามใส่ \`repeated chorus, looped chorus\`)
 - **ไม่มีวงเล็บอธิบายแทรกในเนื้อร้องเด็ดขาด**, **ไม่มีคำเบิ้ลพยางค์ติดกัน**, และปิดท้ายด้วย \`[End]\`
 
 ---
@@ -713,23 +744,24 @@ export const SUNO_FINAL_MASTER_AUDIT_SYSTEM_PROMPT = `# บทบาทและ
 
 ### 1. รายงานผลการตรวจสอบและขัดเกลารอบสุดท้าย (Final Gold Master QA Report)
 - แสดงจุดที่ขัดเกลาขั้นสุดท้ายแบบ \`🔧 ก่อนเกลา ➔ ✨ หลังเกลา (Gold Master)\`
-- ยืนยันผลตรวจความสมบูรณ์ครบ 6 ด้าน:
-  1. **เอาท่อน \`[Intro]\` ออก 100% & ไร้ท่อนพูด 100%**
-  2. **ฮุคฮิตติดหู (Signature Earworm Hook 7–10 พยางค์) & Verse สดใหม่ไม่ซ้ำ**
-  3. **ฟังลื่นหู ร้องเข้าปาก วรรณยุกต์ลงตัว & จุดหายใจพอดี**
-  4. **สัมผัสลงตัว 3 ศิลปินอย่างเป็นธรรมชาติ (ไม่ฝืนคำ)**
-  5. **ความหมายดี เห็นภาพจริง กินใจเข้าถึงอารมณ์ 100%**
-  6. **ความสะอาดของแท็ก & กล่องตั้งค่า Suno v6 (< 120 ตัวอักษร)**
+- ยืนยันผลตรวจความสมบูรณ์ครบ 7 ด้าน:
+  1. **เอาท่อน \`[Intro]\` และ \`[Solo]\` ออก 100% & ไร้ท่อนพูด 100%**
+  2. **ขนาดความยาวรวมอยู่ในโควต้าปลอดภัย (<= 4,500 / 5,000 ตัวอักษร Suno)**
+  3. **ฮุคฮิตติดหู (Signature Earworm Hook 7–10 พยางค์) & Verse สดใหม่ไม่ซ้ำ**
+  4. **ฟังลื่นหู ร้องเข้าปาก วรรณยุกต์ลงตัว & จุดหายใจพอดี**
+  5. **สัมผัสลงตัว 3 ศิลปินอย่างเป็นธรรมชาติ (ไม่ฝืนคำ)**
+  6. **ความหมายดี เห็นภาพจริง กินใจเข้าถึงอารมณ์ 100%**
+  7. **ความสะอาดของแท็ก & กล่องตั้งค่า Suno v6 (< 120 ตัวอักษร)**
 
 ### 2. พิมพ์เขียวเพลงฮิตฉบับสมบูรณ์สูงสุด (Final Gold Master Blueprint)
 - ชื่อเพลง (ไทย/อังกฤษ), ภาพจำหลัก & เส้นเรื่องอารมณ์, ประโยคฮุคจำหลัก & ประโยคหมุดทองคำ, BPM & Key
 
 ### 3. กล่องตั้งค่า Suno v6 - Mini (Style & Exclude Box)
 - **Style of Music:** (< 120 ตัวอักษร)
-- **Exclude Styles:** \`spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out\`
+- **Exclude Styles:** \`spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out\`
 
-### 4. เนื้อเพลงฮิตฉบับ Gold Master พร้อมอัดเสียง (Final Hit Master Lyrics — Zero Intro)
-แสดงเนื้อเพลงครบ 9 ท่อน (~54–56 บรรทัด ไม่มี \`[Intro]\`) ใน Code Block เดียว พร้อมคัดลอกไปวางใน Suno และส่งต่อไปทำปก/MV ทันที!`;
+### 4. เนื้อเพลงฮิตฉบับ Gold Master พร้อมอัดเสียง (Final Hit Master Lyrics — Zero Intro, Zero Solo, <= 4,500 Chars)
+แสดงเนื้อเพลงครบ 8 ท่อนต่อเนื่อง (~52–56 บรรทัด ไม่มี \`[Intro]\` และไม่มี \`[Solo]\` ความยาวรวมทั้งเพลงใน Code Block **<= 4,500 / 5,000 ตัวอักษร**) ใน Code Block เดียว พร้อมคัดลอกไปวางใน Suno และส่งต่อไปทำปก/MV ทันที!`;
 
 /**
  * Build the Stage 3 Final Master Audit Prompt (Final Studio Singability, Catchy Hook & Deep Emotion Lock)
@@ -765,21 +797,22 @@ ${options.lyrics.trim()}
 ════════════════════════════════════════════════════
 
 # คำสั่งดำเนินการรอบสุดท้าย (Final Gold Master Action)
-จงสวมบทบาทโปรดิวเซอร์คุมร้องในห้องอัดและวิศวกรมาสเตอร์ริ่งเพลงฮิต (v125.0) นำเนื้อเพลงด้านบนมาทำการ **"จำลองร้องออกเสียงจริงในห้องอัด (Vocal Mouth-Feel Test)"** และขัดเกลารอบสุดท้ายตาม 6 ขั้นตอน เพื่อให้ได้เพลงที่:
-- **🚫 ไม่มีท่อน \`[Intro]\` และไม่มีท่อนพูด 100%** (เริ่มด้วย \`[Voice: ...]\` แล้วเข้า \`[Verse 1]\` ทันที)
+จงสวมบทบาทโปรดิวเซอร์คุมร้องในห้องอัดและวิศวกรมาสเตอร์ริ่งเพลงฮิต (v126.0) นำเนื้อเพลงด้านบนมาทำการ **"จำลองร้องออกเสียงจริงในห้องอัด (Vocal Mouth-Feel Test)"** และขัดเกลารอบสุดท้ายตาม 7 ขั้นตอน เพื่อให้ได้เพลงที่:
+- **🚫 ไม่มีท่อน \`[Intro]\`, ไม่มีท่อน \`[Solo]\` / \`Interlude\` และไม่มีท่อนพูด 100%** (เริ่มด้วย \`[Voice: ...]\` แล้วเข้า \`[Verse 1]\` ทันที)
+- **📏 ความยาวรวมทั้งเพลงใน Code Block (รวมแท็ก \`[...]\` และช่องว่างทั้งหมด) ต้องไม่เกิน 4,500 ตัวอักษร (ห้ามเกินขีดจำกัด 5,000/5,000 ของ Suno เด็ดขาด!)**
 - **🎵 ฟังลื่นหู ร้องเข้าปาก วรรณยุกต์ไม่เพี้ยนทำนอง สัมผัสลงตัวเป็นธรรมชาติ 100%**
 - **🔥 มีฮุคฮิตติดหู (7–10 พยางค์) ร้องตามได้ตั้งแต่ครั้งแรก**
 - **❤️ ความหมายดี เห็นภาพจริง กินใจเข้าถึงอารมณ์ และไร้คำกลอนลิเก/คำผสมเทียม 100%** ทันที!`;
   }
 
   // Follow-up in the same chat after Stage 2 Audit
-  return `# 👑 คำสั่งตรวจสอบและขัดเกลารอบสุดท้ายสู่ระดับ Gold Master เพลงฮิตติดหู (Stage 3: Studio Vocal Polish v125.0)
+  return `# 👑 คำสั่งตรวจสอบและขัดเกลารอบสุดท้ายสู่ระดับ Gold Master เพลงฮิตติดหู (Stage 3: Studio Vocal Polish v126.0)
 จากเนื้อเพลงฉบับที่คุณเพิ่งขัดเกลามาด้านบน บัดนี้จงสวมบทบาท **"โปรดิวเซอร์คุมร้องในห้องอัดเสียงระดับตำนาน (Chief Studio Vocal Producer & Gold Master Engineer)"** ทำการ **จำลองร้องจริงในห้องอัดและเก็บรายละเอียดรอบสุดท้าย** เพื่อความสมบูรณ์แบบ 100% ก่อนนำไปสร้างเพลงจริงใน Suno!
 ${storyContextBlock}${autoDiagnosisBlock}
-จงตรวจสอบและขัดเกลาขั้นสุดท้ายตาม 6 ข้อดังนี้:
+จงตรวจสอบและขัดเกลาขั้นสุดท้ายตาม 7 ข้อดังนี้:
 
-1. **[🚫 ยืนยัน 100%: ไม่มีท่อน \`[Intro]\` และไม่มีท่อนพูดแม้แต่คำเดียว]:**
-   - เช็กบรรทัดแรกต้องเป็น \`[Voice: ... No Spoken Word]\` และขึ้นตรงเข้า **\`[Verse 1: Brief 2-Bar Musical Pick-up...]\`** ทันที (ห้ามมี \`[Intro]\` และห้ามมี \`Spoken/Narration\`)
+1. **[🚫 ยืนยัน 100%: ไม่มีท่อน \`[Intro]\`, ไม่มีท่อน \`[Solo]\` และไม่มีท่อนพูดแม้แต่คำเดียว]:**
+   - เช็กบรรทัดแรกต้องเป็น \`[Voice: ... No Spoken]\` และขึ้นตรงเข้า **\`[Verse 1: 2-Bar Pick-up, Direct Melodic Entry]\`** ทันที (ห้ามมี \`[Intro]\`, ห้ามมี \`[Solo]\` / \`[Instrumental Solo]\` / \`[Interlude]\` และห้ามมี \`Spoken/Narration\`)
 
 2. **[🗣️ กวาดล้างคำฝืนสัมผัส & คำโบราณลิเกที่อาจหลงเหลือ 100%]:**
    - อ่านออกเสียงทุกบรรทัด! หากมีคำที่ฟังดูเหมือน AI ยัดมาเอาสัมผัส คำผสมเทียม หรือคำลิเกโบราณ (\`ลูกยา, วิญญาณ์, ชีวิน, อาจินต์, อุรา, มโนมั่น, แชเชือน, จิตตั้ง, หมายใจ...\`) **จงเปลี่ยนเป็นภาษาไทยร่วมสมัยที่กินใจและยังคงเสียงสัมผัสเดิมทันที!**
@@ -791,20 +824,23 @@ ${storyContextBlock}${autoDiagnosisBlock}
    - ยืนยันว่า **\`[Chorus 1]\`, \`[Chorus 2]\`, \`[Final Chorus]\`** สั้นคม 7–10 พยางค์ มี **Signature Earworm Hook 2–4 บรรทัด** กลับมาตอกย้ำซ้ำให้ติดหูสุดขีด พร้อมหมุดทองคำในตอนจบที่ขนลุก/ซึ้งกินใจที่สุด!
    - ยืนยันว่า \`Verse 1, 2\`, \`Pre-Chorus 1, 2\`, \`Bridge\`, \`Outro\` เล่าเรื่องก้าวหน้าด้วยภาพจำจริง (Show, Don't Tell) ไม่ซ้ำบรรทัดกันเลย
 
-5. **[✨ เช็กสัมผัสลงตัว & โครงสร้างเพลงฮิต 9 ท่อน (~54–56 บรรทัด)]:**
-   - ครบ 9 ท่อน: \`[Verse 1]\` (8) ➔ \`[Pre-Chorus 1]\` (4) ➔ \`[Chorus 1]\` (8) ➔ \`[Instrumental Solo Interlude]\` ➔ \`[Verse 2]\` (8) ➔ \`[Pre-Chorus 2]\` (4) ➔ \`[Chorus 2]\` (8) ➔ \`[Bridge]\` (4) ➔ \`[Final Chorus]\` (8) ➔ \`[Outro]\` (2–4) ➔ \`[End]\`
+5. **[✨ เช็กสัมผัสลงตัว & โครงสร้างเพลงฮิต 8 ท่อนต่อเนื่อง (~52–56 บรรทัด)]:**
+   - ครบ 8 ท่อนต่อเนื่องแบบไร้ Solo: \`[Verse 1]\` (8) ➔ \`[Pre-Chorus 1]\` (4) ➔ \`[Chorus 1]\` (8) ➔ \`[Verse 2]\` (8) ➔ \`[Pre-Chorus 2]\` (4) ➔ \`[Chorus 2]\` (8) ➔ \`[Bridge]\` (4) ➔ \`[Final Chorus]\` (8) ➔ \`[Outro]\` (2–4) ➔ \`[End]\`
    - ทุกคู่สัมผัสเชื่อมเนียนเป็นธรรมชาติ ไร้ความรู้สึกยัดเยียด
 
-6. **[🎛️ ล็อกความสะอาดกล่องตั้งค่า Suno v6 Gold Master]:**
+6. **[📏 เช็กโควต้าตัวอักษร Suno ไม่เกิน 4,500 / 5,000 ตัวอักษร]:**
+   - ยืนยันว่าข้อความทั้งหมดใน Code Block (รวมแท็ก \`[...]\`, เนื้อเพลง และช่องว่าง) **ยาวไม่เกิน 4,500 ตัวอักษร** เพื่อให้วางลง Suno (ขีดจำกัด 5,000/5,000) ได้สมบูรณ์ 100% โดยไม่โดนตัดคำ!
+
+7. **[🎛️ ล็อกความสะอาดกล่องตั้งค่า Suno v6 Gold Master]:**
    - \`Style of Music\` **< 120 ตัวอักษร** (มี \`catchy hook\` / \`catchy chorus\`, ไม่มี \`through-composed\`)
-   - \`Exclude Styles\` เป็น \`spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out\` (ไม่มี \`repeated chorus\`)
+   - \`Exclude Styles\` เป็น \`spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out\` (ไม่มี \`repeated chorus\`)
    - ไร้วงเล็บอธิบายแทรกในเนื้อร้อง ไร้คำเบิ้ลพยางค์ และปิดท้ายด้วย \`[End]\`
 
 ตอบกลับฉบับ **Final Gold Master** ครบ 4 ส่วนทันที:
-1. **รายงานผลการขัดเกลารอบสุดท้าย** (แบบ \`🔧 ก่อนเกลา ➔ ✨ หลังเกลา (Gold Master)\` + ยืนยันผลตรวจ 6 ด้าน)
+1. **รายงานผลการขัดเกลารอบสุดท้าย** (แบบ \`🔧 ก่อนเกลา ➔ ✨ หลังเกลา (Gold Master)\` + ยืนยันผลตรวจ 7 ด้านพร้อมนับตัวอักษรรวม)
 2. **พิมพ์เขียวเพลงฮิตฉบับสมบูรณ์สูงสุด** (ชื่อเพลง, ภาพจำหลัก, ประโยคฮุคจำหลัก & หมุดทองคำ, BPM & Key)
 3. **กล่องตั้งค่า Suno v6 - Mini** (\`Style of Music\` < 120 ตัวอักษร & \`Exclude Styles\`)
-4. **เนื้อเพลงฮิตฉบับ Gold Master (ไม่มี \`[Intro]\`)** ใน Code Block เดียว!`;
+4. **เนื้อเพลงฮิตฉบับ Gold Master (ไม่มี \`[Intro]\`, ไม่มี \`[Solo]\`, <= 4,500 ตัวอักษร)** ใน Code Block เดียว!`;
 }
 
 /**

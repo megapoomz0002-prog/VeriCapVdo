@@ -168,7 +168,7 @@ export default function SongStudio({ apiKey, onSendToMv }: SongStudioProps) {
   const extractExclude = (raw: string): string => {
     const m = raw.match(/Exclude Styles\)?[:\s*]+([^\n\r]+)/i);
     if (m && m[1]) return m[1].replace(/[*_]/g, "").trim();
-    return "spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out";
+    return "spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out";
   };
 
   const extractHook = (raw: string): string => {
@@ -237,17 +237,17 @@ export default function SongStudio({ apiKey, onSendToMv }: SongStudioProps) {
     "🔒 [สไตล์ร็อกเพื่อชีวิตร่วมสมัย] เสียงชายแหบเสน่ห์ทรงพลัง (Raspy Soul-Rock Anthem): กลองเบสแน่น กีตาร์โซโล่บาดใจ ฮุกระเบิดพลังเสียงเต็มปอด",
   ];
 
-  // 100% Sung Hit Outputs (v125.0: Zero Intro Section, Seamless Natural Rhyme & Flow, Catchy Earworm Hook, Show Don't Tell)
+  // 100% Sung Hit Outputs (v126.0: Zero Intro, Zero Solo, <= 4,500 Chars Suno Safe, Seamless Natural Rhyme & Flow, Catchy Earworm Hook)
   const sampleSongs = {
     tripartite: `ชื่อเพลง: รวงข้าวที่ไม่เคยอวดตน (Golden Grain in Silence)
 คำพาดหัวสะกิดใจ: กลองยิ่งกลวงยิ่งตีดัง... ทองแท้ไม่เคยต้องอวดใคร ให้เวลาและผลงานตอบแทนเอง 🌾
 ประโยคหมุดทองคำ: กลองยิ่งกลวงยิ่งตีให้ก้องกว้าง / ยิ่งได้ฟังยิ่งรู้ว่าข้างในว่าง / ทองคำแท้ไม่เคยต้องอวดคน / ยิ่งนานวันยิ่งเห็นค่าในตน
 Style of Music: Thai folk-soul meets boom-bap, fingerstyle guitar, warm piano, melodic male rap-singing, catchy hook, 84 bpm
-Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out
+Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out
 
-[Voice: Warm Soulful Male Baritone-Tenor, Smooth Melodic Rap-Folk Groove, Catchy Anthemic Chorus, No Spoken Word]
+[Voice: Warm Male Baritone-Tenor, Melodic Rap-Folk, Catchy Chorus, No Spoken]
 
-[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]
+[Verse 1: 2-Bar Pick-up, Direct Melodic Entry - No Intro, No Spoken]
 มองรวงข้าวสีทองกลางทุ่งนา, ยิ่งมีค่าเท่าไรยิ่งโน้มลง
 ผ่านแดดฝนพัดซัดอย่างมั่นคง, ไม่เคยอวดทรนงว่าเหนือใคร
 ต้นหญ้าข้างคันนาที่ว่างเปล่า, ชูยอดสูงท้าลมในฟ้าใส
@@ -273,9 +273,7 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 ให้ผลงานตอบแทนทุกคำถาม,
 ดีกว่าคำสวยงามแต่ไม่ทำตาม
 
-[Instrumental Solo Interlude: Expressive Acoustic & Clean Electric Guitar Solo - 4-8 Bars]
-
-[Verse 2: Deepening Story & Dynamic Melodic Groove, Smooth Internal & Tail Rhymes - No Spoken Word]
+[Verse 2: Deepening Story, Melodic Groove, Smooth Rhymes - No Spoken]
 เริ่มจากศูนย์ไม่มีทุนติดตัว, เดินฝ่าความมืดมัวเพียงลำพัง
 เสื้อตัวเก่าซักซ้ำจนสีจาง, ยังก้มหน้าสร้างทางด้วยความหวัง
 โดนดูถูกเหยียบซ้ำมานับครั้ง, เก็บเป็นแรงผลักดันไว้ข้างใน
@@ -317,7 +315,7 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 ให้เวลาเป็นเครื่องพิสูจน์งาน,
 คือตำนานที่งดงามตลอดกาล!
 
-[Outro: Gentle Lingering Melodic Echo & Soft Instrumental Fade - No Spoken Word]
+[Outro: Gentle Melodic Echo & Soft Fade Out - No Spoken]
 รวงข้าวโน้มลงดินอย่างอ่อนโยน,
 ทิ้งความดีไว้แทนเสียงตะโกน...
 
@@ -326,11 +324,11 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 คำพาดหัวสะกิดใจ: ซองเงินเดือนก้อนแรกพร้อมแล้ว... แต่เพิงไม้เก่าไม่มีพ่อรอรับ 💔
 ประโยคหมุดทองคำ: วันนี้ได้กอดพ่อเพียงแค่ในฝัน / เหลือแค่เสื้อเปื้อนเหงื่อที่ผูกพัน / ซองเงินเดือนก้อนแรกที่ตั้งใจมา / ทำได้เพียงวางไว้หน้ารูปพ่อทั้งน้ำตา
 Style of Music: Thai acoustic folk-soul, warm fingerstyle guitar, soft isan phin, emotional male vocal, catchy chorus, 78 bpm
-Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out
+Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out
 
-[Voice: Warm Soulful Male Baritone-Tenor, Deeply Emotional Storytelling, Catchy Heartfelt Chorus, No Spoken Word]
+[Voice: Warm Male Baritone-Tenor, Emotional Storytelling, Catchy Chorus, No Spoken]
 
-[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]
+[Verse 1: 2-Bar Pick-up, Direct Melodic Entry - No Intro, No Spoken]
 เสียงกบไสไม้ในเพิงเก่าเงียบลง, ตลับเมตรยังวางตรงข้างประตู
 เสื้อยืดตัวเก่าซักแขวนรอพ่ออยู่, มีกลิ่นไม้ที่ลูกคุ้นมาแสนนาน
 ฝ่ามือกร้านที่เคยจับมือลูกเดิน, แลกค่าเทอมด้วยรอยแผลในวันวาน
@@ -356,9 +354,7 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 ซองเงินเดือนก้อนแรกที่ลูกหอบมา,
 ทำได้เพียงวางไว้หน้ารูปพ่อทั้งน้ำตา!
 
-[Instrumental Solo Interlude: Emotional Acoustic Guitar & Soft Isan Phin Solo - 4-8 Bars]
-
-[Verse 2: Deepening Story & Dynamic Melodic Groove, Smooth Internal & Tail Rhymes - No Spoken Word]
+[Verse 2: Deepening Story, Melodic Groove, Smooth Rhymes - No Spoken]
 เปิดกล่องเครื่องมือที่พ่อรักนักหนา, หยิบสิ่วเก่าขึ้นมาลูบเบาด้วยมือสั่น
 รอยถากไม้ยังชัดเจนอยู่ทุกอัน, เหมือนคำสอนที่พ่อพูดอยู่ทุกวัน
 พ่อสร้างบ้านหลังงามให้คนอื่นอยู่, แต่เพิงเรากลับมีรอยรั่วมาเนิ่นนาน
@@ -400,7 +396,7 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 ส่งรักขึ้นไปหาพ่อบนฟากฟ้า,
 หลับให้สบายเถิดพ่อ... ลูกดูแลตัวเองได้แล้วนะ!
 
-[Outro: Gentle Lingering Melodic Echo & Soft Instrumental Fade - No Spoken Word]
+[Outro: Gentle Melodic Echo & Soft Fade Out - No Spoken]
 หลับให้สบายนะพ่อในคืนนี้,
 คำสอนพ่อจะอยู่กับลูกชั่วนิรันดร์...
 
@@ -409,11 +405,11 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 คำพาดหัวสะกิดใจ: แค่รอยยิ้มข้างโต๊ะกาแฟวันฝนตก... โลกที่เคยเหงาก็อุ่นขึ้นมาทันที ☕✨
 ประโยคหมุดทองคำ: ขอบคุณสายฝนที่พาเธอเดินเข้ามา / เติมความอุ่นในวันที่โลกเย็นชา / แค่ได้มองตากันก็เข้าใจ / เธอคือแสงเช้าในใจตลอดไป
 Style of Music: Thai warm acoustic pop-soul, nylon guitar, mellow piano, smooth warm male vocal, catchy chorus, 80 bpm
-Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out
+Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out
 
-[Voice: Smooth Warm Male Pop-Soul Vocal, Intimate Acoustic Groove, Catchy Sweet Chorus, No Spoken Word]
+[Voice: Smooth Warm Male Pop-Soul, Acoustic Groove, Catchy Chorus, No Spoken]
 
-[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]
+[Verse 1: 2-Bar Pick-up, Direct Melodic Entry - No Intro, No Spoken]
 กาแฟร้อนวางอยู่ข้างหน้าต่างใส, เม็ดฝนเย็นร่วงลงมาไม่ขาดสาย
 ผู้คนเดินกางร่มผ่านไปมากมาย, มีเพียงฉันนั่งมองฟ้าอย่างเดียวดาย
 จนเสียงกระดิ่งหน้าประตูดังเบา, เธอสะบัดร่มคันเล็กเดินเข้ามา
@@ -439,9 +435,7 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 โลกจะหมุนเปลี่ยนผันสักเท่าไร,
 แค่มีเธอก็อุ่นใจทุกเวลา!
 
-[Instrumental Solo Interlude: Sweet Acoustic Nylon Guitar & Soft Piano Melody - 4-8 Bars]
-
-[Verse 2: Deepening Story & Dynamic Melodic Groove, Smooth Internal & Tail Rhymes - No Spoken Word]
+[Verse 2: Deepening Story, Melodic Groove, Smooth Rhymes - No Spoken]
 จากวันนั้นเราก็มักเจอกันบ่อย, เก้าอี้เดิมโต๊ะไม้ตัวข้างกระจก
 เล่าเรื่องเล็กน้อยให้กันฟังไม่ตลก, แค่เธอหัวเราะโลกทั้งใบก็สดใส
 วันไหนงานหนักจนฉันเกือบหมดแรง, เธอไม่ถามมากแค่จับมือกันไว้
@@ -483,7 +477,7 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 อยู่ด้วยกันไปจนวันผมเปลี่ยนสี,
 รักเธอแบบนี้ไม่มีวันเปลี่ยนแปลง!
 
-[Outro: Gentle Lingering Melodic Echo & Soft Instrumental Fade - No Spoken Word]
+[Outro: Gentle Melodic Echo & Soft Fade Out - No Spoken]
 แสงแดดอ่อนส่องลงกลางสายฝนพรำ,
 ตั้งแต่มีเธออยู่ข้างกันก็อุ่นใจ...
 
@@ -492,11 +486,11 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 คำพาดหัวสะกิดใจ: ฝนตกทีไรก็แอบคิดถึงเธอ... ไม่โกรธเลยสักนิด แค่ขอให้เธอมีความสุข 🌧️
 ประโยคหมุดทองคำ: คืนฝนพรำตรงหน้าต่างที่ไร้เธอ / ใจยังเผลอคิดถึงอยู่เสมอ / ขอให้ทางเดินใหม่มีแต่คนใจดี / ฝนซาเมื่อไรขอให้เธอยิ้มสักที
 Style of Music: Melancholic Thai city pop-soul, vintage rhodes piano, smooth rainy groove, warm male vocal, catchy hook, 78 bpm
-Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out
+Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out
 
-[Voice: Warm Melancholic Male Vocal, Intimate Rhodes Groove, Catchy Emotional Chorus, No Spoken Word]
+[Voice: Warm Melancholic Male, Rhodes Groove, Catchy Chorus, No Spoken]
 
-[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]
+[Verse 1: 2-Bar Pick-up, Direct Melodic Entry - No Intro, No Spoken]
 แสงไฟนีออนสะท้อนบนกระจกเปียก, เสียงเม็ดฝนเคาะหน้าต่างยามดึกดื่น
 ร่มคันเดิมยังวางพิงข้างประตูยืน, เหมือนรอคนที่เคยเดินกลับพร้อมกัน
 ถนนข้างล่างรถวิ่งผ่านเชื่องช้า, น้ำขังสะท้อนแสงเมืองที่แสนเงียบงัน
@@ -522,9 +516,7 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 ต่อให้วันนี้เราไม่ได้เดินร่วมทาง,
 แค่เธอปลอดภัยฉันก็สบายใจแล้ว!
 
-[Instrumental Solo Interlude: Moody Vintage Rhodes Piano & Clean Guitar Solo - 4-8 Bars]
-
-[Verse 2: Deepening Story & Dynamic Melodic Groove, Smooth Internal & Tail Rhymes - No Spoken Word]
+[Verse 2: Deepening Story, Melodic Groove, Smooth Rhymes - No Spoken]
 เลื่อนดูรูปเก่าในมือถือเพียงลำพัง, ยังจำได้ทุกมุมร้านที่เราเคยไป
 ข้อความสุดท้ายไม่ได้ลบออกจากใจ, เก็บไว้เตือนว่าครั้งหนึ่งเคยรักมากเพียงใด
 เมืองใหญ่ยามค่ำผู้คนต่างรีบเร่ง, ซ่อนความเหนื่อยล้าไว้ใต้ร่มคนละคัน
@@ -566,7 +558,7 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 ขอให้โชคดีนะคนเคยร่วมทาง,
 รักและหวังดีเสมอแม้ฝนซาแล้ว...
 
-[Outro: Gentle Lingering Melodic Echo & Soft Instrumental Fade - No Spoken Word]
+[Outro: Gentle Melodic Echo & Soft Fade Out - No Spoken]
 คืนฝนพรำผ่านพ้นไปในราตรี,
 โชคดีนะ... จากคนที่ยังหวังดีเสมอ...
 
@@ -575,11 +567,11 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 คำพาดหัวสะกิดใจ: ล้มกี่ครั้งก็ไม่ถอย... ปลายนิ้วที่ด้านชาจากสายกีตาร์ จะพาเราไปยืนบนเวทีจริง ⚡🎸
 ประโยคหมุดทองคำ: ต่อให้ล้มสักร้อยครั้งก็จะลุกขึ้นยืน / ต่อให้มืดทั้งคืนก็จะฝืนเดินไป / เลือดนักสู้ยังเต้นแรงอยู่ในหัวใจ / ไม่ถึงเส้นชัยไม่มีวันถอยกลับ!
 Style of Music: Thai modern folk-rock anthem, driving electric guitars, punchy drums, raspy male rock vocal, catchy chorus, 88 bpm
-Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, vocal stutter, robotic vocal, monotone, early fade out
+Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, poetry reading, unpitched voice, spoken intro, long instrumental intro, guitar solo, instrumental solo, instrumental interlude, vocal stutter, robotic vocal, monotone, early fade out
 
-[Voice: Raspy Emotional Male Rock Vocal, 100% Pitched Melodic Verse, Soaring Catchy Power Chorus, No Spoken Word]
+[Voice: Raspy Emotional Male Rock, Pitched Melodic, Power Chorus, No Spoken]
 
-[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]
+[Verse 1: 2-Bar Pick-up, Direct Melodic Entry - No Intro, No Spoken]
 ห้องเช่าห้องเล็กกับกีตาร์ตัวเก่า, ซ้อมจนสายขาดและปลายนิ้วด้านชา
 เล่นหน้าเวทีที่ไร้คนเงยหน้ามอง, แลกค่าแรงน้อยนิดพอประทังเวลา
 เสียงหัวเราะเยาะจากคนที่ไม่เข้าใจ, ถามว่าเมื่อไรจะตื่นจากความฝัน
@@ -605,9 +597,7 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 เกิดมาหนึ่งครั้งขอเดิมพันด้วยฝัน,
 จนกว่าจะถึงวันที่ฟ้าเป็นของเรา!
 
-[Instrumental Solo Interlude: Soaring Overdriven Electric Guitar Solo & Driving Drum Fill - 4-8 Bars]
-
-[Verse 2: Deepening Story & Dynamic Melodic Groove, Smooth Internal & Tail Rhymes - No Spoken Word]
+[Verse 2: Deepening Story, Melodic Groove, Smooth Rhymes - No Spoken]
 จำคืนฝนตกต้องนั่งกินบะหมี่ถ้วย, นั่งปรับเสียงร้องอยู่ข้างหน้าต่างบานเดิม
 บอกกับตัวเองว่าอย่าเพิ่งท้อเลยนะ, พรุ่งนี้อาจเป็นวันของเราเริ่มต้นใหม่
 เพื่อนร่วมวงที่กอดคอสู้ข้างกัน, แบ่งกันกินแบ่งกันฝันไม่เคยทิ้งหนี
@@ -649,7 +639,7 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
 สองมือของฉันคว้าดาวมาด้วยหัวใจ,
 และนี่คือชัยชนะของคนไม่ยอมแพ้!
 
-[Outro: Gentle Lingering Melodic Echo & Soft Instrumental Fade - No Spoken Word]
+[Outro: Gentle Melodic Echo & Soft Fade Out - No Spoken]
 เดินหน้าต่อไป... อย่าหยุดฝัน,
 ปลายทางรอคนที่ไม่ยอมแพ้อยู่เสมอ!
 
@@ -695,10 +685,14 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
     });
   }, [outputResult, story, vocalStyle]);
 
-  // Live Hit Song Quality, Zero-Intro, Zero-Spoken & Natural Thai Scanner (v125.0)
+  // Live Hit Song Quality, Zero-Intro, Zero-Solo, Suno <= 5,000 Chars & Natural Thai Scanner (v126.0)
   const lyricAuditSummary = useMemo(() => {
     const rawLyrics = extractLyrics(outputResult);
     if (!rawLyrics) return null;
+
+    const charCount = rawLyrics.length;
+    const isWithinSunoLimit = charCount <= 5000;
+    const isSafeUnderSunoLimit = charCount <= 4500;
 
     const rawLines = rawLyrics.split(/\r?\n/).map((l) => l.trim());
     const lines: string[] = [];
@@ -710,7 +704,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
       if (line.startsWith("[")) {
         if (/^\[(Final\s+)?Chorus\b/i.test(line) && !/Pre-Chorus/i.test(line)) {
           inChorus = true;
-        } else if (/^\[(Verse|Pre-Chorus|Bridge|Outro|Intro|Instrumental|Beat\s+Switch|Transition|End)/i.test(line)) {
+        } else if (/^\[(Verse|Pre-Chorus|Bridge|Outro|Intro|Instrumental|Solo|Interlude|Beat\s+Switch|Transition|End)/i.test(line)) {
           inChorus = false;
         }
         continue;
@@ -723,6 +717,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
 
     const chorusCount = (rawLyrics.match(/\[(Final\s+)?Chorus/gi) || []).length;
     const hasIntroTag = /^\[Intro\b[^\]]*\]/im.test(rawLyrics);
+    const hasSoloTag = /^\[[^\]]*\b(?:solo|interlude|instrumental\s+break)\b[^\]]*\]/im.test(rawLyrics);
     const breathPocketLines = lines.filter((l) => l.includes(",") || l.includes(" ")).length;
     const breathRatio = lines.length > 0 ? Math.round((breathPocketLines / lines.length) * 100) : 100;
 
@@ -741,8 +736,8 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
     // Spoken word tag check
     const spokenMatches = rawLyrics.match(/\[(Spoken|Narration|Monologue|Talking|Speech|Dialogue|พูด|บทพูด)[^\]]*\]/gi) || [];
 
-    // Estimated duration in minutes:seconds (~3.7s per line + ~22s solo interlude & transitions)
-    const estTotalSec = Math.round(lines.length * 3.7 + (lines.length >= 40 ? 22 : 10));
+    // Estimated duration in minutes:seconds (~3.7s per line + ~12s smooth transitions, no solo interlude)
+    const estTotalSec = Math.round(lines.length * 3.7 + (lines.length >= 40 ? 12 : 8));
     const estMin = Math.floor(estTotalSec / 60);
     const estSec = (estTotalSec % 60).toString().padStart(2, "0");
     const estDurationStr = `${estMin}:${estSec} นาที`;
@@ -756,9 +751,13 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
 
     return {
       totalLines: lines.length,
+      charCount,
+      isWithinSunoLimit,
+      isSafeUnderSunoLimit,
       estDurationStr,
       isOptimalLength: lines.length >= 44,
       hasIntroTag,
+      hasSoloTag,
       chorusCount,
       breathRatio,
       duplicateLineCount,
@@ -769,6 +768,8 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
       weirdCount: weirdPhrases.length,
       isClean:
         !hasIntroTag &&
+        !hasSoloTag &&
+        isWithinSunoLimit &&
         redupMatches.length === 0 &&
         bracketClutter.length === 0 &&
         weirdPhrases.length === 0 &&
@@ -777,20 +778,22 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
     };
   }, [outputResult, story]);
 
-  // 1-Click Auto-Clean & Polish Lyrics for Suno (Also cleans Intro tag, spoken tags, archaic clichés & double syllables!)
+  // 1-Click Auto-Clean & Polish Lyrics for Suno (Cleans Intro, Solo/Interlude tags, spoken tags, archaic clichés & double syllables!)
   const handleAutoCleanLyrics = () => {
     if (!outputResult) return;
     let cleaned = outputResult
       .replace(/\((?:สัมผัส|เสียง|หมายเหตุ|ไรม์)[^)]*\)/gi, "")
       .replace(/\[(เสียง|สัมผัส):[^\]]*\]/gi, "")
-      .replace(/\[(Spoken|Narration|Monologue|Talking|Speech|Dialogue)[^\]]*\]/gi, "[Verse: 100% Sung Melodic Vocal - No Spoken Word]");
+      .replace(/\[(Spoken|Narration|Monologue|Talking|Speech|Dialogue)[^\]]*\]/gi, "[Verse: 100% Sung Melodic Vocal - No Spoken]")
+      .replace(/^[ \t]*\[[^\]]*\b(?:solo|interlude|instrumental\s+break)\b[^\]]*\][ \t]*\r?\n?/gim, "")
+      .replace(/Soft Instrumental Fade(?:\s*Out)?/gi, "Soft Fade Out");
 
     if (/\[Verse\s*1\b/i.test(cleaned)) {
       cleaned = cleaned.replace(/^[ \t]*\[Intro\b[^\]]*\][ \t]*\r?\n?/gim, "");
     } else {
       cleaned = cleaned.replace(
         /^\[Intro\b[^\]]*\]/gim,
-        "[Verse 1: Brief 2-Bar Musical Pick-up, Direct Intimate Melodic Storytelling - No Intro, No Spoken Word]"
+        "[Verse 1: 2-Bar Pick-up, Direct Melodic Entry - No Intro, No Spoken]"
       );
     }
 
@@ -827,7 +830,8 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
       .replace(/ค่อยค่อย/g, "เริ่มจะ")
       .replace(/บางบาง/g, "อ่อนโยน")
       .replace(/เงียบเงียบ/g, "ลำพัง")
-      .replace(/เปล่าเปล่า/g, "เพียงลำพัง");
+      .replace(/เปล่าเปล่า/g, "เพียงลำพัง")
+      .replace(/(\r?\n){3,}/g, "\n\n");
     setOutputResult(cleaned);
   };
 
@@ -875,13 +879,16 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                   <span>Suno v6 - Mini Optimized</span>
                 </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                  🚫 NO INTRO & ZERO SPOKEN WORD
+                  🚫 NO INTRO • NO SOLO • ZERO SPOKEN
+                </span>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                  📏 Suno &lt;= 4,500 / 5,000 ตัวอักษร
                 </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                   🔥 CATCHY EARWORM HOOK (ฮิตติดหู)
                 </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                  🎵 ฟังลื่นหู & สัมผัสลงตัว
+                  🎵 ฟังลื่นหู &amp; สัมผัสลงตัว
                 </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center space-x-1">
                   <Sparkles className="w-3 h-3 text-purple-300" />
@@ -889,14 +896,14 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-fuchsia-500/20 text-amber-200 border border-amber-500/40 flex items-center space-x-1">
                   <Sparkles className="w-3 h-3 text-amber-300" />
-                  <span>❤️ ความหมายดีเข้าถึงอารมณ์ (v125.0)</span>
+                  <span>❤️ ความหมายดีเข้าถึงอารมณ์ (v126.0)</span>
                 </span>
               </div>
               <h2 className="text-lg font-bold text-white mt-1.5">
-                ระบบสกัดพรอพแต่งเพลงฮิตติดหู ฟังลื่นหู กินใจ (SD PMR × P9D × NS-A755 Refined v125.0)
+                ระบบสกัดพรอพแต่งเพลงฮิตติดหู ฟังลื่นหู กินใจ (SD PMR × P9D × NS-A755 Refined v126.0)
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
-                <strong>เอาท่อน [Intro] ออก 100% เปิดเข้า [Verse 1] ทันที</strong> • <strong>ไร้ท่อนพูด 100%</strong> • <strong>สร้างประโยคฮุคจำหลัก (Signature Earworm Hook) ฮิตติดหู</strong> + <strong>ฟังลื่นหู สัมผัสลงตัวไม่ฝืนคำ</strong> + <strong>เล่าเรื่องด้วยภาพจำจริง (Show, Don&apos;t Tell) เข้าถึงอารมณ์คนฟัง!</strong>
+                <strong>เอาท่อน [Intro] และท่อน [Solo] ออก 100% เปิดเข้า [Verse 1] ทันที</strong> • <strong>คุมความยาวไม่เกิน 4,500 / 5,000 ตัวอักษรใน Suno</strong> • <strong>สร้างฮุคจำหลักติดหู</strong> + <strong>ฟังลื่นหู สัมผัสลงตัว</strong> + <strong>ความหมายดีเข้าถึงอารมณ์ (Show, Don&apos;t Tell)</strong>
               </p>
             </div>
           </div>
@@ -1328,14 +1335,14 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               <div className="flex items-center space-x-2">
                 <FileCode className="w-4 h-4 text-fuchsia-400" />
                 <h3 className="text-sm font-bold text-white">
-                  ระบบสายพาน 3 ขั้นตอน (v125.0 ไม่มี Intro • ลื่นหู • สัมผัสลงตัว • ฮิตติดหู)
+                  ระบบสายพาน 3 ขั้นตอน (v126.0 ไม่มี Intro • ไม่มี Solo • &lt;= 5,000 ตัวอักษร • ลื่นหู • ฮิตติดหู)
                 </h3>
               </div>
               <div className="flex flex-wrap items-center gap-1.5">
                 <button
                   onClick={handleCopyPrompt}
                   className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs bg-fuchsia-600/30 hover:bg-fuchsia-600 text-fuchsia-200 hover:text-white border border-fuchsia-500/40 transition-all font-semibold"
-                  title="ขั้นที่ 1: คัดลอกพรอมต์แต่งเพลงฮิต (ไม่มีท่อน Intro, ฟังลื่นหู, สัมผัสลงตัว, ฮุคติดหู & กินใจ)"
+                  title="ขั้นที่ 1: คัดลอกพรอมต์แต่งเพลงฮิต (ไม่มี Intro/Solo, <= 4,500 ตัวอักษร, ฟังลื่นหู, สัมผัสลงตัว, ฮุคติดหู & กินใจ)"
                 >
                   {copiedFullPrompt ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedFullPrompt ? "คัดลอกขั้นที่ 1 แล้ว!" : "1. พรอมต์แต่งเพลง"}</span>
@@ -1343,7 +1350,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 <button
                   onClick={handleCopyAuditPrompt}
                   className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs bg-amber-600/30 hover:bg-amber-600 text-amber-200 hover:text-white border border-amber-500/40 transition-all font-semibold"
-                  title="ขั้นที่ 2: คัดลอกพรอมต์ผ่าตัดรอบแรก (เอา Intro/ท่อนพูดออก, เกลาคำลื่นหู, ปั้นฮุคติดหู & สัมผัสลงตัว)"
+                  title="ขั้นที่ 2: คัดลอกพรอมต์ผ่าตัดรอบแรก (เอา Intro/Solo/ท่อนพูดออก, คุม <= 4,500 ตัวอักษร, เกลาคำลื่นหู & ปั้นฮุคติดหู)"
                 >
                   {copiedAuditPrompt ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Wand2 className="w-3.5 h-3.5 text-amber-300" />}
                   <span>{copiedAuditPrompt ? "คัดลอกรอบแรกแล้ว!" : "2. พรอมต์ตรวจสอบรอบแรก"}</span>
@@ -1351,7 +1358,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 <button
                   onClick={handleCopyFinalAuditPrompt}
                   className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 hover:text-white border border-emerald-500/40 transition-all font-semibold"
-                  title="ขั้นที่ 3: คัดลอกพรอมต์ขัดเกลารอบสุดท้าย (จำลองร้องจริงในห้องอัด, วรรณยุกต์เข้าปาก & Gold Master)"
+                  title="ขั้นที่ 3: คัดลอกพรอมต์ขัดเกลารอบสุดท้าย (จำลองร้องจริง, คุม <= 4,500/5,000 ตัวอักษร & Gold Master)"
                 >
                   {copiedFinalAuditPrompt ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />}
                   <span>{copiedFinalAuditPrompt ? "คัดลอกรอบสุดท้ายแล้ว!" : "3. พรอมต์ตรวจสอบรอบสุดท้าย"}</span>
@@ -1360,7 +1367,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed">
-              แม่แบบเพลงฮิตติดชาร์ต <strong>(9 ท่อน ~54–56 บรรทัด / 3:20–4:10 นาที v125.0)</strong>: <strong>เอาท่อน [Intro] ออก 100% เปิดเข้า [Verse 1] ทันที</strong> • <strong>ไร้ท่อนพูด</strong> • <strong>ฟังลื่นหู สัมผัสลงตัว &amp; วรรณยุกต์เข้าปาก</strong> • <strong>มีฮุคจำติดหู (Earworm Hook)</strong> • <strong>ความหมายดีเข้าถึงอารมณ์ (Show, Don&apos;t Tell)</strong>:
+              แม่แบบเพลงฮิตติดชาร์ต <strong>(8 ท่อนต่อเนื่อง ~52–56 บรรทัด / 3:00–3:50 นาที v126.0)</strong>: <strong>เอาท่อน [Intro] และท่อน [Solo] ออก 100% เปิดเข้า [Verse 1] ทันที</strong> • <strong>คุมขนาดรวมทั้งเพลง &lt;= 4,500 ตัวอักษร (ห้ามเกิน 5,000/5,000 ใน Suno)</strong> • <strong>ฟังลื่นหู สัมผัสลงตัว &amp; ฮุคจำติดหู</strong> • <strong>ความหมายดีเข้าถึงอารมณ์</strong>:
             </p>
 
             {/* Scrollable Live Code Preview */}
@@ -1418,13 +1425,13 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-amber-200 flex items-center space-x-1.5">
-                      <span>🔍 ระบบตรวจสอบ 2 ด่าน (รอบแรก: เอา Intro ออก, ปั้นฮุคติดหู &amp; ลื่นหู ➔ รอบสุดท้าย: จำลองร้องในห้องอัด, วรรณยุกต์เข้าปาก 100%)</span>
+                      <span>🔍 ระบบตรวจสอบ 2 ด่าน (รอบแรก: เอา Intro/Solo ออก, คุม &lt;= 4,500 ตัวอักษร &amp; ปั้นฮุค ➔ รอบสุดท้าย: จำลองร้องในห้องอัด, เข้าปาก 100%)</span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
-                        v125.0 3-Stage
+                        v126.0 3-Stage
                       </span>
                     </h4>
                     <p className="text-[11px] text-slate-300">
-                      แยกภารกิจชัดเจนเพื่อให้เพลงสมบูรณ์ที่สุด: <strong>ตรวจสอบรอบแรก</strong> (เอา [Intro]/ท่อนพูดออก ปั้นฮุคฮิตติดหู สัมผัสลงตัว &amp; ภาพจำกินใจ) ➔ <strong>ตรวจสอบรอบสุดท้าย</strong> (จำลองร้องออกเสียงจริง วรรณยุกต์ลงตัว ร้องเข้าปาก &amp; ล็อก Gold Master!)
+                      แยกภารกิจชัดเจนเพื่อให้เพลงสมบูรณ์ที่สุด: <strong>ตรวจสอบรอบแรก</strong> (เอา [Intro]/[Solo]/ท่อนพูดออก คุม &lt;= 4,500/5,000 ตัวอักษร ปั้นฮุคฮิตติดหู &amp; สัมผัสลงตัว) ➔ <strong>ตรวจสอบรอบสุดท้าย</strong> (จำลองร้องออกเสียงจริง วรรณยุกต์ลงตัว ร้องเข้าปาก &amp; ล็อก Gold Master!)
                     </p>
                   </div>
                 </div>
@@ -1442,8 +1449,8 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               <div className="flex flex-wrap items-center gap-1.5 text-[10px] pt-0.5">
                 <span className="text-slate-400 font-semibold">โหมดเน้นพิเศษ (รอบแรก):</span>
                 {[
-                  { id: 'all', label: '🎯 ครบทุกมิติ (ไม่มี Intro • ลื่นหู • ฮุคติดหู • กินใจ)' },
-                  { id: 'antirepeat', label: '🔥 เอา Intro/พูดออก & ปั้นฮุคติดหู' },
+                  { id: 'all', label: '🎯 ครบทุกมิติ (ไม่มี Intro/Solo • <=5,000 • ลื่นหู • ฮุคติดหู)' },
+                  { id: 'antirepeat', label: '🔥 เอา Intro/Solo/พูดออก & ปั้นฮุคติดหู' },
                   { id: 'natural', label: '❤️ ภาษาธรรมชาติ & ภาพจำ Show Don’t Tell' },
                   { id: 'rhyme', label: '✨ สัมผัสลงตัว ลื่นไหลไม่ฝืนคำ' },
                   { id: 'flow', label: '🎵 ไดนามิกพยางค์ & วรรณยุกต์เข้าปาก' },
@@ -1467,9 +1474,9 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               <div className="p-3 rounded-xl bg-slate-950/70 border border-amber-500/30 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-amber-300">
-                    🛠️ ด่านที่ 1 (ขั้นที่ 2): พรอมต์ผ่าตัดรอบแรก — เอา Intro/พูดออก, ปั้นฮุคติดหู, เกลาสัมผัสลงตัว &amp; ภาพจำกินใจ
+                    🛠️ ด่านที่ 1 (ขั้นที่ 2): พรอมต์ผ่าตัดรอบแรก — เอา Intro/Solo/พูดออก, คุม &lt;= 4,500 ตัวอักษร, ปั้นฮุคติดหู &amp; สัมผัสลงตัว
                   </span>
-                  <span className="text-[10px] text-amber-400/80 font-mono">Stage 2: Zero-Intro &amp; Hit Hook Surgery</span>
+                  <span className="text-[10px] text-amber-400/80 font-mono">Stage 2: Zero-Intro, Zero-Solo &amp; Hit Surgery</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button
@@ -1609,7 +1616,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                       <div className="flex items-center space-x-2">
                         <ShieldCheck className="w-4 h-4 text-emerald-400" />
                         <span className="text-xs font-bold text-slate-200">
-                          ผลชันสูตรคุณภาพเพลงฮิต (ไม่มี Intro • ไร้ท่อนพูด • ลื่นหู • ฮุคติดหู v125.0):
+                          ผลชันสูตรคุณภาพเพลงฮิต (ไม่มี Intro • ไม่มี Solo • &lt;= 5,000 ตัวอักษร Suno v126.0):
                         </span>
                       </div>
                       {!lyricAuditSummary.isClean && (
@@ -1619,12 +1626,26 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                           className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 hover:text-white border border-emerald-500/40 transition-all flex items-center space-x-1"
                         >
                           <Sparkles className="w-3 h-3" />
-                          <span>✨ คลีน Intro, คำแปลก &amp; แท็กพูดอัตโนมัติ (1-Click Clean)</span>
+                          <span>✨ คลีน Intro, Solo &amp; คำแปลกอัตโนมัติ (1-Click Clean)</span>
                         </button>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px]">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-[11px]">
+                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80">
+                        <span className="text-slate-400 block text-[10px]">โควต้า Suno (&lt;= 5,000)</span>
+                        <span
+                          className={`font-bold ${
+                            !lyricAuditSummary.isWithinSunoLimit
+                              ? 'text-rose-400'
+                              : lyricAuditSummary.isSafeUnderSunoLimit
+                              ? 'text-emerald-400'
+                              : 'text-amber-300'
+                          }`}
+                        >
+                          {lyricAuditSummary.charCount.toLocaleString()} / 5,000 {!lyricAuditSummary.isWithinSunoLimit ? '🚨 เกิน!' : ''}
+                        </span>
+                      </div>
                       <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80">
                         <span className="text-slate-400 block text-[10px]">ความยาวเพลงฮิต</span>
                         <span className={`font-bold ${lyricAuditSummary.isOptimalLength ? 'text-emerald-400' : 'text-amber-300'}`}>
@@ -1632,11 +1653,11 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                         </span>
                       </div>
                       <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80">
-                        <span className="text-slate-400 block text-[10px]">ท่อน Intro &amp; พูด</span>
-                        <span className={`font-bold ${!lyricAuditSummary.hasIntroTag && lyricAuditSummary.spokenCount === 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {!lyricAuditSummary.hasIntroTag && lyricAuditSummary.spokenCount === 0
-                            ? '✅ ไม่มี Intro/พูด 100%'
-                            : `🚨 พบ ${lyricAuditSummary.hasIntroTag ? 'Intro ' : ''}${lyricAuditSummary.spokenCount > 0 ? `พูด(${lyricAuditSummary.spokenCount})` : ''}`}
+                        <span className="text-slate-400 block text-[10px]">Intro / Solo &amp; พูด</span>
+                        <span className={`font-bold ${!lyricAuditSummary.hasIntroTag && !lyricAuditSummary.hasSoloTag && lyricAuditSummary.spokenCount === 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {!lyricAuditSummary.hasIntroTag && !lyricAuditSummary.hasSoloTag && lyricAuditSummary.spokenCount === 0
+                            ? '✅ ไร้ Intro/Solo 100%'
+                            : `🚨 พบ ${lyricAuditSummary.hasIntroTag ? 'Intro ' : ''}${lyricAuditSummary.hasSoloTag ? 'Solo ' : ''}${lyricAuditSummary.spokenCount > 0 ? `พูด(${lyricAuditSummary.spokenCount})` : ''}`}
                         </span>
                       </div>
                       <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80">
@@ -1654,7 +1675,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                         </span>
                       </div>
                       <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80">
-                        <span className="text-slate-400 block text-[10px]">คำแปลก/ภาษาลิเก</span>
+                        <span className="text-slate-400 block text-[10px]">คำแปลก/ข้อสังเกต</span>
                         <span className={`font-bold ${lyricAuditSummary.weirdCount === 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {lyricAuditSummary.weirdCount === 0
                             ? '✅ ธรรมชาติ 100%'
@@ -1684,7 +1705,13 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     }}
                     className="p-2.5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-fuchsia-500/50 rounded-xl text-left transition-all group"
                   >
-                    <span className="text-[10px] text-slate-400 block uppercase font-mono">1. เนื้อเพลง Suno Mini</span>
+                    <span
+                      className={`text-[10px] block uppercase font-mono ${
+                        lyricAuditSummary && !lyricAuditSummary.isWithinSunoLimit ? 'text-rose-400 font-bold' : 'text-slate-400'
+                      }`}
+                    >
+                      1. เนื้อเพลง Suno ({lyricAuditSummary ? `${lyricAuditSummary.charCount.toLocaleString()}/5,000` : '0/5,000'})
+                    </span>
                     <span className="text-xs font-bold text-white flex items-center space-x-1 mt-0.5">
                       {copiedLyricsOnly ? (
                         <Check className="w-3.5 h-3.5 text-emerald-400" />
@@ -1793,7 +1820,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               /* If empty: Quick Preset Tester buttons */
               <div className="pt-2 border-t border-slate-800/80 space-y-2">
                 <span className="text-[11px] font-bold text-slate-400 block text-center">
-                  หรือคลิกเลือกตัวอย่างเพลงสำเร็จรูป (ไม่มี Intro • ฟังลื่นหู • ฮิตติดหู • กินใจ) เพื่อทดสอบทันที:
+                  หรือคลิกเลือกตัวอย่างเพลงสำเร็จรูป (ไม่มี Intro • ไม่มี Solo • &lt;= 5,000 ตัวอักษร • ฮิตติดหู) เพื่อทดสอบทันที:
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                   <button
