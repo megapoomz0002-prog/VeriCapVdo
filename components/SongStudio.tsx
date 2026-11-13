@@ -47,14 +47,14 @@ export default function SongStudio({ apiKey, onSendToMv }: SongStudioProps) {
     "เรื่องราวของคนสู้ชีวิตที่ผ่านความยากลำบาก เปรียบดั่งรวงข้าวที่ยิ่งมีค่ายิ่งโน้มตัวลงหาดิน ไม่โอ้อวดตน ยืนหยัดด้วยความจริงใจและความดีจนประสบความสำเร็จ"
   );
   const [vocalStyle, setVocalStyle] = useState(
-    "🔒 ล็อกเสียงร้องโฟลว์ลื่นหูติดชาร์ต (Catchy Melodic Rap-Soul Flow): เสียงผู้ชายอบอุ่นทุ้มลึก ร้องควบแร็ปเมโลดี้สับไรม์คล้องเสียงเด้งรับบีท ท่อนฮุกร้องเมโลดี้จำขึ้นใจ ลื่นหู ไม่บาดหู"
+    "AUTO — ให้ AI วิเคราะห์เลือกเพศ เสียงร้อง และสไตล์ดนตรีที่เข้ากับเรื่องราวนี้ที่สุดโดยอัตโนมัติ"
   );
-  const [mood, setMood] = useState("บีทเด้งฟังสนุก โฟลว์สัมผัสคล้องเสียงลื่นหู ความหมายลึกซึ้งกินใจ ฮิตติดหูฟังวนซ้ำได้เรื่อยๆ ไม่เบื่อ");
+  const [mood, setMood] = useState("AUTO");
   const [tempo, setTempo] = useState("AUTO");
   const [key, setKey] = useState("AUTO");
   const [isAutoMusical, setIsAutoMusical] = useState(true);
-  const [flowStyle, setFlowStyle] = useState<'trinity' | 'sdpmr-folk' | 'p9d-boombap'>('trinity');
-  const [rhymeIntensity, setRhymeIntensity] = useState<'supreme' | 'sharp' | 'melodic'>('supreme');
+  const [flowStyle, setFlowStyle] = useState<'auto' | 'trinity' | 'sdpmr-folk' | 'p9d-boombap'>('auto');
+  const [rhymeIntensity, setRhymeIntensity] = useState<'auto' | 'supreme' | 'sharp' | 'melodic'>('auto');
 
   const [outputResult, setOutputResult] = useState<string>("");
   const [copiedFullPrompt, setCopiedFullPrompt] = useState(false);
@@ -231,11 +231,12 @@ export default function SongStudio({ apiKey, onSendToMv }: SongStudioProps) {
   ];
 
   const vocalPresets = [
-    "🔒 [แนะนำสูงสุด - ไตรภาคี 3 ศิลปิน] เสียงชายอบอุ่นทุ้มลึก (SD PMR × P9D × NS-A755): ท่อน Verse ร้องกึ่งแร็ปเมโลดี้ลื่นไหล x สับไรม์สัมผัสพวงคมกริบ x ท่อนฮุกร้องเมโลดี้เต็มปอดจำขึ้นใจ",
+    "AUTO — ให้ AI วิเคราะห์เลือกเพศ เสียงร้อง และสไตล์ดนตรีที่เข้ากับเรื่องราวนี้ที่สุดโดยอัตโนมัติ",
+    "🔒 [ไตรภาคี 3 ศิลปิน] เสียงชายอบอุ่นทุ้มลึก (SD PMR × P9D × NS-A755): ท่อน Verse ร้องกึ่งแร็ปเมโลดี้ลื่นไหล x สับไรม์สัมผัสพวงคมกริบ x ท่อนฮุกร้องเมโลดี้เต็มปอดจำขึ้นใจ",
     "🔒 [สไตล์ SD PMR ต้นฉบับ] โฟล์คร็อก-แร็ปเมโลดี้เพื่อชีวิตร่วมสมัย: เกากีตาร์โปร่งใสๆ ร้องเล่าเรื่องเปรียบเทียบคู่ขนาน ท่อน Pre-Chorus ลากเสียงยาวกินใจ ฮุกพุ่งทะยานสะกดอารมณ์",
     "🔒 [สไตล์ P9D × NS-A755] บูมแบ็ปสตรีท 90s สับไรม์คมกริบ: เสียงชายทุ้มสุขุม ล็อกสัมผัสพวงท้ายบาร์ 2-4 พยางค์ตรงกันยกชุด สาดสัมผัสในรัวทุกจังหวะสแนร์",
     "🔒 [สไตล์ SD PMR Female Version] เสียงหญิงอบอุ่นกังวานลึก: ร้องกึ่งแร็ปเมโลดี้ลื่นหู ถ่ายทอดอารมณ์ลึกซึ้ง ท่อนฮุกพุ่งทะยานสะกดใจ",
-    "🔒 [สไตล์ร็อกเพื่อชีวิตร่วมสมัย] เสียงชายแหบเสน่ห์ทรงพลัง (Raspy Soul-Rock Anthem): กลองเบสแน่น กีตาร์โซโล่บาดใจ ฮุกระเบิดพลังเสียงเต็มปอด",
+    "🔒 [สไตล์ร็อกเพื่อชีวิตร่วมสมัย] เสียงชายแหบเสน่ห์ทรงพลัง (Raspy Soul-Rock Anthem): กลองเบสแน่น กีตาร์ไฟฟ้าทรงพลัง ฮุคระเบิดพลังเสียงเต็มปอด",
   ];
 
   // 100% Sung Hit Outputs (v127.0: Beat-Locked Melodic Prosody, Zero Intro/Solo, <= 4,500 Chars Suno Safe, Graceful Rhyme & Deep Meaning)
@@ -651,7 +652,7 @@ Exclude Styles: spoken word, talking, speech, monologue, narration, dialogue, po
   const handleExportSkill = () => {
     const skillContent = `---
 name: suno-v6-mini-hit-songwriter
-description: บรมครูนักแต่งเพลงฮิต Suno v6 - Mini (v125.0) ไม่มีท่อน Intro และไร้ท่อนพูด 100% ฟังลื่นหู สัมผัสลงตัว ฮิตติดหู ความหมายดีเข้าถึงอารมณ์
+description: บรมครูนักแต่งเพลงฮิต Suno v6 - Mini (v128.0 Auto-AI Story-First) ไม่มีท่อน Intro/Solo และไร้ท่อนพูด 100% คุมจังหวะร้อง 4/4 เข้าทำนอง ฟังลื่นหู สัมผัสสละสลวย <= 4,500 ตัวอักษร
 ---
 
 ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
@@ -896,18 +897,18 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center space-x-1">
                   <Sparkles className="w-3 h-3 text-purple-300" />
-                  <span>👑 ไตรภาคี 3 ศิลปิน (SD PMR × P9D × NS-A755)</span>
+                  <span>🧠 Auto-AI ถอดจากเรื่องราว 100%</span>
                 </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-fuchsia-500/20 text-amber-200 border border-amber-500/40 flex items-center space-x-1">
                   <Sparkles className="w-3 h-3 text-amber-300" />
-                  <span>❤️ ความหมายดีกินใจ (v127.0)</span>
+                  <span>❤️ ความหมายดีกินใจ (v128.0)</span>
                 </span>
               </div>
               <h2 className="text-lg font-bold text-white mt-1.5">
-                ระบบสกัดพรอพแต่งเพลงฮิตติดหู เข้าทำนอง จังหวะลงตัว สัมผัสสละสลวย (v127.0)
+                ระบบสกัดพรอพแต่งเพลง Auto-AI ตามเรื่องราวผู้ใช้ 100% (v128.0 Story-First &amp; Beat-Lock)
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
-                <strong>ไม่มีท่อน [Intro] และ [Solo] 100%</strong> • <strong>คุมความยาว &lt;= 4,500/5,000 ตัวอักษร Suno</strong> • <strong>คุมการร้องลงห้องจังหวะ 4/4 เข้าทำนองเป๊ะ</strong> + <strong>ฟังลื่นหู สัมผัสสละสลวย</strong> + <strong>ฮุคติดหูความหมายดีเข้าถึงอารมณ์!</strong>
+                <strong>AI ออกแบบแนวเพลง-อารมณ์-BPM-เสียงร้องเข้ากับเรื่องจริง 100%</strong> • <strong>ไม่มี [Intro]/[Solo]</strong> • <strong>&lt;= 4,500/5,000 ตัวอักษร Suno</strong> • <strong>ร้องลงจังหวะ 4/4 ลื่นหู สัมผัสสละสลวย &amp; ฮุคติดหู!</strong>
               </p>
             </div>
           </div>
@@ -960,19 +961,87 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               </div>
             </div>
 
+            {/* Mood / Emotion Direction (Auto-AI by Default) */}
+            <div className="space-y-2 pt-2 border-t border-slate-800">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-200 flex items-center space-x-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>อารมณ์และบรรยากาศเพลง (Mood &amp; Vibe)</span>
+                </label>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                  !mood.trim() || /^AUTO\b/i.test(mood.trim())
+                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                    : "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                }`}>
+                  {!mood.trim() || /^AUTO\b/i.test(mood.trim()) ? "✨ Auto AI ตามเรื่อง" : "🎯 กำหนดอารมณ์เอง"}
+                </span>
+              </div>
+              <input
+                type="text"
+                value={mood}
+                onChange={(e) => setMood(e.target.value)}
+                placeholder="AUTO (ให้ AI ถอดอารมณ์แท้จริงจากเรื่องราวด้านบนเอง — แนะนำ) หรือพิมพ์อารมณ์เอง..."
+                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all"
+              />
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { label: "✨ Auto AI (แนะนำ)", val: "AUTO" },
+                  { label: "🌅 อบอุ่นซาบซึ้ง", val: "อบอุ่น ซาบซึ้ง กินใจ ลึกซึ้ง" },
+                  { label: "💔 เศร้าลึกอาลัย", val: "เศร้าลึก โหยหา อาลัย ซึ้งจนน้ำตาซึม" },
+                  { label: "🔥 ฮึกเหิมสู้ชีวิต", val: "ฮึกเหิม มีพลัง ไม่ยอมแพ้ ปลุกใจ" },
+                  { label: "🌸 รักละมุนยิ้มได้", val: "โรแมนติก ละมุน อบอุ่นหัวใจ ยิ้มตามได้" },
+                  { label: "⚡ สนุกสดใสโยกตาม", val: "สดใส สนุกสนาน จังหวะชวนโยกฟังเพลิน" },
+                ].map((mOpt, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setMood(mOpt.val)}
+                    className={`text-[10px] px-2 py-1 rounded-lg border transition-all ${
+                      (mOpt.val === "AUTO" && (!mood.trim() || /^AUTO\b/i.test(mood.trim()))) || mood === mOpt.val
+                        ? "bg-emerald-950/60 border-emerald-500 text-emerald-200 font-bold"
+                        : "bg-slate-800/70 hover:bg-slate-700 text-slate-300 border-slate-700/50"
+                    }`}
+                  >
+                    {mOpt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Flow & Rhyme Archetype Selector */}
             <div className="space-y-2 pt-2 border-t border-slate-800">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-semibold text-slate-200 flex items-center space-x-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-fuchsia-400" />
-                  <span>สูตรฉันทลักษณ์ & ไรม์สัมผัส (Rhyme & Flow Architecture):</span>
+                  <span>แนวเพลง &amp; ฉันทลักษณ์ (Genre &amp; Flow Architecture):</span>
                 </label>
                 <span className="text-[10px] text-fuchsia-300 font-bold">
-                  {flowStyle === "trinity" ? "👑 ไตรภาคี 3 ศิลปิน" : flowStyle === "sdpmr-folk" ? "🌾 เพื่อชีวิตสัจธรรม" : "🎤 บูมแบ็ปสตรีท"}
+                  {flowStyle === "auto"
+                    ? "✨ Auto AI (แนะนำสูงสุด)"
+                    : flowStyle === "trinity"
+                    ? "👑 ไตรภาคี 3 ศิลปิน"
+                    : flowStyle === "sdpmr-folk"
+                    ? "🌾 เพื่อชีวิตสัจธรรม"
+                    : "🎤 บูมแบ็ปสตรีท"}
                 </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFlowStyle("auto")}
+                  className={`p-2.5 rounded-xl border text-left transition-all ${
+                    flowStyle === "auto"
+                      ? "bg-emerald-950/50 border-emerald-500 text-emerald-200 ring-1 ring-emerald-500 shadow-md"
+                      : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <span className="text-xs font-bold block text-emerald-300">✨ Auto AI (แนะนำ)</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
+                    AI คิดแนวเพลง-จังหวะ-การร้องให้ตรงเรื่อง 100%
+                  </span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setFlowStyle("trinity")}
@@ -984,7 +1053,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 >
                   <span className="text-xs font-bold block text-fuchsia-300">👑 ไตรภาคีฮิตติดชาร์ต</span>
                   <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
-                    เปิดเข้า Verse ทันที ลื่นหู สัมผัสลงตัว + ฮุคจำติดหู
+                    โฟล์คโซลผสมสตรีท สัมผัสพวง + ฮุคจำติดหู
                   </span>
                 </button>
 
@@ -999,7 +1068,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 >
                   <span className="text-xs font-bold block text-amber-300">🌾 สไตล์ SD PMR</span>
                   <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
-                    เพื่อชีวิตร่วมสมัย เห็นภาพจริง ลากสระกินใจ ฮุคติดหู
+                    เพื่อชีวิตร่วมสมัย เห็นภาพจริง ลากสระกินใจ
                   </span>
                 </button>
 
@@ -1014,7 +1083,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 >
                   <span className="text-xs font-bold block text-cyan-300">🎤 สไตล์ P9D × NS-A755</span>
                   <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
-                    บูมแบ็ปสตรีท สัมผัสพวงภาษาพูดเด้งรับบีท 84 BPM
+                    บูมแบ็ปสตรีท สัมผัสพวงคมชัดเด้งรับบีท
                   </span>
                 </button>
               </div>
@@ -1025,10 +1094,12 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               <div className="flex items-center justify-between">
                 <label className="text-xs font-semibold text-slate-200 flex items-center space-x-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>ระดับความลงตัวของสัมผัส & จังหวะร้อง:</span>
+                  <span>ระดับความลงตัวของสัมผัส &amp; จังหวะร้อง:</span>
                 </label>
                 <span className="text-[10px] text-amber-300 font-bold">
-                  {rhymeIntensity === "supreme"
+                  {rhymeIntensity === "auto"
+                    ? "✨ Auto AI ตามอารมณ์เรื่อง"
+                    : rhymeIntensity === "supreme"
                     ? "👑 สัมผัสลงตัวลื่นหู (Balanced Hit)"
                     : rhymeIntensity === "sharp"
                     ? "⚡ คมชัดลงบีท (Sharp Natural)"
@@ -1036,7 +1107,22 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRhymeIntensity("auto")}
+                  className={`p-2 rounded-xl border text-left transition-all ${
+                    rhymeIntensity === "auto"
+                      ? "bg-emerald-950/50 border-emerald-500 text-emerald-200 ring-1 ring-emerald-500 shadow-md"
+                      : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <span className="text-xs font-bold block text-emerald-300">✨ Auto AI (แนะนำ)</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
+                    ปรับสัมผัสละมุนหรือคมตามอารมณ์เรื่องอัตโนมัติ
+                  </span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setRhymeIntensity("supreme")}
@@ -1171,17 +1257,21 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-semibold text-slate-200 flex items-center space-x-1.5">
-                  <span>สไตล์เสียงร้อง (Vocal Style & Delivery) *</span>
+                  <span>สไตล์เสียงร้อง (Vocal Style & Delivery)</span>
                 </label>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center space-x-1">
-                  <span>🔒 ล็อคเสียงสะกดใจ (Active)</span>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded border flex items-center space-x-1 ${
+                  !vocalStyle.trim() || /^AUTO\b/i.test(vocalStyle.trim())
+                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                    : "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                }`}>
+                  <span>{!vocalStyle.trim() || /^AUTO\b/i.test(vocalStyle.trim()) ? "✨ Auto AI เลือกเข้าเรื่อง" : "🎯 กำหนดเสียงเอง"}</span>
                 </span>
               </div>
               <input
                 type="text"
                 value={vocalStyle}
                 onChange={(e) => setVocalStyle(e.target.value)}
-                placeholder="เช่น ขอเสียงผู้ชายอบอุ่นซึ้งกินใจ..."
+                placeholder="AUTO (ให้ AI เลือกเสียงร้องเข้ากับเรื่องเอง) หรือพิมพ์แนวเสียงที่ต้องการ..."
                 className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-fuchsia-500 transition-all font-medium"
               />
               {/* Vocal Presets */}
@@ -1191,9 +1281,13 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     key={idx}
                     type="button"
                     onClick={() => setVocalStyle(v)}
-                    className="w-full text-left text-[11px] bg-slate-800/50 hover:bg-slate-800 text-slate-300 p-2 rounded-lg border border-slate-700/30 truncate block transition-all"
+                    className={`w-full text-left text-[11px] p-2 rounded-lg border truncate block transition-all ${
+                      vocalStyle === v
+                        ? "bg-emerald-950/50 border-emerald-500/60 text-emerald-200 font-semibold"
+                        : "bg-slate-800/50 hover:bg-slate-800 text-slate-300 border-slate-700/30"
+                    }`}
                   >
-                    {v.startsWith("🔒") ? v : `🎤 ${v}`}
+                    {v.startsWith("AUTO") ? `✨ ${v}` : v.startsWith("🔒") ? v : `🎤 ${v}`}
                   </button>
                 ))}
               </div>
@@ -1339,7 +1433,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
               <div className="flex items-center space-x-2">
                 <FileCode className="w-4 h-4 text-fuchsia-400" />
                 <h3 className="text-sm font-bold text-white">
-                  ระบบสายพาน 3 ขั้นตอน (v127.0 ไม่มี Intro/Solo • &lt;= 5,000 ตัวอักษร • เข้าทำนอง จังหวะเป๊ะ • สัมผัสสละสลวย)
+                  ระบบสายพาน 3 ขั้นตอน (v128.0 Auto-AI Story-First • ไม่มี Intro/Solo • &lt;= 5,000 ตัวอักษร • เข้าทำนอง จังหวะเป๊ะ)
                 </h3>
               </div>
               <div className="flex flex-wrap items-center gap-1.5">
@@ -1371,7 +1465,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed">
-              แม่แบบเพลงฮิตติดชาร์ต <strong>(8 ท่อนต่อเนื่อง ~52–56 บรรทัด / 3:00–3:50 นาที v127.0)</strong>: <strong>เอาท่อน [Intro] และ [Solo] ออก 100%</strong> • <strong>คุมขนาด &lt;= 4,500/5,000 ตัวอักษร Suno</strong> • <strong>คุมการร้องเข้าทำนองและจังหวะ 4/4 ลงตัว</strong> • <strong>ฟังลื่นหู สัมผัสสละสลวย &amp; ฮุคฮิตติดหูความหมายดี</strong>:
+              แม่แบบเพลงฮิตติดชาร์ต <strong>(v128.0 Auto-AI Story-First • 8 ท่อนต่อเนื่อง 3:00–3:50 นาที)</strong>: <strong>AI ออกแบบแนวเพลง อารมณ์ เสียง และ BPM ตามเรื่องจริง 100%</strong> • <strong>ไร้ [Intro]/[Solo]</strong> • <strong>&lt;= 4,500/5,000 ตัวอักษร Suno</strong> • <strong>เข้าจังหวะ 4/4 ลื่นหู &amp; ฮุคติดหู</strong>:
             </p>
 
             {/* Scrollable Live Code Preview */}
@@ -1431,7 +1525,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     <h4 className="text-xs font-bold text-amber-200 flex items-center space-x-1.5">
                       <span>🔍 ระบบตรวจสอบ 2 ด่าน (รอบแรก: เอา Intro/Solo ออก, เข้าจังหวะ 4/4 &amp; สัมผัสสละสลวย ➔ รอบสุดท้าย: จำลองร้องคู่บีท &amp; เมโลดี้ 100%)</span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
-                        v127.0 3-Stage
+                        v128.0 3-Stage
                       </span>
                     </h4>
                     <p className="text-[11px] text-slate-300">
