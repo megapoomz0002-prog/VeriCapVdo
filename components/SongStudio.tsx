@@ -39,7 +39,7 @@ interface SongStudioProps {
     mood: string;
     tempo?: string;
     key?: string;
-    flowStyle?: "auto" | "trinity" | "sdpmr-folk" | "p9d-boombap";
+    flowStyle?: "auto" | "trinity" | "sdpmr-folk" | "p9d-boombap" | "melodic-rap-oldschool";
     rhymeIntensity?: "auto" | "supreme" | "sharp" | "melodic";
     credit?: string;
     hookHeadline?: string;
@@ -59,7 +59,7 @@ export default function SongStudio({ onSendToMv }: SongStudioProps) {
   const [tempo, setTempo] = useState("AUTO");
   const [key, setKey] = useState("AUTO");
   const [isAutoMusical, setIsAutoMusical] = useState(true);
-  const [flowStyle, setFlowStyle] = useState<'auto' | 'trinity' | 'sdpmr-folk' | 'p9d-boombap'>('auto');
+  const [flowStyle, setFlowStyle] = useState<'auto' | 'trinity' | 'sdpmr-folk' | 'p9d-boombap' | 'melodic-rap-oldschool'>('auto');
   const [rhymeIntensity, setRhymeIntensity] = useState<'auto' | 'supreme' | 'sharp' | 'melodic'>('auto');
 
   const [outputResult, setOutputResult] = useState<string>("");
@@ -320,6 +320,7 @@ export default function SongStudio({ onSendToMv }: SongStudioProps) {
 
   const vocalPresets = [
     "AUTO — ให้ AI วิเคราะห์เลือกแนวเพลง เพศเสียงร้อง คีย์ และ BPM ที่เข้ากับเรื่องราวนี้ที่สุดโดยอัตโนมัติ (แนะนำ 100%)",
+    "🔒 [เมโลดี้แร็ป × โอลด์สคูล] กรูฟบูมแบ็ป 90s ผสมเมโลดี้แร็ปร้องลื่นหู: สัมผัสพ้องเสียงสระ-พยัญชนะ ฮุคก้องกังวานติดหู",
     "🔒 [ไตรภาคี 3 ศิลปิน] โมเดิร์นอะคูสติก-R&B × บูมแบ็ป 90s (SD PMR × P9D × NS-A755): เปิดชิดไมค์เปลือย -> Beat Drop -> Verse 2 เกียร์เด้งลงสแนร์ -> ฮุคพลิกคมประสานเสียง",
     "🔒 [สไตล์ SD PMR Hybrid] อะคูสติก-ซับเบส 808 ร่วมสมัย: เปิด 2 บรรทัดเปลือยคลอกีตาร์ก่อนทิ้งบีท คู่ขัดแย้งพลิกคม ฮุคกระโดดโทนประสานเสียงติดหู",
     "🔒 [สไตล์ P9D × NS-A755] แจ๊สบูมแบ็ป × โซล R&B: ชิดไมค์เล่าเรื่องจริงภาษาพูดคล้องพวง 2-4 พยางค์ สาดสัมผัสในลงสแนร์ ตัดสลับฮุคโซลกังวาน",
@@ -1122,7 +1123,9 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     ? "👑 ไตรภาคี 3 ศิลปิน"
                     : flowStyle === "sdpmr-folk"
                     ? "🌾 เพื่อชีวิตสัจธรรม"
-                    : "🎤 บูมแบ็ปสตรีท"}
+                    : flowStyle === "p9d-boombap"
+                    ? "🎤 บูมแบ็ปสตรีท"
+                    : "🎵 เมโลดี้แร็ป × โอลด์สคูล"}
                 </span>
               </div>
 
@@ -1186,6 +1189,24 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                     แจ๊สบูมแบ็ป สัมผัสพวงภาษาพูด 2-4 พยางค์ + ฮุคโซล
                   </span>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFlowStyle("melodic-rap-oldschool")}
+                  className={`p-2.5 rounded-xl border text-left transition-all col-span-2 ${
+                    flowStyle === "melodic-rap-oldschool"
+                      ? "bg-violet-950/60 border-violet-500 text-violet-200 ring-1 ring-violet-500 shadow-md"
+                      : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold block text-violet-300">🎵 เมโลดี้แร็ป × โอลด์สคูล 90s</span>
+                    <span className="text-[9px] bg-violet-900/60 text-violet-200 px-1.5 py-0.5 rounded border border-violet-700/50 font-semibold">สัมผัสพ้องเสียง</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
+                    ร้องกึ่งแร็ปมีเมโลดี้ชัดเจน กรูฟ 4/4 บูมแบ็ป สัมผัสพ้องเสียงสระ-พยัญชนะรื่นหู ฮุคก้องกังวานติดหู
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -1198,12 +1219,12 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 </label>
                 <span className="text-[10px] text-amber-300 font-bold">
                   {rhymeIntensity === "auto"
-                    ? "✨ Auto AI ตามอารมณ์เรื่อง"
+                    ? "✨ Auto AI สัมผัสพ้องเสียง & เข้าบีท"
                     : rhymeIntensity === "supreme"
-                    ? "👑 สัมผัสลงตัวลื่นหู (Balanced Hit)"
+                    ? "👑 สัมผัสพ้องเสียงขั้นสุด (Assonance)"
                     : rhymeIntensity === "sharp"
-                    ? "⚡ คมชัดลงบีท (Sharp Natural)"
-                    : "🌸 ละมุนเข้าปาก (Melodic Flow)"}
+                    ? "⚡ คมชัดลงสแนร์ (Snare Bounce)"
+                    : "🌸 ละมุนพริ้วไหว (Melodic Assonance)"}
                 </span>
               </div>
 
@@ -1219,7 +1240,7 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                 >
                   <span className="text-xs font-bold block text-emerald-300">✨ Auto AI (แนะนำ)</span>
                   <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
-                    ปรับสัมผัสละมุนหรือคมตามอารมณ์เรื่องอัตโนมัติ
+                    ปรับสัมผัสพ้องเสียงละมุนหรือคมตามเรื่องอัตโนมัติ
                   </span>
                 </button>
 
@@ -1232,9 +1253,9 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                       : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                   }`}
                 >
-                  <span className="text-xs font-bold block text-amber-300">👑 ลงตัวลื่นหูขั้นสุด</span>
+                  <span className="text-xs font-bold block text-amber-300">👑 สัมผัสพ้องเสียงขั้นสุด</span>
                   <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
-                    สัมผัสพวงธรรมชาติ + เชื่อมวรรคเนียน ไม่ลิ้นพัน
+                    พ้องเสียงสระ-พยัญชนะ + สัมผัสพวง 2-4 พยางค์ รื่นหูไม่สะดุดลิ้น
                   </span>
                 </button>
 
@@ -1247,9 +1268,9 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                       : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                   }`}
                 >
-                  <span className="text-xs font-bold block text-fuchsia-300">⚡ คมชัดลงบีท</span>
+                  <span className="text-xs font-bold block text-fuchsia-300">⚡ คมชัดลงสแนร์</span>
                   <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
-                    สัมผัสพวง 2-3 พยางค์ภาษาพูดจริง เด้งติดหู
+                    สัมผัสในเด้งลงสแนร์ ควบคู่สระพ้องเสียง ไม่ลิ้นพัน
                   </span>
                 </button>
 
@@ -1258,13 +1279,13 @@ ${SUNO_GRANDMASTER_SYSTEM_PROMPT}`;
                   onClick={() => setRhymeIntensity("melodic")}
                   className={`p-2 rounded-xl border text-left transition-all ${
                     rhymeIntensity === "melodic"
-                      ? "bg-cyan-950/50 border-cyan-500 text-cyan-200 ring-1 ring-cyan-500 shadow-md"
+                      ? "bg-rose-950/50 border-rose-500 text-rose-200 ring-1 ring-rose-500 shadow-md"
                       : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                   }`}
                 >
-                  <span className="text-xs font-bold block text-cyan-300">🌸 ละมุนเข้าปาก</span>
+                  <span className="text-xs font-bold block text-rose-300">🌸 ละมุนพริ้วไหว</span>
                   <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight">
-                    อารมณ์นำสัมผัส เมโลดี้ร้องตามง่าย ซึ้งกินใจ
+                    เน้นสระก้องกังวาน ลากเสียงเปิดท้ายวรรค ร้องลื่นหู
                   </span>
                 </button>
               </div>
