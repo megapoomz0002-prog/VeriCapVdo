@@ -303,6 +303,7 @@ export default function CoverMotionStudio({
     if (songData.title) setSongTitle(songData.title);
     if (songData.credit !== undefined) setCredit(songData.credit);
     if (songData.hookHeadline !== undefined) setHookHeadline(songData.hookHeadline);
+    if (songData.mood && songData.mood !== "AUTO") setMoodTone(songData.mood);
     if (songData.lyrics) {
       setLyrics(songData.lyrics);
       setHighlightQuote(extractLyricHighlight(songData.lyrics, songData.title));
